@@ -1,0 +1,175 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+Design by TEMPLATED
+http://templated.co
+Released for free under the Creative Commons Attribution License
+
+Name       : Retention
+Description: A two-column, fixed-width design with dark color scheme.
+Version    : 1.0
+Released   : 20140221
+
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>9.35 Illusion Lab</title>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<link href="http://fonts.googleapis.com/css?family=Karla:400,700" rel="stylesheet" />
+<link href="../../default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../../fonts.css" rel="stylesheet" type="text/css" media="all" />
+<style>
+video {
+  max-width: 20vw;
+}
+</style>
+<!--[if IE 6]>
+<link href="default_ie6.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+</head>
+<body>
+<div id="wrapper">
+	<div id="header-wrapper">
+		<div id="header" class="container">
+			<div id="logo">
+				<h1><a href="#">9.35 Illusion Laboratory</a></h1>
+				<p>Spring 2023 Vision Lab</p>
+			</div>
+			<div id="banner"> <a href="#" class="image"><img src="images/pic01.jpg" alt="" /></a> </div>
+		</div>
+	</div>
+	<div id="menu-wrapper">
+		<div id="menu" class="container">
+			<ul>
+				<li><a href="../../index.html">Homepage</a></li>
+				<li><a href="../../tasks.html">Tasks</a></li>
+				<li><a href="../../review.html">Illusion review</a></li>
+				<li><a href="../../signup.html">Meeting signup</a></li>
+				<li class="current_page_item"><a href="../../gallery.html">Gallery</a></li>
+				<li><a href="../../resources.html">Resources</a></li>
+				<li><a href="../../rubric.html">Rubric</a></li>
+			</ul>
+		</div>
+		<!-- end #menu -->
+	</div>
+	<div id="page" class="container">
+		<div>
+			<div class="title">
+				<h2>Is color used as a motion grouping cue?</h2>
+				<span class="byline">Jesse, Katherine and Kartik</span> </div>
+
+<p>This illusion aims to explore whether the moving plaids example works with
+color.
+
+<p><strong>Refresher on plaids:</strong> Recall from lecture that plaids are a
+common visual stimuli in perception experiments, and one of the ways they are
+used is in studying motion perception. The standard moving plaids stimulus has
+two sine wave gratings drifting across the screen in two different directions.
+The illusory percept is that the motion is in the combined (diagonal)
+direction, despite neither of the individual stimuli moving that way. This is
+governed by the intersection of constraints (IOC) model, which posits that the
+local motion information from each grating imply a specific motion in one
+dimension, giving a constraint line of possible velocities. The combination of
+the two gratings provides two individual constraint lines, and the perceived
+motion has a velocity correlating to the intersection point of the lines. 
+
+<p><strong>Plaids and color?</strong> Those experiments were done using only
+grayscale gratings. Our submission aims to investigate whether colored gratings
+maintain or disrupt the percept of combined motion. It is not immediately clear
+what would happen. Color and motion are largely separate streams of information
+from the bipolar cells in the retina (midget and parasol cells, respectively),
+through the retinal ganglion cells and LGN (parvocellular and magnocellular
+pathways), up to cortex and the higher association areas (ventral and dorsal
+streams– the "what" and "where" pathways of visual processing). However, we
+also know that the higher level visual areas combine multiple kinds of visual
+information, and that the plaids motion perception is seen in neurons in higher
+levels of the visual system.
+
+<p><strong>Our illusion.</strong> In the table below, the first row shows
+"control" (grayscale) stimuli. The following rows show the same stimuli but
+with colored gratings (both the same color), and finally stimuli that combine
+the two colors (different gratings are different colors). We keep the velocity
+and contrast the same for all conditions, but vary the spatial frequency
+(columns).
+
+<p>If color were to break the illusion, the last two rows would be the most
+likely cases to do so - especially the red/blue row, since the two plaids are
+stimulating completely different cones (L/S). This is analogous to how with the
+original grayscale plaids for different spatial frequencies between the two
+gratings- larger differences in spatial frequency do not produce the illusory
+motion and instead favor the slower velocity percept (as expected using
+Bayesian inference with a prior favoring slow velocities). However, this is
+complicated by the fact that spatial frequencies are a feature extracted in
+lower level vision, whereas color and motion have higher cortical regions for
+processing.
+
+<p>Now, take a look at the stimuli and report what you see below!
+
+<table>
+<tr>
+  <th>Colors</th>
+  <th>High spatial freq</th>
+  <th>Mid  spatial freq</th>
+  <th>Low  spatial freq</th>
+</tr>
+
+<tr>
+  <td>Control (b&amp;w)</td>
+  <td><video controls><source src="visual_illusion/control_high.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/control_mid.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/control_low.mp4" type="video/mp4"></source></video></td>
+</tr>
+
+<tr>
+  <td>Red only</td>
+  <td><video controls><source src="visual_illusion/red_high.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/red_mid.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/red_low.mp4" type="video/mp4"></source></video></td>
+</tr>
+
+<tr>
+  <td>Blue only</td>
+  <td><video controls><source src="visual_illusion/blue_high.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/blue_mid.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/blue_low.mp4" type="video/mp4"></source></video></td>
+</tr>
+
+<tr>
+  <td>Red + Blue</td>
+  <td><video controls><source src="visual_illusion/red_blue_high.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/red_blue_mid.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/red_blue_low.mp4" type="video/mp4"></source></video></td>
+</tr>
+
+<tr>
+  <td>Red + Green</td>
+  <td><video controls><source src="visual_illusion/red_green_high.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/red_green_mid.mp4" type="video/mp4"></source></video></td>
+  <td><video controls><source src="visual_illusion/red_green_low.mp4" type="video/mp4"></source></video></td>
+</tr>
+
+</table>
+
+
+<h3>References</h3>
+				<p>Adelson, E. H., and Movshon, J. A. (1982). Phenomenal coherence of moving visual patterns. Nature, 300(5892), 523-525.
+
+                <p>Huk, A. C., and Heeger, D. J. (2002). Pattern-motion responses in human visual cortex. Nature neuroscience, 5(1), 72-75.
+
+		</div>
+		<!-- begin wwww.htmlcommentbox.com -->
+		 <div id="HCB_comment_box"><a href="http://www.htmlcommentbox.com">HTML </a> is loading comments...</div>
+		 <link rel="stylesheet" type="text/css" href="https://www.htmlcommentbox.com/static/skins/bootstrap/twitter-bootstrap.css?v=0" />
+		 <script type="text/javascript" id="hcb"> /*<!--*/ if(!window.hcb_user){hcb_user={};} (function(){var s=document.createElement("script"), l=hcb_user.PAGE || (""+window.location).replace(/'/g,"%27"), h="https://www.htmlcommentbox.com";s.setAttribute("type","text/javascript");s.setAttribute("src", h+"/jread?page="+encodeURIComponent(l).replace("+","%2B")+"&opts=16862&num=10&ts=1616100190864");if (typeof s!="undefined") document.getElementsByTagName("head")[0].appendChild(s);})(); /*-->*/ </script>
+		<!-- end www.htmlcommentbox.com -->
+	</div>
+</div>
+<div id="copyright" class="container">
+	<p> CC BY-NC. | Design by <a href="http://templated.co" rel="nofollow">TEMPLATED</a>.</p>
+</div>
+</body>
+</html>
+				
