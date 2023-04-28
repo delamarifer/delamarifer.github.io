@@ -1,0 +1,614 @@
+html, body {
+	height: 100%;
+	width: 100%;
+	
+}
+
+body {
+	display: grid;
+	margin: 00px;
+	padding: 0px;
+	background: #333333;
+	font-family: 'Muli', sans-serif;
+	font-size: 12pt;
+	font-weight: 300;
+	background: rgb(2,0,36);
+	background: -moz-linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+	background: -webkit-linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+	background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#020024",endColorstr="#00d4ff",GradientType=1);
+}
+
+h1, h2, h3 {
+	margin: 0;
+	padding: 0;
+	display: grid;
+
+}
+
+p, ol, ul  {
+	margin-top: 0px;
+	padding: 0 2% 0 2%;  
+
+}
+
+p {
+	line-height: 100%;
+	padding: 0 3%;  
+
+}
+
+strong {
+}
+
+a {
+	color: #171717;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
+a img {
+	border: none;
+}
+
+	.image
+	{
+		display: grid;
+	}
+	
+		.image img
+		{
+			display: grid;
+			width: 100%;
+		}
+
+	.image-full
+	{
+		display: grid;
+		width: 100%;
+		margin: 0 0 2em 0;
+	}
+	
+	.image-left
+	{
+		float: left;
+		margin: 0 2em 2em 0;
+	}
+	
+	.image-centered
+	{
+		display: block;
+		margin: 0 0 2em 0;
+	}
+
+		.image-centered img
+		{
+			margin: 0 auto;
+			width: auto;
+		}
+
+hr {
+	display: grid;
+}
+
+
+/*********************************************************************************/
+/* List Styles                                                                   */
+/*********************************************************************************/
+
+	ul.style1
+	{
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	
+	ul.style1 li
+	{
+		border-top: solid 1px #E5E5E5;
+		padding: 0.80em 0;
+	}
+	
+	ul.style1 li:first-child
+	{
+		border-top: 0;
+		padding-top: 0;
+	}
+
+	ul.style2
+	{
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	
+	ul.style2 li
+	{
+		border-top: solid 1px #E5E5E5;
+		padding: 0.80em 0;
+	}
+	
+	ul.style2 li:first-child
+	{
+		border-top: 0;
+		padding-top: 0;
+	}
+
+/*********************************************************************************/
+/* Heading Titles                                                                */
+/*********************************************************************************/
+
+	.title
+	{
+		display: grid;
+		padding: 0 3%;
+
+		margin-bottom: 2em;
+		text-transform: uppercase;
+	}
+
+	.title h2
+	{
+		letter-spacing: 0.20em;
+		font-weight: 700;
+		font-size: 2em;
+		color: #00AABB;
+	}
+	
+	.title .byline
+	{
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+		font-weight: 400;
+		font-size: 0.90em;
+		color: #6F6F6F;
+	}
+
+	.subtitle
+	{
+		margin-bottom: 0.5em;
+		text-transform: uppercase;
+	}
+
+	.subtitle .tyline
+	{
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+		font-weight: 400;
+		font-size: 0.90em;
+		color: #6F6F6F;
+	}
+
+/** WRAPPER */
+
+#wrapper {
+	background: #cff5ff url(images/bg01.png) repeat;
+}
+
+#footer-wrapper
+{
+	background: #0F0F0F;
+}
+
+.container {
+	width: 100%;
+	margin: 0px auto;
+}
+
+.clearfix {
+	clear: both;
+}
+
+
+/*********************************************************************************/
+/* Wrappers                                                                      */
+/*********************************************************************************/
+
+#header-wrapper
+{
+	overflow: hidden;
+	background-size: 100%;
+
+	background: -moz-linear-gradient(360deg, rgba(2,0,36,1) 0%, rgb(121, 71, 9) 35%, rgb(255, 238, 0) 100%);
+	background: -webkit-linear-gradient(360deg, rgba(2,0,36,1) 0%, rgba(121, 71, 9,1) 35%, rgba(255, 238, 0,1) 100%);
+	background: linear-gradient(360deg, rgba(2,0,36,1) 0%, rgba(121, 71, 9,1) 35%, rgba(255, 238, 0,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#020024",endColorstr="#00d4ff",GradientType=1);
+}
+
+
+/*********************************************************************************/
+/* Header                                                                        */
+/*********************************************************************************/
+
+	#header 
+	{
+		position: relative;
+		overflow: hidden;
+		text-align: center;
+	}
+
+/*********************************************************************************/
+/* Logo                                                                          */
+/*********************************************************************************/
+
+	#logo 
+	{
+		width: 700px;
+		height: 80px;
+		margin: 0 auto;
+		padding: 2em 0em;
+		text-transform: uppercase;
+	}
+	
+	#logo h1
+	{
+		letter-spacing: 0.10em;
+		font-size: 3em;
+	}
+	
+	#logo p 
+	{
+		letter-spacing: 0.10em;
+		color: #FFF;
+	}
+	
+	#logo a 
+	{
+		text-decoration: none;
+		color: #FFF;
+	}
+
+/*********************************************************************************/
+/* Banner                                                                        */
+/*********************************************************************************/
+
+	#banner 
+	{
+		position: absolute;
+		left: 0;
+		overflow: hidden;
+		z-index: 1;
+	}
+	
+	#banner .image
+	{
+		border: 5px solid #FFFFFF;
+	}
+	
+
+/** MENU */
+
+#menu-wrapper
+{
+	background: -moz-linear-gradient(360deg, rgba(2,0,36,1) 0%, rgba(149, 68, 255) 35%, rgba(204, 195, 255) 100%);
+	background: -webkit-linear-gradient(360deg, rgba(2,0,36,1) 0%, rgba(149, 68, 255) 35%, rgba(204, 195, 255) 100%);
+	background: linear-gradient(360deg, rgba(2,0,36,1) 0%, rgb(149, 68, 255) 35%, rgb(204, 195, 255) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#020024",endColorstr="#00d4ff",GradientType=1);
+}
+
+#menu {
+	overflow: hidden;
+	height: 50px;
+}
+
+#menu ul {
+	margin: 0;
+	padding: 0px 0px 0px 0px;
+	list-style: none;
+	line-height: normal;
+	text-align: center;
+}
+
+#menu li {
+	display: inline-block;
+}
+
+#menu a {
+	display: grid;
+	letter-spacing: 1px;
+	padding: 20px 20px;
+	text-decoration: none;
+	text-align: center;
+	text-transform: uppercase;
+	font-size: 0.80em;
+	font-weight: 600;
+	border: none;
+	color: #FFF;
+}
+
+#menu a:hover, #menu .current_page_item a {
+	text-decoration: rgb(29, 148, 6);
+}
+
+#menu .current_page_item a {
+	color: #2b0c80;
+	background: #cff5ff;
+}
+
+/** PAGE */
+
+#page
+{
+	position: relative;
+	overflow: hidden;
+	padding: 4em 0em 5em 0em;
+}
+
+/** CONTENT */
+
+#content
+{
+	float: right;
+	width: 790px;
+}
+
+/*********************************************************************************/
+/* Sidebar                                                                       */
+/*********************************************************************************/
+
+	#sidebar
+	{
+		float: left;
+		width: 345px;
+	}
+	
+	#sidebar .title h2
+	{
+		font-size: 1.6em;
+	}
+	
+	#sidebar .box1
+	{
+		margin-bottom: 3em;
+	}
+
+
+/*********************************************************************************/
+/* Copyright                                                                     */
+/*********************************************************************************/
+
+	#copyright
+	{
+		overflow: hidden;
+		padding: 5em 0em;
+		text-align: center;
+	}
+	
+	#copyright p
+	{
+		letter-spacing: 0.20em;
+		text-align: center;
+		text-transform: uppercase;
+		font-size: 0.80em;
+		color: #6F6F6F;
+	}
+	
+	#copyright a
+	{
+		text-decoration: none;
+		color: #8C8C8C;
+	}
+
+/*********************************************************************************/
+/* Welcome                                                                       */
+/*********************************************************************************/
+
+	#welcome
+	{
+		overflow: hidden;
+		padding: 5em 0em;
+		border-bottom: 1px solid #E5E5E5;
+		text-align: center;
+	}
+	
+	#welcome h2
+	{
+		letter-spacing: 0.20em;
+		text-transform: uppercase;
+		font-size: 2.6em;
+	}
+	
+	#welcome p
+	{
+		font-size: 1.3em;
+	}
+
+	#welcome .byline
+	{
+		display: block;
+		padding: 0em 0em 1.5em 0em;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+		font-weight: 400;
+		font-size: 1.2em;
+		color: #6F6F6F;
+	}
+
+/*********************************************************************************/
+/* Portfolio                                                                     */
+/*********************************************************************************/
+
+	#portfolio-wrapper
+	{
+		background: rgba(0,0,0,.04);
+		padding: 6em 0em;
+		color: rgba(255,255,255,.7);
+	}
+	
+	#portfolio
+	{
+		overflow: hidden;
+	}
+	
+	#portfolio .title h2
+	{
+		font-size: 1.2em;
+		color: #FFF;
+	}
+
+	#portfolio .byline
+	{
+		font-size: 1em;
+		color: #EEA7C1;
+	}
+	
+	#column1,
+	#column2,
+	#column3,
+	#column4
+	{
+		width: 282px;
+	}
+	
+	#column1,
+	#column2
+	{
+		float: left;
+		margin-right: 24px;
+	}
+	
+	#column3
+	{
+		float: left;
+	}
+	
+	#column4
+	{
+		float: right;
+	}
+	
+/*********************************************************************************/
+/* Button Style                                                                  */
+/*********************************************************************************/
+
+	.button
+	{
+		display: inline-block;
+		margin-top: 1.5em;
+		padding: 0.50em 3em 0.50em 2em;
+		background: #00AABB;
+		letter-spacing: 0.20em;
+		text-decoration: none;
+		text-transform: uppercase;
+		font-weight: 400;
+		font-size: 0.90em;
+		color: #FFF;
+	}	
+		.button:before
+		{
+			display: inline-block;
+			width: 40px;
+			height: 40px;
+			line-height: 40px;
+			border-radius: 20px;
+			text-align: center;
+			color: #FFF;
+		}
+
+/*********************************************************************************/
+/* Footer                                                                        */
+/*********************************************************************************/
+	
+	#footer-wrapper
+	{
+		overflow: hidden;
+		padding: 5em 0em;
+		background: #1E1B1A;
+	}
+
+	#footer
+	{
+		color: #ADADAD;
+	}
+	
+	#footer .title h2
+	{
+		font-weight: 400;
+		font-size: 1.2em;
+		color: #FFF;
+	}
+
+	#footer .title
+	{
+		border-color: #2D2926 !important;
+	}
+	
+	#footer .style1 li
+	{
+		border-color: #2D2926 !important;
+	}
+	
+	#footer .style1 a
+	{
+		letter-spacing: 0.10em;
+		font-size:1em;
+		color: #B1B1B1;
+	}
+	
+	#box1
+	{
+		float: left;
+		width: 354px;
+		margin-right: 24px;
+		padding-right: 30px;
+	}
+	
+	#box2
+	{
+		float: left;
+		width: 354px;
+		margin-left: 24px;
+		padding-right: 30px;
+	}
+	
+	#box3
+	{
+		float: right;
+		width: 344px;
+		padding-left: 40px;
+	}
+
+
+/*********************************************************************************/
+/* Gallery                                                                        */
+/*********************************************************************************/
+
+.gallerycontainer {
+  position: relative;
+}
+
+.galleryimage {
+  display: grid;
+  height: auto;
+}
+
+.galleryoverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: .5s ease;
+  background-color: #008CBA;
+}
+
+.gallerycontainer:hover .galleryoverlay {
+  opacity: 0.75;
+}
+
+.gallerytext {
+  color: white;
+  font-size: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
