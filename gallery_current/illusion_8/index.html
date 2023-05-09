@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+Design by TEMPLATED
+http://templated.co
+Released for free under the Creative Commons Attribution License
+
+Name       : Retention
+Description: A two-column, fixed-width design with dark color scheme.
+Version    : 1.0
+Released   : 20140221
+
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>9.35 Illusion Lab</title>
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <link href="http://fonts.googleapis.com/css?family=Karla:400,700" rel="stylesheet" />
+  <link href="default.css" rel="stylesheet" type="text/css" media="all" />
+  <link href="../../fonts.css" rel="stylesheet" type="text/css" media="all" />
+  <!--[if IE 6]>
+<link href="default_ie6.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+</head>
+
+<body>
+  <div id="wrapper">
+    <div id="header-wrapper">
+      <div id="header" class="container">
+        <div id="logo">
+          <h1><a href="#">9.35 Illusion Laboratory</a></h1>
+          <p>Spring 2023 Vision Lab</p>
+        </div>
+        <div id="banner"> <a href="#" class="image"><img src="images/pic01.jpg" alt="" /></a> </div>
+      </div>
+    </div>
+    <div id="menu-wrapper">
+      <div id="menu" class="container">
+        <ul>
+          <li><a href="../../index.html">Homepage</a></li>
+          <li><a href="../../tasks.html">Tasks</a></li>
+          <li><a href="../../review.html">Illusion review</a></li>
+          <li><a href="../../signup.html">Meeting signup</a></li>
+          <li class="current_page_item"><a href="../../gallery.html">Gallery</a></li>
+          <li><a href="../../resources.html">Resources</a></li>
+          <li><a href="../../rubric.html">Rubric</a></li>
+        </ul>
+      </div>
+      <!-- end #menu -->
+    </div>
+    <div id="page" class="container">
+      <div>
+        <div class="title">
+          <h2>To what extent are 2-dimensional cues important for perception of motion, and are motion illusions
+            preserved when 1-dimensional cues are manipulated?</h2>
+          <span class="byline">Crista Falk, Somaia Saba, Matthew Soza</span>
+        </div>
+
+        <p>Our illusion is based on the “Motion illusions as optimal percepts” paper by Weiss et. al (2002). In the
+          original illusion, when a rhombus is moving from left to right, it appears to move horizontally at high
+          contrast but diagonally at low contrast. This motion perception is further manipulated by the narrowness of
+          the shape; when the shape is widened, the diagonal motion illusion is lost and it appears to move horizontally
+          regardless of contrast. The diagonal motion could be explained by the Vector Average principle which looks at
+          the average velocity of the sides, while the horizontal motion is best explained by the Intersection of
+          Constraints principle or Feature Tracking principle. This paper, however, proposed a Bayesian model based on
+          assumptions that local measurements tend to be noisy and image velocities tend to be slow.</p>
+        <p>In this illusion, we investigate the importance of 1-dimensional cues. We applied radial gradients to the
+          rhombi such that either the edges are emphasized or reduced. We expect that, along with previous conditions,
+          diagonal motion should be preserved when the edges are reduced and horizontal motions should be seen when
+          edges are emphasized. When the edges are emphasized, noise in local measurements seem to be mitigated, helping
+          the user see the actual motion; reduced edges on the other hand has a more blurred effect, which may aid the
+          percept of diagonal motion. What conditions help preserve the diagonal motion for you, and what conditions
+          break the illusion such that you see the rhombus actually moving from left to right?</p>
+
+        <div id='illusion'>
+          <div>
+            <p>Adjust Lightness: <span id="color_slider"></span></p>
+            <input type="range" min="0" max="15" value="0" class="slider" id="myRange">
+          </div>
+          <div class='row'>
+            <button id='move'>GO</button>
+            Thick: <input type="checkbox" id='thick_toggle' onclick="toggle_thick()" checked>
+            Thin: <input type="checkbox" id='thin_toggle' onclick="toggle_thin()" checked>
+            Solid: <input type="checkbox" id='solid' onclick="toggle_solid()" checked>
+            Edges Reduced: <input type="checkbox" id='grad1' onclick="toggle_grad1()" checked>
+            Edges Emphasized: <input type="checkbox" id='grad2' onclick="toggle_grad2()" checked>
+          </div>
+
+          <div id='thick'>
+            <h1>Thick Condition</h1>
+            <div class='row'>
+              <div class="rhombus" id="rhom1"></div>
+            </div>
+            <div class='row'>
+              <div class="rhombus gradient" id="rhom2"></div>
+            </div>
+            <div class='row'>
+              <div class="rhombus gradient-reverse" id="rhom3"></div>
+            </div>
+          </div>
+
+          <div id='thin'>
+            <h1>Thin Condition</h1>
+            <div class='row'>
+              <div class="skinty" id="rhom4"></div>
+            </div>
+            <div class='row'>
+              <div class="skinty gradient" id="rhom5"></div>
+            </div>
+            <div class='row'>
+              <div class="skinty gradient-reverse" id="rhom6"></div>
+            </div>
+          </div>
+        </div>
+
+        <script src="script.js"></script>
+</body>
+
+<p>Weiss, Y., Simoncelli, E. & Adelson, E. Motion illusions as optimal percepts. Nat Neurosci 5, 598–604 (2002).
+  https://doi.org/10.1038/nn0602-858
+<p>
+
+  </div>
+  <!-- begin wwww.htmlcommentbox.com -->
+<div id="HCB_comment_box"><a href="http://www.htmlcommentbox.com">HTML </a> is loading comments...</div>
+<link rel="stylesheet" type="text/css"
+  href="https://www.htmlcommentbox.com/static/skins/bootstrap/twitter-bootstrap.css?v=0" />
+<script type="text/javascript"
+  id="hcb"> /*<!--*/ if (!window.hcb_user) {hcb_user = {};} (function () {var s = document.createElement("script"), l = hcb_user.PAGE || ("" + window.location).replace(/'/g, "%27"), h = "https://www.htmlcommentbox.com"; s.setAttribute("type", "text/javascript"); s.setAttribute("src", h + "/jread?page=" + encodeURIComponent(l).replace("+", "%2B") + "&opts=16862&num=10&ts=1616100190864"); if (typeof s != "undefined") document.getElementsByTagName("head")[0].appendChild(s);})(); /*-->*/ </script>
+<!-- end www.htmlcommentbox.com -->
+</div>
+</div>
+<div id="copyright" class="container">
+  <p> CC BY-NC. | Design by <a href="http://templated.co" rel="nofollow">TEMPLATED</a>.</p>
+</div>
+</body>
+
+</html>
