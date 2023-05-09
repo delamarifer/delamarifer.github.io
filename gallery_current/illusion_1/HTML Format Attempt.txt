@@ -1,0 +1,176 @@
+<!--I have attempted to put stuff into the HTML format, but am not totally sure if the links will work!-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+Design by TEMPLATED
+http://templated.co
+Released for free under the Creative Commons Attribution License
+
+Name       : Retention
+Description: A two-column, fixed-width design with dark color scheme.
+Version    : 1.0
+Released   : 20140221
+
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>9.35 Illusion Lab 2</title>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<link href="http://fonts.googleapis.com/css?family=Karla:400,700" rel="stylesheet" />
+<link href="../../default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../../fonts.css" rel="stylesheet" type="text/css" media="all" />
+<!--[if IE 6]>
+<link href="default_ie6.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+</head>
+<body>
+<div id="wrapper">
+	<div id="header-wrapper">
+		<div id="header" class="container">
+			<div id="logo">
+				<h1><a href="#">9.35 Illusion Laboratory</a></h1>
+				<p>Spring 2021 Auditory Lab</p>
+			</div>
+			<div id="banner"> <a href="#" class="image"><img src="images/pic01.jpg" alt="" /></a> </div>
+		</div>
+	</div>
+	<div id="menu-wrapper">
+		<div id="menu" class="container">
+			<ul>
+				<li><a href="../../index.html">Homepage</a></li>
+				<li><a href="../../tasks.html">Tasks</a></li>
+				<li><a href="../../review.html">Illusion review</a></li>
+				<li><a href="../../signup.html">Meeting signup</a></li>
+				<li class="current_page_item"><a href="../../gallery.html">Gallery</a></li>
+				<li><a href="../../resources.html">Resources</a></li>
+				<li><a href="../../rubric.html">Rubric</a></li>
+			</ul>
+		</div>
+		<!-- end #menu -->
+	</div>
+	<div id="page" class="container">
+		<div>
+			<div class="title">
+				<h2>Does the Thatcher illusion (and the face inversion effect) hold in scenes other than human faces? This can help us investigate the features that are salient to make a face/scene look like itself. In the human face case, we can see the eyes, nose, and mouths dictate the illusion. How does that extend to non-human faces? </h2>
+				<span class="byline">Abby Dulski and Brian Bailey</span> </div>
+
+				<p>The Thatcher Illusion is a famous illusion dating back to the 1980s. It is created by reversing some of the most salient features of the human face (eyes, mouth) and flipping the image upside down. When the images are right-side up, observers can clearly see that the eyes and mouth are edited. However, when the images are upside down, observers rarely notice that any edits have been made to the image. This shows us that, at least for faces, the brain does not rely on a mechanism of processing individual features separately, but instead, it relies on collective features, such as where the positions and relationships between those features are. When the image is flipped upside down, we lose the ability to rely on the holistic mechanism, and just rely on assessing the individual features individually. Since the features appear to be correct on their own, we interpret the face as a whole upside down face. When we see the image right-side up, we regain the ability to rely on a holistic mechanism and can clearly see that something is wrong with the image. This also shows us that this holistic processing is much more sensitive, and allows us to more carefully assess faces in the world. 
+<p> 
+<p>The Thatcher Illusion has famously been done in faces, but we went a step further to see if the Thatcher Illusion carries over to non-human faces and scenes. This would then confirm whether or not this holistic processing of features carries beyond just human faces. Our hypothesis is that if we are able to flip the salient features of non-human scenes such as animals, the Thatcher Illusion will hold as it is likely we process animal faces the same way as human faces. Even further, we hypothesize that if we flip salient features of everyday life (trees and a common scene at MIT), an observer may not notice the edits in the flipped image. We chose to flip salient features in a STATA scene as it has been proven that it is hard to identify upside-down pictures that have lots of parts with adjacent contours, making the MIT STATA building a perfect candidate for our illusion. Additionally, we chose to flip salient features of a forest scene to test if common landscape backgrounds are viewed in a similar holistic approach.
+To investigate this hypothesis, we will perform the Thatcher Illusion on a human (for reference), a monkey (relatively humanlike), a dog, a scene of a forest, and two scenes involving the  STATA Center. All of the original images we have edited are in the zip-folder submission. 
+ </p>
+				<p> 1)Observe the human face upside down, noting anything out of the ordinary. (file: Obama Thatcher Upside Down)
+2) Observe the monkey face upside down, noting anything out of the ordinary. (file: Monkey Thatcher Upside Down)
+3) Observe the dog face upside down, noting anything out of the ordinary. (file: Dog Thatcher Upside Down)
+4) Observe the STATA scene upside down, noting anything out of the ordinary. (file: STATA1 Thatcher Upside Down)
+5) Observe the second STATA scene upside down, noting anything out of the ordinary. (file: STATA2 Thatcher Upside Down)
+6) Observe the tree scene upside down, noting anything out of the ordinary. (file: Tree Thatcher Upside Down)
+7) Observe the human face, monkey face, dog face, STATA scenes, and tree scene right-side up. Determine for which scenes it was apparent that the salient features were flipped in both the upside down and right-side up positions, and for which it was only apparent in the right-side up images. 
+a) (file: Obama Thatcher Right-side Up)
+b) (file: Monkey Thatcher Right-side Up)
+c) (file: Dog Thatcher Right-side Up)
+d) (file: STATA1 Thatcher Right-side Up)
+e) (file: STATA2 Thatcher Right-side Up)
+f) (file: Tree Thatcher Right-side Up)
+
+</p>
+
+				
+<p>Home Page Image</p>
+				<!-- How to insert images:-->
+				<img src='Cover Photo For Website.png.jpeg' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+				<p>Obama Thatcher Upside Down</p>
+				<!-- How to insert images:-->
+				<img src='Obama Thatcher Upside Down' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+								<p>Monkey Thatcher Upside Down</p>
+				<!-- How to insert images:-->
+				<img src='Monkey Thatcher Upside Down' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>Dog Thatcher Upside Down</p>
+				<!-- How to insert images:-->
+				<img src='Dog Thatcher Upside Down' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>STATA1 Thatcher Upside Down</p>
+				<!-- How to insert images:-->
+				<img src='STATA1 Thatcher Upside Down' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>STATA2 Thatcher Upside Down</p>
+				<!-- How to insert images:-->
+				<img src='STATA2 Thatcher Upside Down' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>Tree Thatcher Upside Down</p>
+				<!-- How to insert images:-->
+				<img src='Tree Thatcher Upside Down' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+
+				<p>Obama Thatcher Right-side Up</p>
+				<!-- How to insert images:-->
+				<img src='Obama Thatcher Right-side Up' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+								<p>Monkey Thatcher Right-side Up</p>
+				<!-- How to insert images:-->
+				<img src='Monkey Thatcher Right-side Up' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>Dog Thatcher Right-side Up</p>
+				<!-- How to insert images:-->
+				<img src='Dog Thatcher Right-side Up' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>STATA1 Thatcher Right-side Up</p>
+				<!-- How to insert images:-->
+				<img src='STATA1 Thatcher Right-side Up' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>STATA2 Thatcher Right-side Up</p>
+				<!-- How to insert images:-->
+				<img src='STATA2 Thatcher Right-side Up' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+				
+											<p>Tree Thatcher Right-side Up</p>
+				<!-- How to insert images:-->
+				<img src='Tree Thatcher Right-side Up' width=500/><br>
+				<!--You can use the width parameter to change the size of your image-->
+				<!--src could be a gif, png, jpeg, etc.-->
+
+      <p>Sources<p>
+				<p>Rakover, Sam S. “Explaining the Face-Inversion Effect: The Face–Scheme Incompatibility (FSI) Model - Psychonomic Bulletin & Review.” SpringerLink, 5 Feb. 2013, link.springer.com/article/10.3758/s13423-013-0388-1. <p>
+<p>Etchells, Pete. “The Thatcher Illusion: Are Faces Special?” The Guardian, Guardian News and Media, 19 Sept. 2016, https://www.theguardian.com/science/head-quarters/2016/sep/19/the-thatcher-illusion-are-faces-special. 
+<p><p>Diamond, R., & Carey, S. (1986). Why faces are and are not special: An effect of expertise. Journal of Experimental Psychology: General, 115(2), 107–117. https://doi.org/10.1037/0096-3445.115.2.107
+<p><p>Sanguinetti, J. L., Allen, J. J. B., & Peterson, M. A. (2014). The ground side of an object: Perceived as shapeless yet processed for semantics. Psychological Science, 25(1), 256–264. https://doi.org/10.1177/0956797613502814<p>
+
+		</div>
+		<!-- begin wwww.htmlcommentbox.com -->
+		 <div id="HCB_comment_box"><a href="http://www.htmlcommentbox.com">HTML </a> is loading comments...</div>
+		 <link rel="stylesheet" type="text/css" href="https://www.htmlcommentbox.com/static/skins/bootstrap/twitter-bootstrap.css?v=0" />
+		 <script type="text/javascript" id="hcb"> /*<!--*/ if(!window.hcb_user){hcb_user={};} (function(){var s=document.createElement("script"), l=hcb_user.PAGE || (""+window.location).replace(/'/g,"%27"), h="https://www.htmlcommentbox.com";s.setAttribute("type","text/javascript");s.setAttribute("src", h+"/jread?page="+encodeURIComponent(l).replace("+","%2B")+"&opts=16862&num=10&ts=1616100190864");if (typeof s!="undefined") document.getElementsByTagName("head")[0].appendChild(s);})(); /*-->*/ </script>
+		<!-- end www.htmlcommentbox.com -->
+	</div>
+</div>
+<div id="copyright" class="container">
+	<p> CC BY-NC. | Design by <a href="http://templated.co" rel="nofollow">TEMPLATED</a>.</p>
+</div>
+</body>
+</html>
