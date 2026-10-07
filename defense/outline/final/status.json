@@ -1,12 +1,12 @@
 {
  "intro": {
-  "version": 3,
-  "pushed_at": "2026-10-07T08:14:20",
+  "version": 4,
+  "pushed_at": "2026-10-07T08:39:55",
   "slides": 20
  },
  "ch1-adv-vulnerability": {
-  "version": 3,
-  "pushed_at": "2026-10-07T08:24:36",
+  "version": 4,
+  "pushed_at": "2026-10-07T08:39:55",
   "slides": 1
  },
  "ch1-adv-training": {
