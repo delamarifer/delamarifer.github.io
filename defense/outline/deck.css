@@ -1,0 +1,182 @@
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b;
+    --panel:#f8fafc; --border:#e2e8f0;
+    --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309;
+    --serif:"Fraunces", Georgia, serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%; overflow:hidden; background:var(--bg); color:var(--body);
+    font-family:var(--sans); font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;}
+  #root{position:fixed; inset:0;}
+
+  /* ---------- static slides: full-viewport, 3MT-style ---------- */
+  .slide{position:absolute; inset:0; display:none; background:var(--bg);}
+  .slide.active{display:block;}
+  .stage{position:absolute; inset:0; padding:9vh 6vw 11vh; display:flex; flex-direction:column;}
+
+  .eyebrow{text-transform:uppercase; letter-spacing:.12em; font-size:.78rem; font-weight:600; color:var(--muted); margin-bottom:1.6rem;}
+  h1.t{font-family:var(--serif); font-weight:900; color:var(--ink);
+    font-size:clamp(1.8rem, 3.5vw, 3rem); line-height:1.08; letter-spacing:-.012em; margin-bottom:1.6rem;}
+  /* Fer, 2026-10-07: titles a little smaller overall (were clamp(2.2rem,4.6vw,4rem), mb 2.4rem) so figures get more room */
+  h1.t em{font-style:normal; color:var(--slate);}
+  h1.t em.pine{color:var(--pine)} h1.t em.ochre{color:var(--ochre)} h1.t em.plum{color:var(--plum)}
+  .lead{font-size:clamp(1.15rem, 1.9vw, 1.6rem); line-height:1.45; color:var(--body); max-width:34em;}
+  .lead .hl{color:var(--ink); font-weight:700;}
+  em.term{font-style:italic; color:var(--ink);}
+  .accent-pine{color:var(--pine)} .accent-ochre{color:var(--ochre)}
+  .accent-plum{color:var(--plum)} .accent-slate{color:var(--slate)}
+
+  /* build-in fragments: hidden until their click */
+  .b{opacity:0; transform:translateY(12px); transition:opacity .45s ease, transform .45s ease;}
+  .b.shown{opacity:1; transform:none;}
+
+  .cols{display:flex; gap:4vw; flex:1; min-height:0; align-items:stretch;}
+  .col{flex:1; min-width:0;}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:1.6rem 1.8rem;}
+  .card h3{font-family:var(--serif); font-weight:700; color:var(--ink); font-size:clamp(1.2rem,1.9vw,1.6rem); line-height:1.15; margin-bottom:.7rem;}
+  .card p{font-size:clamp(1rem,1.4vw,1.25rem);}
+  .card .sub{margin-top:.8rem; color:var(--muted); font-size:clamp(.85rem,1.1vw,1rem);}
+
+  /* big statement list (fragments, bold leads) */
+  ul.frag{list-style:none; display:flex; flex-direction:column; gap:1.15rem;}
+  ul.frag li{font-size:clamp(1.15rem,1.9vw,1.65rem); line-height:1.35; padding-left:1.15em; position:relative; max-width:30em;}
+  ul.frag li::before{content:""; position:absolute; left:0; top:.52em; width:.42em; height:.42em; border-radius:50%; background:var(--slate);}
+  ul.frag li.pine::before{background:var(--pine)} ul.frag li.ochre::before{background:var(--ochre)}
+  ul.frag li.plum::before{background:var(--plum)} ul.frag li.muted::before{background:var(--border)}
+  ul.frag li .hl{color:var(--ink); font-weight:700;}
+
+  /* numbered roadmap */
+  ol.road{list-style:none; display:flex; flex-direction:column; gap:1.3rem; margin-top:.5rem;}
+  ol.road li{display:flex; align-items:baseline; gap:1.2rem; font-size:clamp(1.25rem,2vw,1.8rem); color:var(--body);}
+  ol.road li b{font-family:var(--serif); font-weight:900; font-size:1.15em; color:var(--slate); width:1.6em; flex:none; text-align:right;}
+
+  /* ---------- the judge strip: one experiment, different judges ----------
+     The talk's connective motif. Two stimuli → a system → same/different.
+     It reappears with the judge swapped: eye → model stage → listener →
+     cortex. Same geometry every time so the audience recognizes the rhyme. */
+  .judgeline{display:flex; align-items:center; justify-content:center; gap:1.2vw; flex-wrap:wrap;}
+  .judgeline .stim{font-family:var(--serif); font-weight:700; font-size:clamp(1rem,1.5vw,1.3rem);
+    padding:.55em .9em; border-radius:12px; border:1.5px solid; background:var(--bg);}
+  .judgeline .stim.a{color:var(--slate); border-color:var(--slate);}
+  .judgeline .stim.b{color:var(--plum); border-color:var(--plum);}
+  .judgeline .arr{color:var(--muted); font-size:clamp(1.1rem,1.7vw,1.5rem);}
+  .judgeline .judge{font-family:var(--serif); font-weight:900; color:var(--ink);
+    font-size:clamp(1.05rem,1.7vw,1.5rem); padding:.55em 1em; border-radius:999px;
+    border:2px solid var(--ink); background:var(--panel); white-space:nowrap;}
+  .judgeline .verdict{font-weight:700; font-size:clamp(1rem,1.5vw,1.3rem); white-space:nowrap;}
+  .judgeline .verdict.same{color:var(--pine);}
+  .judgeline .verdict.open{color:var(--muted); font-style:italic;}
+  .judgeline .verdict.diff{color:var(--ochre);}
+  .judgecap{text-align:center; color:var(--muted); font-size:clamp(.85rem,1.15vw,1rem); margin-top:.7rem;}
+
+  /* figures */
+  figure.fig{flex:1; min-height:0; display:flex; flex-direction:column; gap:.7rem;}
+  figure.fig .well{flex:1; min-height:0; border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+  figure.fig img{max-width:100%; max-height:100%; object-fit:contain; display:none;}
+  figure.fig .well.loaded{border:none; background:none;}
+  figure.fig .well.loaded img{display:block;}
+  figure.fig .well.missing{border:2px dashed var(--border); background:var(--panel); min-height:38vh;}
+  figure.fig .well.missing::after{content:"drop " attr(data-src) " into the folder"; color:var(--muted); font-size:.85rem;}
+  figure.fig figcaption{font-size:.85rem; color:var(--muted);}
+
+  /* stat band */
+  .stats{display:flex; gap:1.4vw;}
+  .stat{flex:1; text-align:center; padding:1.2rem .8rem; background:var(--panel); border:1px solid var(--border); border-radius:16px;}
+  .stat b{display:block; font-family:var(--serif); font-weight:900; font-size:clamp(2.2rem,3.6vw,3.4rem); color:var(--ink); line-height:1.05;}
+  .stat span{font-size:clamp(.85rem,1.1vw,1rem); color:var(--muted);}
+
+  /* row-per-sound activation matrix */
+  .mx{display:flex; align-items:center; gap:1.4vw; justify-content:center;}
+  .mx .grid{display:grid; gap:4px;}
+  .mx .cell{width:clamp(20px,2.4vw,34px); height:clamp(20px,2.4vw,34px); border-radius:5px;}
+  .mx .rowlab{display:grid; gap:4px; justify-items:end; font-size:.85rem; color:var(--muted);}
+  .mx .rowlab div{height:clamp(20px,2.4vw,34px); display:flex; align-items:center;}
+  .mx .op{font-family:var(--serif); font-size:clamp(1.6rem,2.6vw,2.4rem); color:var(--muted);}
+  .mx .veclab{font-size:.85rem; color:var(--muted); text-align:center; margin-top:.5rem;}
+
+  /* pipeline chips (slide 10) */
+  .pipe{display:flex; align-items:center; gap:1vw; justify-content:center; flex-wrap:wrap;}
+  .pipe .chip{background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:.7em 1em; font-size:clamp(1rem,1.6vw,1.4rem); color:var(--ink);}
+  .pipe .chip.q{color:var(--plum); font-family:var(--serif); font-weight:900;}
+  .pipe .arr{color:var(--muted); font-size:clamp(1.1rem,1.8vw,1.6rem);}
+
+  /* ---------- scene slides ---------- */
+  .scenehost{position:absolute; inset:0;}
+  .scenehost iframe{position:absolute; inset:0; width:100%; height:100%; border:0; display:none; background:var(--bg);}
+  .scenehost iframe.shown{display:block;}
+
+  /* ---------- chrome ---------- */
+  #hud{position:fixed; left:18px; bottom:14px; z-index:40; font-size:12px; color:var(--muted); user-select:none; pointer-events:none;}
+  #secbar{position:fixed; left:0; right:0; bottom:12px; z-index:40; display:flex; gap:2vw;
+    justify-content:center; user-select:none; pointer-events:none; font-size:11.5px;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--muted);}
+  #secbar span{padding-bottom:4px; border-bottom:2px solid transparent; opacity:.5;}
+  #secbar span.done{opacity:.8;}
+  #secbar span.active{color:var(--ink); opacity:1; border-bottom-color:var(--slate);}
+  #help{position:fixed; right:18px; bottom:14px; z-index:40; font-size:12px; color:var(--muted); user-select:none; pointer-events:none;}
+  #notes{position:fixed; left:0; right:0; bottom:0; z-index:50; background:rgba(15,23,42,.94); color:#e2e8f0;
+    padding:20px 28px 24px; font-size:16px; line-height:1.55; display:none; max-height:38vh; overflow:auto;}
+  #notes.shown{display:block;}
+  #notes .nlab{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin-bottom:8px;}
+
+  /* ================= outline-deck additions ================= */
+  /* figure with step reveals: covers fade away, rings pulse in.
+     Coordinates are normalized [0,1] over the image. */
+  .rwell{position:relative;}
+  .fw{position:relative; flex:none;}
+  .fw > img{position:absolute; inset:0; width:100%; height:100%; display:block !important; object-fit:contain;}
+  .fw .cov{position:absolute; background:var(--bg); transition:opacity .55s ease;}
+  .fw .cov.b{opacity:1; transform:none;}
+  .fw .cov.b.shown{opacity:0;}
+  .fw .ring{position:absolute; border:3px solid var(--ochre); border-radius:10px; pointer-events:none;}
+  .fw .ring.b{transform:scale(1.06);}
+  .fw .ring.b.shown{transform:none; animation:ringpulse 1.6s ease-in-out infinite;}
+  .fw .dim{position:absolute; background:rgba(255,255,255,.72); transition:opacity .45s ease; opacity:0;}
+  .fw .dim.b{transform:none;}
+  .fw .dim.b.shown{opacity:1;}
+  @keyframes ringpulse{0%,100%{box-shadow:0 0 0 0 rgba(180,83,9,.35)} 50%{box-shadow:0 0 0 8px rgba(180,83,9,0)}}
+
+  /* outline note: what the animation for this slide should become (visible
+     only in "draft" mode, toggled with d) */
+  .todo{position:absolute; right:2vw; top:2vh; max-width:30vw; font-size:.8rem; line-height:1.35;
+    background:#fff7ed; color:#9a3412; border:1px dashed #fdba74; border-radius:10px; padding:.6em .8em; display:none; z-index:5;}
+  body.draft .todo{display:block;}
+  .cite{position:absolute; left:6vw; bottom:5.2vh; font-size:1rem; color:var(--ink);}  /* Fer 2026-10-07: citations slightly larger everywhere, and black, not gray (was .78rem muted) */
+  /* a figure inside a column fills the column's height */
+  .col > figure.fig{height:100%;}
+
+  /* ---------- video beats: vid() / vcue() (added by section 06) ---------- */
+  .vwell{position:relative;}
+  .vwell video{display:block; max-width:100%; max-height:100%; border-radius:12px; background:var(--panel);}
+  .vreplay{position:absolute; right:12px; bottom:12px; width:36px; height:36px; border-radius:50%;
+    border:1px solid var(--border); background:rgba(255,255,255,.9); color:var(--ink); font-size:18px;
+    line-height:1; cursor:pointer; opacity:0; transition:opacity .2s;}
+  .vwell:hover .vreplay{opacity:1;}
+  .vcue.shown:not(.vcur){opacity:.38;}
+  .vchips{display:flex; gap:.8vw; justify-content:center; flex-wrap:wrap;}
+  .vchip{font-size:clamp(.95rem,1.35vw,1.2rem); padding:.45em .9em; border-radius:999px; border:1.5px solid currentColor; background:var(--bg); white-space:nowrap;}
+  .vchip.vcur{box-shadow:0 0 0 4px color-mix(in srgb, currentColor 18%, transparent);}
+  h3.vq{font-family:var(--serif); font-weight:700; color:var(--ink); font-size:clamp(1.2rem,1.9vw,1.6rem); text-align:center;}
+
+  /* ================= Fer, 2026-10-07: her slide font, no colored text =================
+     Every slide in Calibri (titles in Calibri Light, like her PowerPoint), and text in black.
+     Color stays only in figures and data marks, never in words. Fonts: vendor/calibri.css. */
+  :root{
+    --serif: 'Deck Calibri', Calibri, Carlito, 'Helvetica Neue', Arial, sans-serif;
+    --sans:  'Deck Calibri', Calibri, Carlito, 'Helvetica Neue', Arial, sans-serif;
+  }
+  html, body, #root, .slide, .stage, button, input{font-family:var(--sans);}
+  h1.t{font-weight:300; letter-spacing:0;}
+  h1.t b, h1.t strong{font-weight:400;}
+  /* no colored text: titles, emphasis, accents, captions, leads, cards */
+  h1.t, h1.t em, h1.t em.pine, h1.t em.ochre, h1.t em.plum, h1.t em.slate,
+  .accent-pine, .accent-ochre, .accent-plum, .accent-slate,
+  .lead, .lead .hl, em.term, .eyebrow, .sub, .card h3, .card p, .card .sub,
+  ul.frag li, ul.frag li .hl, ol.road li, ol.road li b,
+  figure.fig figcaption, .judgecap, .stat b, .stat span, .veclab, .mx .rowlab, .cite,
+  .judgeline .verdict, .judgeline .stim, .judgeline .judge{color:var(--ink) !important;}
+  h1.t em{font-style:normal;}
+  /* feedback numbering "14.3" (slide.click): readable over scenes too */
+  #hud{z-index:70; font-size:13px; color:var(--ink); background:rgba(255,255,255,.85); padding:2px 8px; border-radius:999px; font-variant-numeric:tabular-nums;}

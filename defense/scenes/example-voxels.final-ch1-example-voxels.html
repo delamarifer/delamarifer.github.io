@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two example voxels</title>
+<!-- the anchor brain's box, shared by every Ch. 1 experiment scene (owned by ch1-experiment) -->
+<link rel="stylesheet" href="shared/anchor.css">
+<style>
+  /* Fonts: the engine injects scenes/shared/deck-font.css (Calibri) into this frame. */
+  :root{
+    --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0;
+    --pine:#3f7357; --ochre:#b45309;      /* pin and scatter-key colours: marks, never words */
+    --sans:'Deck Calibri', Calibri, Carlito, 'Helvetica Neue', Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:#fff; color:var(--ink); font-family:var(--sans); overflow:hidden;
+        cursor:pointer; user-select:none; -webkit-user-select:none; }
+
+  /* title above --anchor-top, at the deck's h1.t size and weight (Calibri Light) */
+  h1{ position:absolute; left:var(--anchor-left); top:3.6vh; font-family:var(--sans);
+      font-weight:300; color:var(--ink); font-size:clamp(1.8rem,3.5vw,3rem); line-height:1.05; }
+
+  /* ── the anchor brain: Fig. 4A locator + enlargement, exactly as region-definition.html ── */
+  #brain{ width:100%; height:100%; display:block; overflow:visible; }
+  .fade{ opacity:0; transition:opacity .5s ease; }
+  .fade.on{ opacity:1; }
+  .numeral text{ font-weight:700; fill:#fff; stroke:#000; stroke-width:9; paint-order:stroke;
+                 text-anchor:middle; dominant-baseline:central; }
+  .pin .ring{ fill:#fff; stroke-width:13; }
+  .pin .pulse{ fill:none; stroke-width:10; animation:vpulse 1.8s ease-out infinite;
+               transform-box:fill-box; transform-origin:center; }
+  .pin.quiet .pulse{ animation:none; opacity:0; }
+  .pin line{ stroke:var(--ink); stroke-width:7; }
+  @keyframes vpulse{ 0%{ transform:scale(.6); opacity:.9 } 100%{ transform:scale(2.4); opacity:0 } }
+  #pin1 .ring, #pin1 .pulse{ stroke:var(--pine); }  #pin1 .dot{ fill:var(--pine); }
+  #pin2 .ring, #pin2 .pulse{ stroke:var(--ochre); } #pin2 .dot{ fill:var(--ochre); }
+  /* labels are words, so black; a white halo keeps them legible on the surface */
+  .plab{ font-size:124px; font-weight:700; fill:var(--ink); stroke:#fff; stroke-width:22;
+         stroke-linejoin:round; paint-order:stroke; }
+  .plab tspan.sub{ font-size:80px; font-weight:400; }
+
+  /* ── the two scatters, cut from image7.png at its whitespace gap (x 606-693) ── */
+  #panels{ position:absolute; display:flex; align-items:flex-start; }
+  .pan{ position:relative; opacity:0; transition:opacity .45s ease; }
+  .pan.on{ opacity:1; }
+  /* colour key tying each scatter to its pin */
+  .pan .strip{ height:6px; border-radius:2px; margin:0 6% 4px 14%; }
+  #pan1 .strip{ background:var(--pine); } #pan2 .strip{ background:var(--ochre); margin-left:8%; }
+  .pan img{ display:block; width:100%; height:auto; }
+
+  #cap{ position:absolute; left:var(--anchor-left); bottom:4.6vh; max-width:70vw;
+    font-size:clamp(15px,1.6vw,23px); font-weight:500; color:var(--ink); line-height:1.3;
+    min-height:1.3em; transition:opacity .3s ease; pointer-events:none; }
+  #cap.swap{ opacity:0; }
+
+  #dots{ position:absolute; right:2rem; bottom:5vh; display:flex; gap:.42rem; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1;
+        transition:background .2s, border-color .2s; cursor:pointer; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:fixed; inset:auto 0 0 0; max-height:52vh; overflow:auto; background:#0f172a;
+          color:#e2e8f0; padding:1.5rem 3vw 2rem; font-size:15px; line-height:1.6; display:none;
+          pointer-events:none; }
+  #notes.on{ display:block; }
+  #notes b{ color:#fff; }
+</style>
+</head>
+<body>
+  <h1>Responses of two example voxels</h1>
+
+  <div class="anchor-brain">
+    <!-- Same SVG as region-definition.html (the part just before this one), so the cut is
+         continuous: #bw is whole-regions.png; the enlargement below re-uses it at 1.947×.
+         This part's overlays sit in the enlargement's frame (zoom-regions.png pixels). -->
+    <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
+      </defs>
+      <g id="bw"><image href="../assets/final/ch1-example-voxels/outline/anchor/whole-regions.png?v=3" width="1947" height="1580"/></g>
+      <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
+      <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
+      <!-- zoom-regions.png pixels from here on -->
+      <g id="zf" transform="translate(0 1640) scale(1.947)">
+        <image class="fade" id="wash1"  href="../assets/final/ch1-example-voxels/outline/ev-wash-r1.png?v=3"  width="1000" height="686"/>
+        <image class="fade" id="wash13" href="../assets/final/ch1-example-voxels/outline/ev-wash-r13.png?v=3" width="1000" height="686"/>
+      </g>
+      <g class="numeral" font-size="96">
+        <text x="771" y="2029">1</text><text x="1373" y="2364">2</text><text x="629" y="2401">3</text>
+      </g>
+      <g class="pin fade" id="pin1"><line/><circle class="pulse" r="46"/><circle class="ring" r="46"/><circle class="dot" r="18"/>
+        <text class="plab">Region 1 voxel<tspan class="sub" dy="92">parcel PBelt</tspan></text></g>
+      <g class="pin fade" id="pin2"><line/><circle class="pulse" r="46"/><circle class="ring" r="46"/><circle class="dot" r="18"/>
+        <text class="plab">Region 3 voxel<tspan class="sub" dy="92">parcel A5</tspan></text></g>
+    </svg>
+  </div>
+  <div class="anchor-content" id="acontent"></div>
+
+  <div id="panels">
+    <div class="pan" id="pan1"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-pbelt.png?v=3" alt="Region 1 voxel scatter"></div>
+    <div class="pan" id="pan2"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-a5.png?v=3" alt="Region 3 voxel scatter"></div>
+  </div>
+
+  <p id="cap"></p>
+  <div id="dots"></div>
+  <div id="notes"></div>
+
+<script>
+// ═══ WHAT THIS SCENE SHOWS ═══════════════════════════════════════════════════
+// Part ch1-example-voxels, on the anchor brain (outline/contracts/anchor-brain.md), right after
+// ch1-regions (regions + reliable voxels): the same Fig. 4A locator and enlargement, then a pin
+// on a Region 1 voxel (PBelt) and its scatter, then a Region 3 voxel (A5) and its scatter. The
+// scatters are image7.png cut in two; each grows out of its pin. One page of content, so one
+// slide (deck-wide rule, 2026-10-07).
+//
+//   0 regions, as ch1-regions leaves them · 1 pin PBelt · 2 its scatter
+//   3 pin A5 · 4 its scatter
+//
+// Words are black; colour is only on marks (pins, the scatters' key strips, the data).
+// The washes come from the region masks (tools/build_example_voxel_overlays.py).
+//
+// PIN POSITIONS ARE INTERIM: a point deep inside Region 1 / Region 3, on the posterior
+// side, chosen by that tool. The exact PBelt and A5 voxel positions are requested
+// (anchor-brain-requests/ch1-example-voxels.md).
+//
+// Deck hook: window.exampleVoxels = {advance, back, atStart, atEnd, reset, resetToEnd,
+//                                    getBeat, count, setBeat}
+const SLIDE_NAME = 'exampleVoxels';
+
+// The enlargement maps zoom-regions.png pixel (x, y) to SVG (1.947x, 1640 + 1.947y).
+const Z = 1.947, ZY = 1640, toSvg = ([x, y]) => [x*Z, ZY + y*Z];
+// zoom pixels for the pins (interim); label anchor in SVG units, above (−) or below the pin
+const PINS = [
+  {xy:[267, 189], lab:[300, 1800], up:true},    // Region 1 · PBelt
+  {xy:[198, 357], lab:[120, 2800], up:false},   // Region 3 · A5
+];
+
+const BEATS = [
+  { cap:'Two example voxels', pins:[0,0], pans:[0,0], wash:null },
+  { cap:'A Region 1 voxel, in parcel PBelt', pins:[1,0], pans:[0,0], wash:'1', live:1 },
+  { cap:'Region 1 voxel: natural and matched responses similar (NSE 0.34)', pins:[1,0], pans:[1,0], wash:'1', grow:1 },
+  { cap:'A Region 3 voxel, in parcel A5', pins:[1,1], pans:[1,0], wash:'13', live:2 },
+  { cap:'Region 3 voxel: they diverge (NSE 0.70)', pins:[1,1], pans:[1,1], wash:'13', grow:2 },
+];
+const N = BEATS.length;
+const SCRIPT = [
+  `<b>Two example voxels.</b> The same three regions. Before pooling over a region, here is
+   what the comparison looks like for single voxels.`,
+  `<b>A voxel in Region 1.</b> One voxel in parcel PBelt, in Region 1. (The pin marks where in
+   the region; the data are the paper’s example voxel from that parcel.)`,
+  `<b>Similar.</b> Each point is one natural sound: across, the voxel’s response to the natural
+   sound; up, its response to the sound’s spectrotemporal model-matched version. Points near
+   the diagonal mean the voxel responds to the two about equally. For this Region 1 voxel they
+   do: NSE 0.34.`,
+  `<b>A voxel in Region 3.</b> And one in parcel A5, in Region 3, the most non-primary region.`,
+  `<b>Diverge.</b> Many natural sounds drive this voxel much more than their matched versions
+   do, so the points fall below the diagonal: NSE 0.70. The spectrotemporal model misses what
+   this voxel responds to.`,
+];
+
+// ── DOM ──────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const capEl = $('cap'), dotsEl = $('dots'), notesEl = $('notes'), panelsEl = $('panels');
+const PIN = [$('pin1'), $('pin2')], PAN = [$('pan1'), $('pan2')];
+const WASH = {'1':$('wash1'), '13':$('wash13')};
+
+PINS.forEach((p, i) => {
+  const g = PIN[i], [x, y] = toSvg(p.xy), [lx, ly] = p.lab;
+  g.querySelectorAll('circle').forEach(c => { c.setAttribute('cx', x); c.setAttribute('cy', y); });
+  const t = g.querySelector('text');
+  // above: the two lines end at ly; below: the first line starts at ly
+  t.setAttribute('x', lx); t.setAttribute('y', p.up ? ly - 92 : ly + 100);
+  t.querySelector('tspan').setAttribute('x', lx);
+  const ln = g.querySelector('line');               // leader: pin → label's near edge
+  ln.setAttribute('x1', x); ln.setAttribute('y1', y + (p.up ? -50 : 50));
+  ln.setAttribute('x2', lx + 120); ln.setAttribute('y2', p.up ? ly + 30 : ly);
+});
+for(let i=0; i<N; i++){ const d = document.createElement('div'); d.className = 'dot';
+  d.addEventListener('click', e => { e.stopPropagation(); jump(i); }); dotsEl.appendChild(d); }
+
+// scatters: side by side, same height, centred in .anchor-content
+const IMG = [{w:612, h:633}, {w:540, h:633}];
+function layoutPanels(){
+  const c = $('acontent').getBoundingClientRect(), gap = innerWidth*0.012;
+  const s = Math.min((c.width - gap)/(IMG[0].w + IMG[1].w), (c.height - 10)/IMG[0].h);
+  const tw = s*(IMG[0].w + IMG[1].w) + gap;
+  panelsEl.style.left = (c.left + (c.width - tw)/2) + 'px';
+  panelsEl.style.top = (c.top + (c.height - s*IMG[0].h)/2) + 'px';
+  panelsEl.style.gap = gap + 'px';
+  PAN.forEach((p, i) => p.style.width = (s*IMG[i].w) + 'px');
+}
+addEventListener('resize', layoutPanels);
+if(window.ResizeObserver) new ResizeObserver(layoutPanels).observe($('acontent'));
+
+// the scatter grows out of its pin: one click, one animation
+let growAnim = null;
+function grow(i){
+  const p = PAN[i], r = p.getBoundingClientRect(), q = PIN[i].querySelector('.ring').getBoundingClientRect();
+  const dx = (q.left + q.width/2) - (r.left + r.width/2), dy = (q.top + q.height/2) - (r.top + r.height/2);
+  growAnim = p.animate([
+    {transform:`translate(${dx}px,${dy}px) scale(.04)`, opacity:0},
+    {transform:`translate(${dx*.25}px,${dy*.25}px) scale(.55)`, opacity:1, offset:.45},
+    {transform:'none', opacity:1}],
+    {duration:900, easing:'cubic-bezier(.3,.7,.25,1)'});
+}
+
+let phase = 0, capTimer = null;
+function sync(animate){
+  const b = BEATS[phase];
+  capEl.classList.add('swap'); clearTimeout(capTimer);
+  capTimer = setTimeout(() => { capEl.textContent = b.cap; capEl.classList.remove('swap'); }, 150);
+  [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', i <= phase));
+  for(let i=0; i<2; i++){
+    PIN[i].classList.toggle('on', !!b.pins[i]);
+    PIN[i].classList.toggle('quiet', b.live !== i+1);   // only the pin just placed pulses
+    PAN[i].classList.toggle('on', !!b.pans[i]);
+  }
+  Object.entries(WASH).forEach(([k, el]) => el.classList.toggle('on', b.wash === k));
+  if(growAnim){ growAnim.cancel(); growAnim = null; }
+  if(animate && b.grow) grow(b.grow - 1);
+  notesEl.innerHTML = SCRIPT[phase];
+}
+function advance(){ if(phase >= N-1) return; phase++; sync(true); }
+function goBack(){ if(phase <= 0) return; phase--; sync(false); }
+function jump(p){ phase = Math.max(0, Math.min(N-1, p)); sync(false); }
+
+addEventListener('click', e => { if(!e.target.closest('#dots')) advance(); });
+addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); advance(); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); goBack(); }
+  else if(e.key === 'n' || e.key === 'N'){ notesEl.classList.toggle('on'); }
+  else if(e.key === 'r' || e.key === 'R'){ jump(0); }
+  else if(e.key >= '1' && e.key <= String(N)){ jump(+e.key - 1); }
+});
+
+window[SLIDE_NAME] = {
+  advance, back: goBack,
+  atStart: () => phase <= 0, atEnd: () => phase >= N-1,
+  reset: () => jump(0), resetToEnd: () => jump(N-1),
+  getBeat: () => phase, count: () => N, setBeat: jump,   // for the deck's slide.click number
+};
+
+layoutPanels(); sync(false);
+</script>
+</body>
+</html>

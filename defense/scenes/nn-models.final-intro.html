@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural networks as candidate computations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap">
+<style>
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b;
+    --border:#e2e8f0; --panel:#f8fafc;
+    --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--body); font-family:var(--sans); overflow:hidden;
+        cursor:pointer; user-select:none; -webkit-user-select:none; }
+  header{ position:absolute; left:6vw; top:7vh; right:6vw; z-index:5; pointer-events:none; }
+  h1{ font-family:var(--serif); font-weight:900; color:var(--ink);
+      font-size:clamp(1.5rem,2.75vw,2.6rem); line-height:1.05; letter-spacing:-.015em; }
+  h1 em{ font-style:normal; color:var(--slate); }
+
+  /* the network schematic (viewBox 1000×560), placed like the brain in ac-papers */
+  #net{ position:absolute; overflow:visible; transition:opacity .6s ease; }
+  body.popped #net{ opacity:.12; }
+  #net text{ font-family:var(--sans); }
+  #net .lab{ font-size:20px; fill:var(--muted); }
+  #net .big{ font-size:24px; font-weight:700; }
+  #net [data-step]{ opacity:0; transition:opacity .5s ease; }
+  #net [data-step].shown{ opacity:1; }
+  #net .flow{ opacity:0; }
+  body.flow #net .flow{ opacity:1; }
+  #net .train{ opacity:0; }
+  body.train #net .train{ opacity:1; }
+
+  #links{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:2; }
+  #links line{ stroke-width:2; opacity:0; transition:opacity .4s ease; }
+  #links line.on{ opacity:.85; transition-delay:.55s; }
+  body.popped #links line.on{ opacity:.25; }
+  #links circle{ opacity:0; transition:opacity .4s ease; }
+  #links circle.on{ opacity:1; }
+  #links circle.active{ animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ r:9px; } 50%{ r:14px; } }
+
+  /* paper groups: figures + citation, no box (same as ac-papers) */
+  .grp{ position:absolute; left:0; top:0; width:600px; transform-origin:0 0; opacity:0; z-index:3;
+        transition:transform .8s cubic-bezier(.3,.7,.2,1), opacity .45s ease; }
+  .grp.on{ opacity:1; }
+  .grp.big{ z-index:4; }
+  .grp .figs{ display:flex; gap:18px; align-items:flex-end; }
+  .grp figure{ flex:1; min-width:0; }
+  .grp .im{ height:270px; display:flex; align-items:flex-end; justify-content:center; }
+  .grp .im img{ max-width:100%; max-height:100%; object-fit:contain; display:block; }
+  .grp .ph{ width:100%; height:100%; border:2px dashed #cbd5e1; border-radius:8px; display:flex;
+            flex-direction:column; align-items:center; justify-content:center; gap:6px;
+            color:var(--muted); font-size:16px; text-align:center; padding:14px; }
+  .grp figcaption{ margin-top:8px; font-size:17px; color:var(--muted); text-align:center; }
+  .grp .take{ margin-top:16px; font-size:26px; line-height:1.3; color:var(--ink); text-align:center; }
+  .grp .tag{ display:none; margin-top:6px; font-size:34px; font-weight:700; line-height:1.1; text-align:center; }
+  .grp.flag .take{ display:none; }
+  .grp.flag .tag{ display:block; }
+  .grp.flag figcaption{ font-size:26px; }
+
+  footer{ position:absolute; left:6vw; right:6vw; bottom:0; padding:.6rem 0 1.2rem; display:flex;
+          justify-content:space-between; align-items:flex-end; gap:2rem; z-index:6; pointer-events:none; }
+  #cap{ font-size:clamp(14px,1.5vw,22px); font-weight:500; color:var(--ink); line-height:1.3;
+        max-width:70vw; min-height:1.3em; transition:opacity .3s ease; }
+  #cap.swap{ opacity:0; }
+  #dots{ display:flex; gap:.42rem; padding-bottom:.35em; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  body.instant *{ transition:none !important; }
+</style>
+</head>
+<body>
+<header><h1>Neural networks as <em>candidate computations</em></h1></header>
+
+<svg id="net" viewBox="0 0 1000 560" aria-label="Schematic of a task-optimized network compared with auditory cortex">
+  <defs>
+    <linearGradient id="coch" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#1e3a5f"/><stop offset=".3" stop-color="#5d8fc7"/>
+      <stop offset=".55" stop-color="#e6c35c"/><stop offset=".8" stop-color="#5d8fc7"/><stop offset="1" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <path id="pWord"  d="M150,190 L520,190 L560,110 L740,110"/>
+    <path id="pGenre" d="M150,190 L520,190 L560,270 L740,270"/>
+    <path id="pBack"  d="M740,110 L560,110 L520,190 L180,190"/>
+  </defs>
+
+  <!-- step 1: sound in -->
+  <g data-step="1">
+    <rect x="30" y="110" width="110" height="160" rx="6" fill="url(#coch)" opacity=".85"/>
+    <g stroke="#fff" stroke-width="2" opacity=".55">
+      <line x1="44" y1="120" x2="44" y2="260"/><line x1="66" y1="130" x2="66" y2="250"/>
+      <line x1="88" y1="118" x2="88" y2="262"/><line x1="110" y1="135" x2="110" y2="245"/><line x1="128" y1="125" x2="128" y2="255"/>
+    </g>
+    <text class="lab" x="85" y="300" text-anchor="middle">sound</text>
+  </g>
+
+  <!-- step 2: stages -->
+  <g data-step="2" fill="var(--slate)">
+    <rect x="180" y="90"  width="40" height="200" rx="5" opacity=".35"/>
+    <rect x="250" y="105" width="40" height="170" rx="5" opacity=".48"/>
+    <rect x="320" y="118" width="40" height="144" rx="5" opacity=".62"/>
+    <rect x="390" y="130" width="40" height="120" rx="5" opacity=".76"/>
+    <rect x="460" y="140" width="40" height="100" rx="5" opacity=".9"/>
+    <text class="lab" x="340" y="320" text-anchor="middle">stages of simple operations</text>
+  </g>
+
+  <!-- step 3: task heads (Kell et al. 2018: shared stages, then word and genre branches) -->
+  <g data-step="3">
+    <rect x="540" y="75"  width="34" height="70" rx="5" fill="var(--slate)"/>
+    <rect x="600" y="85"  width="34" height="50" rx="5" fill="var(--slate)"/>
+    <rect x="540" y="235" width="34" height="70" rx="5" fill="var(--plum)"/>
+    <rect x="600" y="245" width="34" height="50" rx="5" fill="var(--plum)"/>
+    <path d="M500,190 L540,110 M500,190 L540,270" stroke="var(--muted)" stroke-width="2" fill="none"/>
+    <text class="big" x="670" y="118" fill="var(--slate)">word</text>
+    <text class="big" x="670" y="278" fill="var(--plum)">genre</text>
+    <text class="lab" x="760" y="118" font-style="italic">“dog”</text>
+    <text class="lab" x="760" y="278" font-style="italic">jazz</text>
+  </g>
+
+  <!-- signal flow (loops while shown, from step 2) -->
+  <g class="flow">
+    <circle r="7" fill="var(--ochre)"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#pWord"/></animateMotion></circle>
+    <circle r="7" fill="var(--ochre)"><animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite"><mpath href="#pGenre"/></animateMotion></circle>
+  </g>
+  <!-- training: error signal back through the network (step 3 only) -->
+  <g class="train">
+    <circle r="6" fill="#b91c1c" opacity=".8"><animateMotion dur="2.2s" begin=".6s" repeatCount="indefinite"><mpath href="#pBack"/></animateMotion></circle>
+  </g>
+
+  <!-- step 4: regression — a stage's features predict each voxel -->
+  <g data-step="4">
+    <image href="../assets/final/intro/3mt/clearbrain.webp?v=3" x="615" y="330" width="275" height="219"/>
+    <path d="M340,262 C340,380 560,440 745,455" stroke="var(--pine)" stroke-width="3" fill="none" stroke-dasharray="8 6"/>
+    <circle cx="745" cy="455" r="8" fill="var(--pine)"/>
+    <text class="lab" x="160" y="400" fill="var(--pine)" font-weight="700">regression:</text>
+    <text class="lab" x="160" y="426">stage features → each voxel</text>
+  </g>
+
+  <!-- step 5: RSA — which sounds a stage and a region treat as similar (schematic) -->
+  <g data-step="5" id="rsa">
+    <text class="lab" x="160" y="470" fill="var(--pine)" font-weight="700">RSA:</text>
+    <text class="lab" x="160" y="496">same sounds similar?</text>
+  </g>
+</svg>
+
+<svg id="links"></svg>
+<div id="groups"></div>
+<footer><p id="cap"></p><div id="dots"></div></footer>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Neural networks as candidate computations (Josh: "Neural network models have
+// been one way people have proposed might enable us to understand that. Talk
+// about how that works and what's known").
+//
+// ACT 0 — TITLE   (0):     the claim.
+// ACT 1 — HOW     (1-3):   sound in; stages; trained on words and genres
+//                          (signal flows forward; error signal flows back).
+// ACT 2 — COMPARE (4-5):   regression (stage → voxel); RSA (similarity structure).
+// ACT 3 — KNOWN   (6..):   each paper's result pops up big, then shrinks to a flag
+//                          pinned to the part of the network it speaks to.
+// ACT 4 — MAP     (last):  all flags.
+//
+// Figures: assets/outline/papers/<id>.png (open-access papers). Missing files
+// show a dashed placeholder. RSA matrices are schematic, not data.
+// ─────────────────────────────────────────────────────────────────────────────
+const SLIDE_NAME = 'nnModels';
+const NET_AR = 1000 / 560;
+const BASE_W = 600;
+const HOW = ['Neural networks as candidate computations',
+  'A sound comes in',
+  'It passes through stages of simple operations',
+  'The network is trained to perform tasks: recognize words and musical genres',
+  'Regression: predict each voxel’s response from a stage’s features',
+  'RSA: do a stage and a region treat the same sounds as similar?'];
+const NH = HOW.length;                  // beats before the papers
+
+// anchors over the schematic, in viewBox units
+const A = { heads:[650,190], lastStage:[480,190], midStage:[340,190], link:[420,400], brain:[745,455] };
+const GROUPS = [
+  { tag:'Vision: performance ↔ cortex', col:'--slate', slot:['L', .30], anchors:['lastStage'],
+    take:'Networks that perform the task better predict <b>visual cortex</b> better',
+    figs:[{id:'yamins2014', cite:'Yamins et al., 2014'}] },
+  { tag:'Primate behavior', col:'--slate', slot:['L', .56], anchors:['heads'],
+    take:'Networks reproduce primates’ <b>object recognition</b> behavior — but not image by image',
+    figs:[{id:'rajalingham2018', cite:'object level'}, {id:'rajalingham2018b', cite:'image level'}], cite:'Rajalingham et al., 2018' },
+  { tag:'Brain-Score', col:'--muted', slot:['L', .82], anchors:['link'],
+    take:'<b>Benchmarks</b> score models by how well they predict brain and behavior',
+    figs:[{id:'schrimpf2018', cite:'Schrimpf et al., 2018'}] },
+  { tag:'Audition', col:'--plum', slot:['R', .32], anchors:['heads','brain'],
+    take:'Trained on words and genres: <b>human-like behavior</b>, and better predictions of <b>auditory cortex</b>',
+    figs:[{id:'kell2018b', cite:'behavior'}, {id:'kell2018a', cite:'auditory cortex'}], cite:'Kell et al., 2018' },
+  { tag:'Many models', col:'--pine', slot:['R', .68], anchors:['midStage','brain'],
+    take:'<b>Many</b> audio models predict auditory cortex, and their <b>stages map onto regions</b>',
+    figs:[{id:'tuckute2023', cite:'many models'}, {id:'tuckute2023b', cite:'stage ↔ region'}], cite:'Tuckute et al., 2023' },
+];
+const N = GROUPS.length;
+const plain = s => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
+const BEATS = [...HOW, ...GROUPS.map(g => `${plain(g.tag)}: ${g.cite ? plain(g.cite) : g.figs.map(f => plain(f.cite)).join('; ')}`),
+  'What is known: networks predict cortex and behavior'];
+const MAX = BEATS.length - 1;
+
+// ── schematic RSA matrices (not data) ──
+(function(){
+  const g = document.getElementById('rsa'), NS = 'http://www.w3.org/2000/svg';
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const base = [...Array(6)].map((_, i) => [...Array(6)].map((_, j) => i === j ? 1 : (Math.floor(i/2) === Math.floor(j/2) ? .7 : .15)));
+  const mat = (x0, y0, col, noise) => base.forEach((row, i) => row.forEach((v, j) => {
+    const r = document.createElementNS(NS, 'rect');
+    const w = Math.max(.05, Math.min(1, v + (i === j ? 0 : (rnd() - .5) * noise)));
+    Object.entries({x:x0 + j*13, y:y0 + i*13, width:12, height:12, fill:`var(${col})`, opacity:w.toFixed(2)})
+      .forEach(([k, val]) => r.setAttribute(k, val));
+    g.appendChild(r);
+  }));
+  mat(370, 452, '--slate', .3);
+  const t = document.createElementNS(NS, 'text'); t.setAttribute('x', 458); t.setAttribute('y', 500);
+  t.setAttribute('class', 'big'); t.setAttribute('fill', 'var(--muted)'); t.textContent = '≈'; g.appendChild(t);
+  mat(490, 452, '--pine', .45);
+})();
+
+// ── build paper groups ──
+const NS = 'http://www.w3.org/2000/svg';
+const groupsEl = document.getElementById('groups'), links = document.getElementById('links');
+GROUPS.forEach(g => {
+  const el = document.createElement('div');
+  el.className = 'grp';
+  el.innerHTML = `<div class="figs">${g.figs.map(f => `<figure>
+      <div class="im"><img src="${f.src || `../assets/outline/papers/${f.id}.png`}" alt=""
+        onerror="this.outerHTML='<div class=ph><b>${f.id}.png</b>figure to come</div>'"></div>
+      <figcaption>${f.cite}</figcaption></figure>`).join('')}</div>
+    ${g.cite ? `<div style="margin-top:4px; font-size:17px; color:var(--muted); text-align:center;" class="gcite">${g.cite}</div>` : ''}
+    <div class="take">${g.take}</div>
+    <div class="tag" style="color:var(${g.col})">${g.tag}</div>`;
+  groupsEl.appendChild(el);
+  g.el = el;
+  g.lines = g.anchors.map(() => { const l = document.createElementNS(NS, 'line');
+    l.setAttribute('stroke', `var(${g.col})`); links.appendChild(l); return l; });
+});
+const DOT = {};
+GROUPS.forEach(g => g.anchors.forEach(a => { if(!DOT[a]){ const d = document.createElementNS(NS, 'circle');
+  d.setAttribute('r', 9); d.setAttribute('fill', `var(${g.col})`); d.setAttribute('stroke', '#fff');
+  d.setAttribute('stroke-width', 3); DOT[a] = d; } }));
+Object.values(DOT).forEach(d => links.appendChild(d));
+
+// ── layout ──
+let L = null;
+function layout(){
+  const W = innerWidth, H = innerHeight;
+  const top = H * .2, bottom = H * .92;
+  const nw = Math.min(W * .58, (bottom - top) * NET_AR), nh = nw / NET_AR;
+  const nx = (W - nw) / 2, ny = top + (bottom - top - nh) / 2;
+  Object.assign(document.getElementById('net').style, {left:nx+'px', top:ny+'px', width:nw+'px', height:nh+'px'});
+  L = { W, H, flagW: Math.min(W * .17, nx - W * .03),
+        bigW: Math.min(W * .7, H * .72 / (400 / BASE_W)),
+        pt: k => [nx + A[k][0] / 1000 * nw, ny + A[k][1] / 560 * nh] };
+}
+function place(g, mode){
+  const el = g.el;
+  el.classList.toggle('flag', mode !== 'big');
+  const h = el.offsetHeight;
+  let x, y, s;
+  if(mode === 'flag'){
+    s = L.flagW / BASE_W;
+    x = g.slot[0] === 'L' ? L.W * .02 : L.W * .98 - L.flagW;
+    y = L.H * g.slot[1] - h * s / 2;
+  } else {
+    s = L.bigW / BASE_W * (mode === 'big' ? 1 : .55);
+    x = (L.W - BASE_W * s) / 2; y = L.H * .57 - h * s / 2;
+  }
+  el.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  el.classList.toggle('on', mode !== 'hidden');
+  el.classList.toggle('big', mode === 'big');
+  const fx = g.slot[0] === 'L' ? L.W * .02 + L.flagW : L.W * .98 - L.flagW, fy = L.H * g.slot[1];
+  g.anchors.forEach((a, j) => {
+    const [ax, ay] = L.pt(a), l = g.lines[j];
+    l.setAttribute('x1', fx); l.setAttribute('y1', fy); l.setAttribute('x2', ax); l.setAttribute('y2', ay);
+    l.classList.toggle('on', mode === 'flag');
+  });
+}
+
+let beat = 0;
+function render(){
+  document.querySelectorAll('#net [data-step]').forEach(el => el.classList.toggle('shown', beat >= +el.dataset.step));
+  document.body.classList.toggle('flow', beat >= 2 && beat < NH + 1);
+  document.body.classList.toggle('train', beat === 3);
+  const k = beat - NH;                          // papers act: k = 0..N
+  const cur = k >= 0 && k < N ? k : -1;
+  GROUPS.forEach((g, i) => place(g, i === cur ? 'big' : ((k >= 0 && i < k) || k >= N ? 'flag' : 'hidden')));
+  document.body.classList.toggle('popped', cur >= 0);
+  const on = new Set(), active = new Set();
+  GROUPS.forEach((g, i) => {
+    if(k >= 0 && i <= k && i !== cur) g.anchors.forEach(a => on.add(a));
+    if(i === cur) g.anchors.forEach(a => { on.add(a); active.add(a); });
+  });
+  Object.keys(DOT).forEach(a => {
+    const [x, y] = L.pt(a);
+    DOT[a].setAttribute('cx', x); DOT[a].setAttribute('cy', y);
+    DOT[a].classList.toggle('on', on.has(a)); DOT[a].classList.toggle('active', active.has(a));
+  });
+  const cap = document.getElementById('cap');
+  cap.classList.add('swap');
+  setTimeout(() => { cap.textContent = BEATS[beat]; cap.classList.remove('swap'); }, 150);
+  document.getElementById('dots').innerHTML =
+    BEATS.map((_, i) => `<span class="dot ${i <= beat ? 'on' : ''}"></span>`).join('');
+}
+function jump(b){
+  beat = Math.max(0, Math.min(MAX, b));
+  document.body.classList.add('instant'); render();
+  void document.body.offsetHeight;
+  requestAnimationFrame(() => document.body.classList.remove('instant'));
+}
+window[SLIDE_NAME] = {
+  advance(){ if(beat < MAX){ beat++; render(); } },
+  back(){ if(beat > 0){ beat--; render(); } },
+  atStart(){ return beat <= 0; }, atEnd(){ return beat >= MAX; },
+  reset(){ jump(0); }, resetToEnd(){ jump(MAX); },
+  getBeat(){ return beat; }, count(){ return MAX + 1; }, setBeat: jump,
+};
+addEventListener('resize', () => { layout(); jump(beat); });
+addEventListener('load', () => { layout(); jump(beat); });
+addEventListener('click', () => window[SLIDE_NAME].advance());
+if(window.parent === window){
+  addEventListener('keydown', e => {
+    if(['ArrowRight',' ','Enter'].includes(e.key)) window[SLIDE_NAME].advance();
+    else if(e.key === 'ArrowLeft') window[SLIDE_NAME].back();
+  });
+}
+layout(); jump(0);
+</script>
+</body>
+</html>

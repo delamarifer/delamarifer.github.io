@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the regions were defined</title>
+<link rel="stylesheet" href="../vendor/fraunces.css">
+<!-- the anchor brain's box, shared by every Ch. 1 experiment scene (owned by ch1-experiment) -->
+<link rel="stylesheet" href="shared/anchor.css">
+<style>
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0;
+    --slate:#38506e;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    /* region blues (anchor.json), never restyled */
+    --r1:#b7cfe8; --r2:#5d8fc7; --r3:#1f3f7a;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--body); font-family:var(--sans);
+        overflow:hidden; cursor:pointer; user-select:none; -webkit-user-select:none; }
+  #stage{ position:absolute; inset:0; }
+  /* the title sits above --anchor-top (contracts/anchor-brain.md), as in ch1-hypotheses */
+  h1{ position:absolute; left:var(--anchor-left); top:3.6vh;
+      font-family:var(--serif); font-weight:900; color:var(--ink);
+      font-size:clamp(1.8rem,3.5vw,3rem); line-height:1.05; letter-spacing:-.015em; }
+  h1 em{ font-style:normal; color:var(--slate); }
+  #brain, #fig{ position:absolute; inset:0; width:100%; height:100%; display:block; overflow:visible; }
+  text{ font-family:var(--sans); }
+  .numeral text{ font-family:var(--sans); font-weight:700; fill:#fff; stroke:#000; stroke-width:9;
+                 paint-order:stroke; text-anchor:middle; dominant-baseline:central;
+                 transition:opacity .5s ease; }
+
+  /* ── panel A of Supp. Fig. S4, redrawn ── */
+  .fade{ opacity:0; transition:opacity .5s ease; }
+  .fade.on{ opacity:1; }
+  /* S4 is transposed in the v14_6 full text: parcels across, NSE up */
+  .col{ transition:opacity .45s ease; }
+  .col .pn{ font-size:21px; fill:var(--ink); text-anchor:middle; }
+  .col .val{ font-size:19px; fill:var(--ink); text-anchor:middle; }
+  .col .pt{ fill:#1a1a1a; }
+  .tick{ font-size:18px; fill:var(--ink); text-anchor:end; dominant-baseline:central; }
+  .ax{ font-size:17px; fill:var(--ink); text-anchor:middle; }
+  .rlab{ font-size:21px; text-anchor:middle; }
+  .cnt{ font-size:19px; fill:var(--ink); text-anchor:middle; }
+  .cnt.pp{ font-weight:700; }
+  .foot{ font-size:14px; fill:var(--muted); text-anchor:middle; }
+  .band, .swatch, .rlab{ transition:opacity .5s ease; }
+  .rout{ transition:opacity .5s ease; }
+  /* Norman-Haignere & McDermott (2018) Fig. 3, cropped from the paper, never recoloured */
+  .nh{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+       justify-content:center; gap:1.2vh; opacity:0; transition:opacity .55s ease; pointer-events:none; }
+  .nh.on{ opacity:1; }
+  .nh img{ max-width:100%; max-height:88%; object-fit:contain; display:block; }
+  .nh .src{ font-size:1rem; color:var(--ink); }   /* citations: 1rem, ink (deck-wide, 2026-10-07) */
+  .boot *{ transition:none !important; }   /* the first frame lands without sliding in */
+
+  #cap{ position:absolute; left:var(--anchor-left); bottom:4.6vh; max-width:70vw;
+        font-size:clamp(15px,1.6vw,23px); font-weight:500; color:var(--ink); line-height:1.3;
+        min-height:1.3em; transition:opacity .3s ease; pointer-events:none; }
+  #cap.swap{ opacity:0; }
+  #dots{ position:absolute; right:2rem; bottom:5vh; display:flex; gap:.42rem; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:fixed; inset:auto 0 0 0; max-height:52vh; overflow:auto; background:#0f172a;
+          color:#e2e8f0; padding:1.5rem 3vw 2rem; font-size:15px; line-height:1.6; display:none; }
+  #notes.on{ display:block; }
+</style>
+</head>
+<body class="boot">
+<div id="stage">
+  <h1>How were the <em>regions</em> defined?</h1>
+  <div class="anchor-brain">
+    <!-- the anchor brain: the paper's Fig. 4A locator + enlargement (contracts/anchor-brain.md),
+         built exactly as in expected-outcomes.html / scanning-run.html so the cuts are continuous.
+         Everything inside #bw is in whole-regions.png pixels; the enlargement re-uses it. -->
+    <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
+      </defs>
+      <g id="bw">
+        <image href="../assets/final/ch1-regions/outline/anchor/whole-regions.png?v=2" width="1947" height="1580"/>
+        <!-- the region being named gets a thin outline (from its mask); the image is never recoloured -->
+        <image class="rout" data-r="1" href="../assets/final/ch1-regions/outline/rg-outline-r1.png?v=2" width="1947" height="1580" opacity="0"/>
+        <image class="rout" data-r="2" href="../assets/final/ch1-regions/outline/rg-outline-r2.png?v=2" width="1947" height="1580" opacity="0"/>
+        <image class="rout" data-r="3" href="../assets/final/ch1-regions/outline/rg-outline-r3.png?v=2" width="1947" height="1580" opacity="0"/>
+      </g>
+      <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
+      <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
+      <g class="numeral" font-size="96">
+        <text data-r="1" x="771" y="2029">1</text><text data-r="2" x="1373" y="2364">2</text><text data-r="3" x="629" y="2401">3</text>
+      </g>
+    </svg>
+  </div>
+  <div class="anchor-content">
+    <div class="nh" id="nhC"><img src="../assets/final/ch1-regions/outline/nh2018-fig3c-group.png?v=2" alt="NSE map, natural vs spectrotemporal model-matched, group of 12, 2018">
+      <span class="src">Norman-Haignere &amp; McDermott (2018), Fig. 3C · white outline: primary auditory cortex</span></div>
+    <div class="nh" id="nhD"><img src="../assets/final/ch1-regions/outline/nh2018-fig3d-annular.png?v=2" alt="NSE versus distance to the centre of primary auditory cortex, 2018">
+      <span class="src">Norman-Haignere &amp; McDermott (2018), Fig. 3D</span></div>
+    <svg id="fig" viewBox="0 0 1000 660" preserveAspectRatio="xMidYMid meet"
+    role="img" aria-label="Nine auditory parcels ranked by NSE in the Norman-Haignere and McDermott 2018 data, cut into three regions"></svg>
+  </div>
+  <p id="cap"></p>
+  <div id="dots"></div>
+</div>
+<div id="notes"></div>
+
+<script>
+// ═══ WHAT THIS SCENE SHOWS ═══════════════════════════════════════════════════
+// Part ch1-regions: how the three regions were defined, and which voxels in them are kept.
+// Supplementary Figure S4 (transposed, as in the v14_6 full text) is redrawn on the right;
+// its panel B is the anchor brain on the left (contracts/anchor-brain.md, same view), so
+// each group lights its region there. Comes right after the NSE explainer (ch1-nse).
+//
+// ACT 0 — CONTINUITY      (0):   the brain as ch1-nse leaves it; the question.
+// ACT 1 — PRIOR WORK      (1-3): the 2018 group map (Fig. 3C) · NSE vs distance to primary
+//                                cortex (Fig. 3D) · nine Glasser parcels, ranked on that map.
+// The brain is never greyed or recoloured (Fer, 2026-10-07); naming a region outlines it.
+// ACT 2 — THE CUT         (4-7): three groups of three · Region 1, 2, 3 in turn, outlined.
+// ACT 3 — THE VOXELS      (8-9): region sizes · keep only voxels that measured reliably.
+// The last frame has all three regions lit, which is how ch1-example-voxels opens.
+//
+// DATA, copied verbatim:
+//  - ranking: S4_plotted_values.csv, v14_6_incoming/figures/supp/S4_region_definition (same
+//    values as the 10-04 v14 build). Uncorrected NSE, natural vs spectrotemporal model-matched,
+//    on the 12-participant group map of Norman-Haignere & McDermott (2018); not this study.
+//  - counts: S4_region_sizes.csv (v14_6) and Supplementary Table S4 of
+//    MMS_fMRI_FullText_2026-10-05_v14_FD_2.docx (per-participant median and range).
+//  - Fig. 3C (group row + colourbar) and 3D of Norman-Haignere & McDermott (2018), PLOS Biol
+//    (CC BY), cropped with PIL from ~/Downloads/journal.pbio.2005127.pdf, page 8, at whitespace.
+// Band tints and region-label colours sampled from the S4 PNG with PIL.
+// The brain shows no reliability map yet: none exists in this view
+// (anchor-brain-requests/ch1-regions.md). Nothing is drawn on it that isn't data.
+//
+// Deck hook: window.regionDefinition = {advance, back, atStart, atEnd, reset, resetToEnd}
+const SLIDE_NAME = 'regionDefinition';
+
+// rank order (S4_plotted_values.csv): parcel, NSE, region
+const PARCELS = [
+  ['A1',    0.078, 1], ['LBelt', 0.082, 1], ['PBelt', 0.136, 1],
+  ['MBelt', 0.250, 2], ['A4',    0.318, 2], ['TA2',   0.494, 2],
+  ['A5',    0.560, 3], ['STSda', 0.774, 3], ['STSdp', 0.826, 3],
+];
+// per region: vertices in the parcels (both hemispheres), in the group maps
+// (group-averaged test-retest NSE < 0.4), and per participant (own test-retest NSE < 0.4),
+// median (range) across the 10 participants
+const COUNTS = [
+  {all:'2,993', group:'2,856', pp:'787 (244–1,718)'},
+  {all:'3,693', group:'3,312', pp:'798 (166–1,916)'},
+  {all:'5,251', group:'3,364', pp:'1,043 (15–1,985)'},
+];
+const RCOL  = ['#b7cfe8', '#5d8fc7', '#1f3f7a'];     // anchor.json region blues
+const BAND  = ['#dee9f4', '#ceddee', '#bbc5d6'];     // S4 panel A band tints
+const RLABC = ['#4e7ab3', '#30609e', '#20407b'];     // S4 panel A region-label colours
+
+// chart geometry, in #fig's viewBox (1000 × 660)
+const CX0 = 170, CW = 88;                            // first column's left edge, column width
+const CX = i => CX0 + CW*(i + .5);
+const BT = 22, PY1 = 78, PY0 = 392;                  // band top; NSE 1 and 0
+const Y = v => PY0 - v*(PY0 - PY1);
+const NY = PY0 + 34;                                 // parcel names
+const BY = NY + 26;                                  // count brackets
+
+// beats: nh = which 2018 panel is up · chart/bands = chart state · lit = regions whose strip is up ·
+// on = the region outlined on the brain ·
+// cnt = count lines shown (1 = sizes, 2 = + per participant)
+const BEATS = [
+  { cap:'How were these regions defined?',                                      nh:0,   chart:0, bands:0, lit:0, cnt:0 },
+  { cap:'Earlier data: the spectrotemporal model matches responses in primary cortex, not beyond (Norman-Haignere & McDermott, 2018)',
+                                                                                nh:'C', chart:0, bands:0, lit:0, cnt:0 },
+  { cap:'NSE rises with distance from primary auditory cortex',                 nh:'D', chart:0, bands:0, lit:0, cnt:0 },
+  { cap:'Nine parcels (Glasser et al., 2016), ranked by NSE on that group map', nh:0,   chart:1, bands:0, lit:0, cnt:0 },
+  { cap:'Cut into three groups of three',                                       nh:0,   chart:1, bands:1, lit:0, cnt:0 },
+  { cap:'Region 1: A1, LBelt, PBelt (primary)',                                 nh:0,   chart:1, bands:1, lit:1, cnt:0, on:1 },
+  { cap:'Region 2: MBelt, A4, TA2',                                             nh:0,   chart:1, bands:1, lit:2, cnt:0, on:2 },
+  { cap:'Region 3: A5, STSda, STSdp (most non-primary)',                        nh:0,   chart:1, bands:1, lit:3, cnt:0, on:3 },
+  { cap:'Vertices per region, both hemispheres (in the group maps)',             nh:0,   chart:1, bands:1, lit:3, cnt:1 },
+  { cap:'In each listener, keep only voxels that measured reliably: test-retest NSE < 0.4',
+                                                                                nh:0,   chart:1, bands:1, lit:3, cnt:2 },
+];
+const MAX = BEATS.length - 1;
+const SCRIPT = [
+  `<b>How were these regions defined?</b> The three regions we just saw, on the listener’s
+   cortex. Where do they come from?`,
+  `<b>Earlier data.</b> Norman-Haignere &amp; McDermott (2018) ran this comparison with the
+   spectrotemporal model in 12 listeners. Their group map: inside the white outline, primary
+   auditory cortex, responses to natural and model-matched sounds are nearly the same (NSE near
+   0, cyan); further out they diverge (red and yellow).`,
+  `<b>A gradient.</b> Binned by distance from the centre of primary auditory cortex, the NSE
+   rises steadily, in every listener and in both hemispheres.`,
+  `<b>Nine parcels, ranked.</b> We take the nine parcels of a standard anatomical parcellation
+   (Glasser et al., 2016) that cover auditory cortex, and rank them by their NSE on that 2018
+   group map: A1 and the belt lowest, the superior temporal sulcus highest. Using independent
+   data means the regions can’t be biased toward any result here. (Vertices entered if their
+   test-retest NSE there was below 0.15, parcels if at least 100 vertices passed.)`,
+  `<b>Three groups of three.</b> The ranking is cut into three regions of three parcels each,
+   in rank order. (The cut is by count, not at the largest gaps, which fall inside
+   Regions 2 and 3.)`,
+  `<b>Region 1.</b> A1, LBelt and PBelt: primary auditory cortex.`,
+  `<b>Region 2.</b> MBelt, A4 and TA2.`,
+  `<b>Region 3.</b> A5, STSda and STSdp: the most non-primary cortex we measured.`,
+  `<b>Sizes.</b> In both hemispheres the regions have 2,993, 3,693 and 5,251 vertices; in
+   parentheses, the vertices shown in the group maps, where the group-averaged test-retest NSE
+   is below 0.4: 2,856, 3,312 and 3,364.`,
+  `<b>Reliable voxels.</b> Within each region, each listener’s analysis keeps only the voxels
+   whose own responses repeat: test-retest NSE below 0.4, the range where the noise correction
+   is well behaved. That leaves a median of 787, 798 and 1,043 vertices per listener, and every
+   one of the 10 listeners contributes to every region (fewest: 244, 166 and 15).`,
+];
+
+// ── build the chart ──────────────────────────────────────────────────────────
+const fig = document.getElementById('fig');
+let s = '';
+[0,1,2].forEach(r => {
+  const x = CX0 + CW*3*r, w = CW*3, mid = x + w/2, c = COUNTS[r];
+  s += `<rect class="band" data-r="${r+1}" x="${x}" y="${BT}" width="${w}" height="${PY0-BT}" fill="${BAND[r]}" opacity="0"/>`;
+  s += `<rect class="swatch" data-r="${r+1}" x="${x}" y="${BT}" width="${w}" height="9" fill="${RCOL[r]}" opacity="0"/>`;
+  s += `<text class="rlab" data-r="${r+1}" x="${mid}" y="${BT+38}" fill="${RLABC[r]}" opacity="0">Region ${r+1}</text>`;
+  s += `<g class="fade cnt1" data-r="${r+1}">
+    <path d="M${x+8} ${BY} v8 H${x+w-8} v-8" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
+    <text class="cnt" x="${mid}" y="${BY+34}">${c.all} (${c.group})</text></g>`;
+  s += `<g class="fade cnt2" data-r="${r+1}">
+    <text class="cnt" x="${mid}" y="${BY+64}">per participant:</text>
+    <text class="cnt pp" x="${mid}" y="${BY+90}">${c.pp}</text></g>`;
+});
+s += `<g class="fade" id="axis">
+  <line x1="${CX0}" y1="${PY0}" x2="${CX0}" y2="${PY1-8}" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="${CX0}" y1="${PY0}" x2="${CX0+CW*9}" y2="${PY0}" stroke="#1a1a1a" stroke-width="2"/>`;
+[0, .25, .5, .75, 1].forEach(v => s += `
+  <line x1="${CX0-9}" y1="${Y(v)}" x2="${CX0}" y2="${Y(v)}" stroke="#1a1a1a" stroke-width="2"/>
+  <text class="tick" x="${CX0-15}" y="${Y(v)}">${v.toFixed(2)}</text>`);
+s += `<text class="ax" transform="translate(${CX0-90},${(PY0+PY1)/2}) rotate(-90)">
+    <tspan x="0" dy="-.3em">NSE, natural vs spectrotemporal model-matched</tspan>
+    <tspan x="0" dy="1.25em">(Norman-Haignere &amp; McDermott 2018 group map)</tspan></text></g>`;
+s += `<text class="foot fade cnt1" x="${CX0+CW*4.5}" y="${BY+128}">Vertices in both hemispheres; in parentheses, in the group maps (group-averaged test-retest NSE &lt; 0.4).</text>
+  <text class="foot fade cnt2" x="${CX0+CW*4.5}" y="${BY+148}">Per participant: own test-retest NSE &lt; 0.4, median (range) across the 10 participants.</text>`;
+PARCELS.forEach(([name, v], rank) => s += `
+  <g class="col" data-p="${name}">
+    <text class="pn" x="${CX(rank)}" y="${NY}">${name}</text>
+    <g class="vals"><circle class="pt" cx="${CX(rank)}" cy="${Y(v)}" r="7.5"/>
+      <text class="val" x="${CX(rank)}" y="${Y(v)-18}">${v.toFixed(3)}</text></g>
+  </g>`);
+fig.innerHTML = s;
+const COLS = Object.fromEntries([...fig.querySelectorAll('.col')].map(g => [g.dataset.p, g]));
+
+
+// ── render ───────────────────────────────────────────────────────────────────
+let beat = 0, capTimer = null;
+function render(){
+  const b = BEATS[beat];
+  // brain: as in the paper; the region being named is outlined
+  document.querySelectorAll('.rout').forEach(r =>
+    r.setAttribute('opacity', +r.dataset.r === b.on ? 1 : 0));
+  // the 2018 panels, then the chart: parcels come in already ranked, a staircase left to right
+  document.getElementById('nhC').classList.toggle('on', b.nh === 'C');
+  document.getElementById('nhD').classList.toggle('on', b.nh === 'D');
+  PARCELS.forEach(([name], rank) => {
+    const g = COLS[name];
+    g.style.transitionDelay = b.chart ? `${.25 + rank*.09}s` : '0s';
+    g.style.opacity = b.chart ? 1 : 0;
+  });
+  document.getElementById('axis').classList.toggle('on', !!b.chart);
+  fig.querySelectorAll('.band, .rlab').forEach(el => el.setAttribute('opacity', b.bands ? 1 : 0));
+  fig.querySelectorAll('.swatch').forEach(el => el.setAttribute('opacity', b.bands && +el.dataset.r <= b.lit ? 1 : 0));
+  fig.querySelectorAll('.cnt1').forEach(el => el.classList.toggle('on', b.cnt >= 1));
+  fig.querySelectorAll('.cnt2').forEach(el => el.classList.toggle('on', b.cnt >= 2));
+  // caption, dots, notes
+  const cap = document.getElementById('cap');
+  cap.classList.add('swap'); clearTimeout(capTimer);
+  capTimer = setTimeout(() => { cap.textContent = b.cap; cap.classList.remove('swap'); }, 150);
+  document.getElementById('dots').innerHTML =
+    BEATS.map((_,i) => `<span class="dot ${i<=beat?'on':''}"></span>`).join('');
+  document.getElementById('notes').innerHTML = SCRIPT[beat];
+}
+window[SLIDE_NAME] = {
+  advance(){ if(beat<MAX){ beat++; render(); } },
+  back(){ if(beat>0){ beat--; render(); } },
+  atStart(){ return beat<=0; }, atEnd(){ return beat>=MAX; },
+  reset(){ beat=0; render(); }, resetToEnd(){ beat=MAX; render(); },
+  getBeat(){ return beat; }, count(){ return MAX+1; },
+  setBeat(b){ beat=Math.max(0,Math.min(MAX,b)); render(); },
+};
+// clicks land in the iframe, so the scene owns them; keys are the deck's when embedded
+addEventListener('click', e => { if(!e.target.closest('#notes')) window[SLIDE_NAME].advance(); });
+if(window.parent === window){
+  addEventListener('keydown', e => {
+    if(['ArrowRight',' ','Enter'].includes(e.key)) window[SLIDE_NAME].advance();
+    else if(e.key === 'ArrowLeft') window[SLIDE_NAME].back();
+    else if(e.key === 'n') document.getElementById('notes').classList.toggle('on');
+  });
+}
+render();
+requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('boot')));
+</script>
+</body>
+</html>

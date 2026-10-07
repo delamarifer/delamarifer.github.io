@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What we average</title>
+<link rel="stylesheet" href="../vendor/fraunces.css">
+<link rel="stylesheet" href="shared/anchor.css">
+<style>
+  :root{
+    --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0; --panel:#f8fafc;
+    --blue:#38506e; --purple:#7a5ea0; --green:#3f7357; --amber:#b45309; --red:#dc2626;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    background:#fff; color:var(--body); font-family:var(--sans);
+    display:flex; flex-direction:column; overflow:hidden;
+    cursor:pointer; user-select:none; -webkit-user-select:none;
+  }
+  #stage{ flex:1 1 auto; min-height:0; position:relative; }
+  /* the anchor brain (outline/contracts/anchor-brain.md) holds the left box; the figure
+     lives in .anchor-content to its right */
+  #fig{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  #title{
+    position:absolute; top:3.4%; left:3.2%; pointer-events:none;
+    font-family:'Deck Calibri', Calibri, sans-serif; font-size:clamp(14px,1.25vw,18px); font-weight:300;
+    color:var(--ink); letter-spacing:.09em; text-transform:uppercase;
+  }
+  #cap{
+    position:absolute; left:3.2%; bottom:4.6%; max-width:46vw;
+    font-size:clamp(15px,1.7vw,25px); font-weight:500; color:var(--ink);
+    letter-spacing:-.01em; line-height:1.28; pointer-events:none;
+    transition:opacity .32s ease, transform .32s ease;
+  }
+  #cap.swap{ opacity:0; transform:translateY(7px); }
+
+  #notes{
+    position:absolute; right:0; top:0; bottom:0; width:min(31rem,40vw);
+    background:var(--panel); border-left:1px solid var(--border);
+    padding:2.2rem 2rem; overflow-y:auto; font-size:.95rem; line-height:1.62;
+    color:var(--body); transform:translateX(100%); transition:transform .32s ease;
+  }
+  #notes.on{ transform:none; }
+  #notes b{ color:var(--ink); }
+
+  footer{ flex:0 0 auto; padding:.4rem 2rem 1.1rem; display:flex;
+          justify-content:space-between; align-items:center; }
+  #hint{ font-size:.72rem; color:#cbd5e1; letter-spacing:.04em; }
+  #dots{ display:flex; gap:.45rem; margin-left:auto; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff;
+        border:1.5px solid #cbd5e1; transition:background .2s, border-color .2s; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+
+  /* Colour code, held across the talk (same as block-design.html):
+     plum  = the sound the listener hears     slate = the scanner reading out
+     ochre = the measured response            pine  = kept / averaged
+     brick = discarded.  Block squares keep image6's condition colours.        */
+  /* all words black (Fer, round 2): colour only in data marks */
+  .lbl{ font-family:var(--sans); font-size:19px; fill:var(--ink); }
+  .lbl.b{ font-weight:700; fill:var(--ink); }
+  .blk{ font-family:var(--sans); font-size:24px; font-weight:700; fill:var(--ink); }
+  .axis{ stroke:#94a3b8; stroke-width:1.4; }
+  .hrf{ fill:none; stroke:var(--amber); stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; }
+  .samp{ fill:var(--amber); stroke:#fff; stroke-width:2.5; }
+  .sampLine{ stroke:var(--amber); stroke-width:1.3; stroke-dasharray:3 3; }
+  .mean{ stroke:var(--green); stroke-width:2.4; stroke-dasharray:7 5; }
+  .glow{ fill:#f2a33a; }
+  .numeral text{ font-family:var(--sans); font-weight:700; fill:#fff; stroke:#000; stroke-width:9;
+                 paint-order:stroke; text-anchor:middle; dominant-baseline:central; }
+  #brain{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .dropX{ stroke:var(--red); stroke-width:2.6; stroke-linecap:round; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div class="anchor-brain">
+      <!-- the anchor brain: the paper's Fig. 4A locator + enlargement (contracts/anchor-brain.md).
+           Everything inside #bw is in whole-regions.png pixels; the enlargement re-uses it. -->
+      <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region1.png?v=5" width="1947" height="1580"/></mask>
+          <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region2.png?v=5" width="1947" height="1580"/></mask>
+          <mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region3.png?v=5" width="1947" height="1580"/></mask>
+          <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
+          <radialGradient id="pinGlow"><stop offset="0" stop-color="#b45309" stop-opacity=".55"/><stop offset="1" stop-color="#b45309" stop-opacity="0"/></radialGradient>
+        </defs>
+        <g id="bw">
+          <image href="../assets/final/ch1-scanning/outline/anchor/whole-regions.png?v=5" width="1947" height="1580"/>
+          <rect class="glow" mask="url(#m1)" x="0" y="0" width="1947" height="1580" opacity="0"/>
+          <rect class="glow" mask="url(#m2)" x="0" y="0" width="1947" height="1580" opacity="0"/>
+          <rect class="glow" mask="url(#m3)" x="0" y="0" width="1947" height="1580" opacity="0"/>
+          <g id="pin" transform="translate(780 1080)">
+            <circle id="pinHalo" r="60" fill="url(#pinGlow)" opacity="0"/>
+            <circle r="17" fill="#b45309" stroke="#fff" stroke-width="7"/>
+          </g>
+        </g>
+        <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
+        <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
+        <g class="numeral" font-size="96">
+          <text x="771" y="2029">1</text><text x="1373" y="2364">2</text><text x="629" y="2401">3</text>
+        </g>
+      </svg>
+    </div>
+    <div class="anchor-content"><svg id="fig" viewBox="0 0 1100 800" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <h1 id="title">What we average</h1>
+    <p id="cap"></p>
+    <div id="notes"></div>
+  </div>
+  <footer><span id="hint"></span><div id="dots"></div></footer>
+
+<script>
+// ═══ WHAT THIS SLIDE SHOWS ═══════════════════════════════════════════════════
+// Fer's outline note: "animate the presentation of sounds on the brain, one by one,
+// for a general audience to get the sense of what we are averaging". This is
+// image6 (the scanning-paradigm figure) brought to life, with one voxel's response
+// drawn underneath: a run is a stream of blocks; a block is three excerpts of one
+// sound, each followed by a scan; each block collapses to one number; the same
+// sound comes back across runs and sessions, and those repeats are averaged.
+// block-design.html (shared with the old deck, untouched) explains WHY the scans
+// sit in the gaps; this scene is WHAT gets averaged.
+//
+// ACT STRUCTURE
+//   INTRO              (0):   the scanner is loud, so it pauses while each sound plays.
+//   ACT 0 — THE RUN    (1):   one run, one square per block (image6's strip).
+//   (acts below are numbered as in the draw code, which runs one beat behind: cb = beat-1)
+//   ACT 1 — ONE BLOCK  (1-4): zoom in; play it (real Spanish clip); drop the first
+//                             scan, average the rest → one number; next block → another.
+//   ACT 2 — ZOOM OUT   (5-7): the whole run → one number per block; 12 runs; 3 sessions.
+//   ACT 3 — REPEATS    (8-11): the same sound, every time it played; within a session
+//                             presentation 1 vs 2 → one number per session → average of 3.
+//
+// Within-beat motion (a playhead sweeping a block) is fine; no beat advances itself.
+// The response is a canonical SPM double-gamma HRF convolved with the excerpt
+// boxcars, computed below. Block amplitudes and repeat values are ILLUSTRATIVE.
+//
+// Deck hook: window.scanningRun = {advance, back, atStart, atEnd, reset, resetToEnd}
+(function(){
+  'use strict';
+  const SLIDE_NAME = 'scanningRun';
+
+  // ── design facts (check against the paper's methods) ───────────────────────
+  const TR = 4.45, EXC = 3, GAP = 0.225, SCAN = 1;      // image6 / block-design
+  const BLK = 3*TR;                                     // 13.35 s
+  const NB = 31;                 // blocks in image6's "Run 1" strip
+  const RUNS = 12;               // runs per session — from the BIDS events in
+  const SESS = 3;                //   neuroimaging-preprocessing-toolkit; CONFIRM
+  const PLAY_SPEED = 1.5;        // block playback: 13.35 s of design in 8.9 s
+  const AUDIO_SRC = '../data/brain/sounds/spanish.mp3';  // 2.06 s; one per excerpt
+
+  // image6 condition colours: [border, fill] (fills sampled from the figure)
+  const COND = {
+    natural:['#000000','#b8b8b8'], spectemp:['#e6801e','#f8dbc0'],
+    std_l2:['#80cdc1','#dbf1ee'],  std_l3:['#35978f','#c6e2e0'], std_l4:['#01665e','#b8d4d2'],
+    rob_l2:['#c9b3e6','#f0eaf8'],  rob_l3:['#9b6fd1','#e3d7f2'], rob_l4:['#5e2ca5','#d2c4e6'],
+    sil:['#666666','#ffffff'],
+  };
+  const CKEYS = Object.keys(COND).filter(k => k !== 'sil');
+
+  // the two blocks image6 zooms into: natural Spanish speech, then Robust L3 piano
+  const Z1 = 17, Z2 = 18;
+  const A1 = 1.0, A2 = 0.55;     // their (illustrative) response sizes
+  // every time natural Spanish speech played: twice per session [session, run, block]
+  const SPAN = [[0,0,Z1],[0,6,5],[1,2,22],[1,9,12],[2,1,9],[2,7,26]];
+  const REP = [0.80, 0.67, 0.88, 0.72, 0.84, 0.70];   // illustrative per-repeat numbers
+
+  // ── beats ──────────────────────────────────────────────────────────────────
+  const BEATS = [
+    { cap:'', ms:1200 },
+    { cap:'One run: a stream of blocks, one sound per block',                    ms:600 },
+    { cap:'One block: three excerpts of one sound, a scan after each',           ms:1100 },
+    { cap:'The listener hears the sound; the scanner reads out in the gaps',     ms:EXC*0+BLK/PLAY_SPEED*1000 },
+    { cap:'Drop the first scan, average the other two: one number',              ms:1400 },
+    { cap:'Next block, next sound: another number',                              ms:BLK/PLAY_SPEED*1000+900 },
+    { cap:'A whole run: one number per block',                                   ms:4600 },
+    { cap:'Twelve runs in a session',                                            ms:1700 },
+    { cap:'Three sessions per listener · ten listeners',                         ms:1500 },
+    { cap:'Each natural sound comes back: twice per session',                    ms:900 },
+    { cap:'Within a session: compare presentation 1 and 2',                      ms:2400 },
+    { cap:'Each session: save one number',                                       ms:1200 },
+    { cap:'Average the three sessions: one number per sound, per voxel',         ms:1400 },
+  ];
+  const N = BEATS.length;
+
+  const SCRIPT = [
+   `<b>Listening in a loud machine.</b> A running MRI scanner is about as loud as a rock
+    concert. If we scanned straight through, every sound we played would be buried under it.
+    So the scanner pauses: a sound plays into silence, and only then does the scanner take its
+    picture.`,
+   `<b>One run.</b> This strip is one scanning run, about seven minutes. Each square is a
+    block: a few seconds of one sound. The colours are the kinds of sound — black-edged grey
+    is a natural sound, the purples and teals are sounds synthesized to match a model
+    stage, orange matches the spectrotemporal model, and white is silence.`,
+   `<b>Inside a block.</b> Zoom into two of the squares. A block is three different
+    3-second excerpts of the same sound. After each excerpt the scanner takes one image —
+    the black bars — one second long.`,
+   `<b>Listen, then look.</b> Here is a natural sound, Spanish speech. While it plays the
+    scanner is silent; in each gap it reads out. Underneath is one voxel — one small patch
+    of cortex — and how strongly it responds. The response is slow: it builds over seconds,
+    and each scan catches it partway up. The shape is a standard model of that slow response;
+    the sizes are illustrative. On the brain, auditory cortex lights up as that response
+    builds, and the dot marks the voxel whose curve this is.`,
+   `<b>One number.</b> The first scan comes too early — the response has not arrived yet —
+    so we drop it. The other two are averaged: one number for how much this voxel responded
+    to Spanish speech in this block.`,
+   `<b>Next sound.</b> The next block starts straight away with a different sound — here a
+    piano excerpt synthesized to match the robust network's third stage. Same procedure, and
+    this voxel responds less to it: a smaller number.`,
+   `<b>A whole run.</b> Zooming back out, the run plays through, and every block leaves one
+    number behind: this voxel's response to that sound. On the brain, each sound lands in turn,
+    lighting the three regions a little differently.`,
+   `<b>Many runs.</b> A session is twelve runs like this one, each in its own order.`,
+   `<b>Many sessions.</b> Each listener came back for three sessions, and ten listeners took
+    part.`,
+   `<b>The same sound, again.</b> Spanish speech was not heard once. Natural sounds were played
+    twice in every session, so across three sessions this voxel heard it six times.`,
+   `<b>Two presentations per session.</b> Within each session the same sound was played twice.
+    We compare presentation 1 with presentation 2: they are never exactly the same, because the
+    measurement is noisy, and how well they agree is the test-retest reliability used next.`,
+   `<b>One number per session.</b> Each session saves one number for this voxel and this sound,
+    from its two presentations.`,
+   `<b>What we average.</b> The three session numbers are averaged: that is the voxel's response
+    to Spanish speech. Do this for every sound and every voxel, and that table of numbers is what
+    every comparison in the rest of this chapter is built on.`,
+  ];
+
+  // ── tiny helpers ───────────────────────────────────────────────────────────
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('fig');
+  function el(tag, attrs={}, parent=svg){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e); return e;
+  }
+  function txt(s, attrs, parent){ const t = el('text', attrs, parent); t.textContent = s; return t; }
+  const clamp01 = x => Math.max(0, Math.min(1, x));
+  const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+  const lerp = (a,b,t) => a + (b-a)*t;
+  function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  // ── the design: SESS × RUNS × NB blocks ────────────────────────────────────
+  const R = rng(20261016);
+  const design = [];
+  for(let s=0;s<SESS;s++){ design.push([]); for(let r=0;r<RUNS;r++){ const row=[];
+    for(let i=0;i<NB;i++){
+      const sil = R() < .1, k = sil ? 'sil' : CKEYS[Math.floor(R()*CKEYS.length)];
+      row.push({k, amp: sil ? 0 : .3 + .6*R(), span:false});
+    }
+    design[s].push(row); } }
+  design[0][0][Z1] = {k:'natural', amp:A1, span:true};
+  design[0][0][Z2] = {k:'rob_l3',  amp:A2, span:false};
+  SPAN.forEach(([s,r,i],j) => { design[s][r][i] = {k:'natural', amp:j ? REP[j]/REP[0]*A1 : A1, span:true}; });
+
+  // how strongly each sound drives regions 1/2/3 on the anchor brain (ILLUSTRATIVE)
+  const RW = rng(4);
+  const REGW = design[0][0].map(b => b.k === 'sil' ? [0,0,0] : [.35+.65*RW(), .35+.65*RW(), .35+.65*RW()]);
+  REGW[Z1] = [.7, .85, 1.0];      // speech: strongest in region 3
+  REGW[Z2] = [.95, .6, .3];       // piano: strongest in region 1
+
+  // ── response model: canonical double-gamma HRF ⊛ excerpt boxcars ──────────
+  function hrf(t){ return t <= 0 ? 0 :
+    Math.pow(t,5)*Math.exp(-t)/120 - Math.pow(t,15)*Math.exp(-t)/(6*1.3076744e12); }
+  function respond(blocks, T, dt){
+    const n = Math.ceil(T/dt)+1, stim = new Float32Array(n), out = new Float32Array(n);
+    const K = []; for(let t=0;t<32;t+=dt) K.push(hrf(t)*dt);
+    for(const b of blocks){ if(!b.amp) continue;
+      for(let k=0;k<3;k++){ const a = Math.round((b.t0+k*TR)/dt), z = Math.round((b.t0+k*TR+EXC)/dt);
+        for(let i=a;i<z&&i<n;i++) stim[i] += b.amp; } }
+    for(let i=0;i<n;i++){ if(!stim[i]) continue;
+      for(let j=0;j<K.length && i+j<n;j++) out[i+j] += stim[i]*K[j]; }
+    return out;
+  }
+  const NORM = Math.max(...respond([{t0:0, amp:1}], 30, .05));
+  const DT = .05;
+  const RB = respond([{t0:0, amp:A1}, {t0:BLK, amp:A2}], 2*BLK, DT).map(v => v/NORM);
+  const rAt = t => RB[Math.min(RB.length-1, Math.max(0, Math.round(t/DT)))];
+  const SAMP_T = [0,1,2,3,4,5].map(k => k*TR + EXC + GAP + SCAN/2);   // mid-scan
+  const SAMP_V = SAMP_T.map(rAt);
+  const MEAN1 = (SAMP_V[1]+SAMP_V[2])/2, MEAN2 = (SAMP_V[4]+SAMP_V[5])/2;
+
+  // ── layout: viewBox 1100×800, the shape of .anchor-content (right of the brain) ──
+  const BX0 = 62, PX = 1030/(2*BLK);                   // block view: seconds → x
+  const X = t => BX0 + t*PX;
+  const TILE_Y = 58, TILE_H = EXC*PX*118/106;          // tiles keep image6's aspect
+  const FR_Y0 = 46, FR_Y1 = TILE_Y + TILE_H + 12;
+  const BASE = 470, AMP_H = 185, Y = r => BASE - r*AMP_H;
+
+  function geo(b, s, r){                    // where the row (s,r) of squares sits at beat b
+    if(b < 0) b = 0;                          // the intro: squares hidden, parked at beat 0
+    if(b >= 7) return {x:70, y: 52 + s*196 + r*14, p:14, z:12};   // sessions stacked
+    if(b === 6) return s === 0 ? {x:92, y:24 + r*45, p:31.5, z:25} : geo(7, s, r);
+    if(s !== 0 || r !== 0) return s === 0 ? geo(6, s, r) : geo(7, s, r);
+    if(b === 0) return {x:92, y:360, p:31.5, z:27};
+    if(b === 5) return {x:92, y:300, p:31.5, z:27};
+    return {x:130, y:600, p:29, z:23};
+  }
+  const vis = (b, s, r) => b < 0 ? 0 : b >= 7 ? 1 : b === 6 ? (s === 0 ? 1 : 0) : (s === 0 && r === 0 ? 1 : 0);
+
+  // ═══ build the SVG once; draw() only sets attributes ══════════════════════
+  // wedge (beat 1): image6's zoom fan from the two squares up to the blocks
+  const wedgeG = el('g');
+  const wedge1 = el('polygon', {fill:'#e9e9e9'}, wedgeG);
+  const wedge2 = el('polygon', {fill:'#efe9f7'}, wedgeG);
+
+  // block view
+  const blockG = el('g');
+  const BLOCKS = [{t0:0, k:'natural', name:'Natural: Spanish speech', tiles:[1,2,3]},
+                  {t0:BLK, k:'rob_l3', name:'Robust L3: Piano', tiles:[4,5,6]}];
+  // literal paths, so outline/publish.py can find and freeze them
+  const TILE_SRC = ['../assets/final/ch1-scanning/outline/scan-tile-1.png?v=5', '../assets/final/ch1-scanning/outline/scan-tile-2.png?v=5',
+    '../assets/final/ch1-scanning/outline/scan-tile-3.png?v=5', '../assets/final/ch1-scanning/outline/scan-tile-4.png?v=5',
+    '../assets/final/ch1-scanning/outline/scan-tile-5.png?v=5', '../assets/final/ch1-scanning/outline/scan-tile-6.png?v=5'];
+  const tileHi = [], scanR = [];
+  BLOCKS.forEach(B => {
+    const [bc, bf] = COND[B.k];
+    el('rect', {x:X(B.t0)+3, y:FR_Y0, width:BLK*PX-6, height:FR_Y1-FR_Y0, rx:8,
+                fill:bf, stroke:bc, 'stroke-width':4}, blockG);
+    txt(B.name, {class:'blk', x:X(B.t0)+8, y:FR_Y0-14}, blockG);
+    B.tiles.forEach((n, k) => {
+      const t0 = B.t0 + k*TR;
+      el('image', {href:TILE_SRC[n-1], x:X(t0)+3, y:TILE_Y,
+                   width:EXC*PX-6, height:TILE_H, preserveAspectRatio:'none'}, blockG);
+      el('rect', {x:X(t0)+3, y:TILE_Y, width:EXC*PX-6, height:TILE_H, fill:'none',
+                  stroke: B.k==='natural' ? '#000' : bc, 'stroke-width':3}, blockG);
+      tileHi.push({t0, e: el('rect', {x:X(t0)-2, y:TILE_Y-5, width:EXC*PX+4, height:TILE_H+10,
+                  rx:5, fill:'none', stroke:'var(--purple)', 'stroke-width':6, opacity:0}, blockG)});
+      const s0 = t0 + EXC + GAP;
+      scanR.push({t0:s0, e: el('rect', {x:X(s0), y:TILE_Y+28, width:SCAN*PX, height:TILE_H-56,
+                  fill:'#000'}, blockG)});
+    });
+  });
+  // image6 annotations (beat 1 only)
+  const annG = el('g', {}, blockG);
+  el('path', {d:`M${X(0)+3},${FR_Y1+14} v8 H${X(EXC)-3} v-8`, stroke:'#334155', 'stroke-width':1.4, fill:'none'}, annG);
+  txt('3 s', {class:'lbl b', x:X(EXC/2), y:FR_Y1+44, 'text-anchor':'middle'}, annG);
+  txt('scan · 1 s', {class:'lbl b', x:X(EXC+GAP+SCAN/2), y:FR_Y1+44, 'text-anchor':'middle'}, annG);
+
+  // response panel
+  const tcG = el('g');
+  el('line', {class:'axis', x1:X(0), y1:BASE, x2:X(2*BLK), y2:BASE}, tcG);
+  [[0,'0 s'],[BLK,'13.35 s'],[2*BLK,'26.7 s']].forEach(([t,s]) =>
+    txt(s, {class:'lbl', x:X(t), y:BASE+24, 'text-anchor': t ? (t===2*BLK?'end':'middle') : 'start'}, tcG));
+  txt("one voxel's response", {class:'lbl b', x:X(0)-18, y:BASE-AMP_H/2,
+      transform:`rotate(-90 ${X(0)-18} ${BASE-AMP_H/2})`, 'text-anchor':'middle'}, tcG);
+  txt('illustrative', {class:'lbl', x:X(2*BLK), y:BASE-AMP_H-14, 'text-anchor':'end', 'font-size':14}, tcG);
+  const dropA = [0,1].map(() => el('path', {fill:'var(--red)', opacity:0}, tcG));
+  const winA  = [0,1].map(() => el('path', {fill:'var(--green)', opacity:0}, tcG));
+  const curve = el('path', {class:'hrf'}, tcG);
+  const samps = SAMP_T.map((t,k) => {
+    const g = el('g', {opacity:0}, tcG);
+    el('line', {class:'sampLine', x1:X(t), y1:TILE_Y+TILE_H-28, x2:X(t), y2:Y(SAMP_V[k])}, g);
+    el('circle', {class:'samp', cx:X(t), cy:Y(SAMP_V[k]), r:7}, g);
+    return {t, g};
+  });
+  const drops = [0,3].map(k => {
+    const g = el('g', {opacity:0}, tcG), x = X(SAMP_T[k]), y = Y(SAMP_V[k]);
+    el('path', {class:'dropX', d:`M${x-14},${y-14} L${x+14},${y+14} M${x+14},${y-14} L${x-14},${y+14}`}, g);
+    txt('too early', {class:'lbl b', x, y:y-24, 'text-anchor':'middle'}, g);
+    return g;
+  });
+  const means = [[1,2,MEAN1],[4,5,MEAN2]].map(([a,b,m]) => {
+    const g = el('g', {opacity:0}, tcG), x0 = X(SAMP_T[a])-30, x1 = X(SAMP_T[b])+30;
+    el('line', {class:'mean', x1:x0, y1:Y(m), x2:x1, y2:Y(m)}, g);
+    el('circle', {cx:(x0+x1)/2, cy:Y(m), r:9, fill:'var(--green)', stroke:'#fff', 'stroke-width':2.5}, g);
+    txt('one number', {class:'lbl b', x:(x0+x1)/2, y:Y(m)+34, 'text-anchor':'middle'}, g);
+    return g;
+  });
+  const playhead = el('line', {x1:0, y1:FR_Y0-4, x2:0, y2:BASE+4, stroke:'#0f172a',
+                               'stroke-width':2, opacity:0});
+
+  // intro (beat 0): the sound buried under scanner noise, then the fix: pause, play, scan
+  const introG = el('g');
+  txt('If we scanned straight through', {class:'lbl b', x:62, y:150}, introG);
+  { let d = 'M62,250'; for(let x=62;x<=1070;x+=6) d += `L${x},${250 + (Math.sin(x*.9)+Math.sin(x*.37)*.8)*38}`;
+    el('path', {d, fill:'none', stroke:'var(--red)', 'stroke-width':3, opacity:.75}, introG); }
+  { let d = 'M62,250'; for(let x=62;x<=1070;x+=4) d += `L${x},${250 + Math.sin(x/22)*14}`;
+    el('path', {d, fill:'none', stroke:'var(--purple)', 'stroke-width':3}, introG); }
+  txt('scanner noise', {class:'lbl b', x:1070, y:190, 'text-anchor':'end'}, introG);
+  el('line', {x1:906, y1:184, x2:936, y2:184, stroke:'var(--red)', 'stroke-width':4}, introG);
+  txt('the sound, buried', {class:'lbl b', x:1070, y:330, 'text-anchor':'end'}, introG);
+  el('line', {x1:878, y1:324, x2:908, y2:324, stroke:'var(--purple)', 'stroke-width':4}, introG);
+  txt('So we pause the scanner', {class:'lbl b', x:62, y:450}, introG);
+  [0,1,2].forEach(k => {
+    const x0 = 62 + k*340;
+    el('rect', {x:x0, y:480, width:230, height:64, rx:6, fill:'#efeaf6', stroke:'#d6c9e8'}, introG);
+    txt('sound, in silence', {class:'lbl b', x:x0+115, y:519, 'text-anchor':'middle'}, introG);
+    el('rect', {x:x0+244, y:480, width:80, height:64, rx:4, fill:'#000'}, introG);
+    txt('scan', {class:'lbl b', x:x0+284, y:519, 'text-anchor':'middle', style:'fill:#fff'}, introG);   // white on the black scan mark
+  });
+
+  // run view (beat 5): per-block numbers above the strip, the run's response below
+  const runG = el('g');
+  const RUN_BASE = 540, RUN_H = 170, RUN_X0 = 92, RUN_P = 31.5, BAR_Y = 292;
+  const runResp = respond(design[0][0].map((b,i) => ({t0:i*BLK, amp:b.amp})), NB*BLK, .1).map(v => v/NORM);
+  const runCurve = el('path', {class:'hrf', 'stroke-width':2.4}, runG);
+  el('line', {class:'axis', x1:RUN_X0, y1:RUN_BASE, x2:RUN_X0+NB*RUN_P, y2:RUN_BASE}, runG);
+  txt("one voxel's response", {class:'lbl', x:RUN_X0, y:RUN_BASE+24}, runG);
+  const runBars = design[0][0].map((b,i) => el('rect', {x:RUN_X0+i*RUN_P+7, width:14, y:BAR_Y, height:0,
+      fill: b.k==='natural' ? '#555' : COND[b.k][0], opacity:.9}, runG));
+  txt('one number per block', {class:'lbl b', x:RUN_X0, y:205}, runG);
+  const runHead = el('line', {y1:205, y2:RUN_BASE+4, stroke:'#0f172a', 'stroke-width':2, opacity:0}, runG);
+
+  // squares (all sessions × runs × blocks), row labels, session labels
+  const sqG = el('g');
+  const SQ = [], ROWLBL = [];
+  for(let s=0;s<SESS;s++) for(let r=0;r<RUNS;r++){
+    ROWLBL.push({s, r, e: txt(`Run ${r+1}`, {class:'lbl b', 'text-anchor':'end'}, sqG)});
+    for(let i=0;i<NB;i++){ const b = design[s][r][i];
+      SQ.push({s, r, i, b, e: el('rect', {fill:COND[b.k][1], stroke:COND[b.k][0]}, sqG)}); }
+  }
+  const zoomRing = [Z1, Z2].map(() => el('rect', {fill:'none', stroke:'#0f172a', 'stroke-width':2.5, rx:3}, sqG));
+  const SESSLBL = [0,1,2].map(s => txt(`Session ${s+1}`, {class:'blk', x:70, y:40 + s*196}, sqG));
+  const runsNote = txt('12 runs each', {class:'lbl b', x:530, y:52 + RUNS*7 + 6}, sqG);
+  const spanRing = SPAN.map(() => el('rect', {fill:'none', stroke:'var(--purple)', 'stroke-width':3, rx:3}, sqG));
+  const spanNote = txt('', {class:'blk', x:530, y:250});
+  ['Natural: Spanish speech,', 'every time it played'].forEach((l,i) => {
+    const ts = el('tspan', {x:530, dy: i ? '1.3em' : 0}, spanNote); ts.textContent = l; });
+
+  // repeats (cb 9-11): two presentations per session, compared → one number per session →
+  // the three sessions averaged
+  const repG = el('g');
+  const REP_BASE = 560, REP_H = 330, PW = 34, SW = 50, AVG_X = 1005;
+  const CX = [610, 760, 910];                                   // each session's pair centre
+  const SM = [0,1,2].map(s => (REP[2*s] + REP[2*s+1])/2);       // the saved session numbers
+  const MEANR = SM.reduce((a,b)=>a+b)/3;
+  const presX = j => CX[SPAN[j][0]] + (j % 2 ? 4 : -4 - PW);
+  el('line', {class:'axis', x1:CX[0]-60, y1:REP_BASE, x2:AVG_X+SW+15, y2:REP_BASE}, repG);
+  const presLbl = SPAN.map((_, j) => txt(`${j%2 + 1}`, {class:'lbl', x:presX(j)+PW/2, y:REP_BASE+22,
+      'text-anchor':'middle', 'font-size':15}, repG));
+  const sessLbl = CX.map((cx, s) => txt(`session ${s+1}`, {class:'lbl b', x:cx, y:REP_BASE+46,
+      'text-anchor':'middle', 'font-size':16}, repG));
+  const cmp = CX.map((cx, s) => {
+    const top = REP_BASE - Math.max(REP[2*s], REP[2*s+1])*REP_H - 14, g = el('g', {opacity:0}, repG);
+    el('path', {d:`M${cx-4-PW/2},${top+8} V${top} H${cx+4+PW/2} V${top+8}`, fill:'none', stroke:'#334155', 'stroke-width':1.6}, g);
+    txt('compare', {class:'lbl', x:cx, y:top-8, 'text-anchor':'middle', 'font-size':15}, g);
+    return g;
+  });
+  const flyR = SPAN.map(() => el('rect', {fill:COND.natural[1], stroke:'#000', 'stroke-width':2.5}, repG));
+  const perSess = txt('one number per session', {class:'lbl b', x:CX[1], y:REP_BASE+76, 'text-anchor':'middle', opacity:0}, repG);
+  const repMean = el('line', {class:'mean', x1:CX[0]-50, x2:AVG_X+SW+10, y1:REP_BASE-MEANR*REP_H, y2:REP_BASE-MEANR*REP_H, opacity:0}, repG);
+  const avgBar = el('rect', {x:AVG_X, width:SW, fill:'var(--green)'}, repG);
+  const avgTxt = txt('average', {class:'lbl b', x:AVG_X+SW/2, y:REP_BASE+46, 'text-anchor':'middle'}, repG);
+  const avgOne = txt('one number', {class:'blk', x:AVG_X+SW, y:REP_BASE-MEANR*REP_H-18, 'text-anchor':'end'}, repG);
+
+  const GLOW = [...document.querySelectorAll('#brain .glow')];
+  const pinHalo = document.getElementById('pinHalo');
+
+  // ── state & render ────────────────────────────────────────────────────────
+  // ?from=&to= plays only that range of beats, so the deck shows the scene as separate slides
+  // (Fer, round 2: new content gets a new slide number). getBeat() counts from the range start.
+  const QS = new URLSearchParams(location.search);
+  const LO = Math.max(0, Math.min(N-1, +(QS.get('from') || 0)));
+  const HI = Math.max(LO, Math.min(N-1, QS.get('to') != null ? +QS.get('to') : N-1));
+  let beat = LO, from = LO, tStart = -1e9;
+  const capEl = document.getElementById('cap'), notesEl = document.getElementById('notes');
+  const dotsEl = document.getElementById('dots');
+  for(let i=LO;i<=HI;i++){ const d=document.createElement('div'); d.className='dot'; dotsEl.appendChild(d); }
+
+  // audio: the real natural clip, one play per excerpt during the beat-2 sweep
+  const audio = new Audio(AUDIO_SRC); audio.preload = 'auto';
+  let muted = false, audioTile = -1;
+  function stopAudio(){ audioTile = -1; try{ audio.pause(); }catch(e){} }
+
+  function pathTo(tEnd){                       // block-view curve, 0 → tEnd seconds
+    const n = Math.round(tEnd/DT); if(n < 1) return '';
+    let d = `M${X(0)},${Y(RB[0])}`;
+    for(let i=2;i<=n;i+=2) d += `L${X(i*DT).toFixed(1)},${Y(RB[i]).toFixed(1)}`;
+    return d;
+  }
+  function areaPath(a, b){
+    const i0 = Math.round(a/DT), i1 = Math.round(b/DT);
+    let d = `M${X(a)},${BASE}`;
+    for(let i=i0;i<=i1;i+=2) d += `L${X(i*DT).toFixed(1)},${Y(RB[i]).toFixed(1)}`;
+    return d + `L${X(b)},${BASE}Z`;
+  }
+  dropA[0].setAttribute('d', areaPath(0, TR));     winA[0].setAttribute('d', areaPath(TR, BLK));
+  dropA[1].setAttribute('d', areaPath(BLK, BLK+TR)); winA[1].setAttribute('d', areaPath(BLK+TR, 2*BLK));
+
+  // opacity of a group: on during [lo,hi] beats, cross-faded with progress g
+  const band = (b, lo, hi) => (b >= lo && b <= hi) ? 1 : 0;
+  const fade = (lo, hi, g) => lerp(band(from-1, lo, hi), band(beat-1, lo, hi), g);   // draw-code numbering (cb)
+
+  function draw(){
+    const now = performance.now();
+    const t = clamp01((now - tStart) / BEATS[beat].ms);
+    // geometry/opacity progress: about a second, however long the beat's own motion runs
+    const g = ease(clamp01((now - tStart) / Math.min(BEATS[beat].ms, 1000)));
+    // the drawing logic below predates the intro beat: cb/cf are beat/from minus one, so
+    // cb = -1 is the loud-scanner intro, where nothing of the run is on screen yet
+    const cb = beat - 1, cf = from - 1;
+
+    // ── squares ──
+    for(const q of SQ){
+      const g0 = geo(cf, q.s, q.r), g1 = geo(cb, q.s, q.r);
+      const x = lerp(g0.x + q.i*g0.p, g1.x + q.i*g1.p, g), y = lerp(g0.y, g1.y, g), z = lerp(g0.z, g1.z, g);
+      let o0 = vis(cf, q.s, q.r), o1 = vis(cb, q.s, q.r);
+      let o = o1 > o0 ? o0 + (o1-o0)*ease(clamp01((t - .03*q.r - .2*q.s)/.45)) : lerp(o0, o1, g);
+      const dim = lerp(cf >= 8 && !q.b.span ? .2 : 1, cb >= 8 && !q.b.span ? .2 : 1, g);
+      const a = q.e;
+      a.setAttribute('x', x.toFixed(1)); a.setAttribute('y', y.toFixed(1));
+      a.setAttribute('width', z.toFixed(1)); a.setAttribute('height', z.toFixed(1));
+      a.setAttribute('stroke-width', Math.max(1, z*.1).toFixed(1));
+      a.setAttribute('opacity', (o*dim).toFixed(3));
+    }
+    for(const L of ROWLBL){
+      const g0 = geo(cf, L.s, L.r), g1 = geo(cb, L.s, L.r);
+      const z = lerp(g0.z, g1.z, g);
+      L.e.setAttribute('x', lerp(g0.x, g1.x, g) - 12);
+      L.e.setAttribute('y', lerp(g0.y, g1.y, g) + z*.5 + z*.22);
+      L.e.setAttribute('font-size', Math.max(11, z*.6).toFixed(1));
+      const lv = b => (b <= 6 ? vis(b, L.s, L.r) : 0);
+      const o0 = lv(cf), o1 = lv(cb);
+      L.e.setAttribute('opacity', o1 > o0 ? ease(clamp01((t - .03*L.r)/.45)) : lerp(o0, o1, g));
+    }
+    const gz = (b) => geo(b, 0, 0);
+    [Z1, Z2].forEach((i, k) => {
+      const g0 = gz(cf), g1 = gz(cb);
+      const x = lerp(g0.x + i*g0.p, g1.x + i*g1.p, g), y = lerp(g0.y, g1.y, g), z = lerp(g0.z, g1.z, g);
+      const r = zoomRing[k];
+      r.setAttribute('x', x-4); r.setAttribute('y', y-4); r.setAttribute('width', z+8); r.setAttribute('height', z+8);
+      r.setAttribute('opacity', fade(1, 4, g));
+    });
+    SESSLBL.forEach(e => e.setAttribute('opacity', fade(7, 99, g)));
+    runsNote.setAttribute('opacity', fade(7, 7, g));
+    SPAN.forEach(([s,r,i], j) => {
+      const G = geo(7, s, r), e = spanRing[j];
+      e.setAttribute('x', G.x + i*G.p - 4); e.setAttribute('y', G.y - 4);
+      e.setAttribute('width', G.z + 8); e.setAttribute('height', G.z + 8);
+      const pulse = cb === 8 ? .75 + .25*Math.sin(now/260) : 1;
+      e.setAttribute('opacity', fade(8, 99, g) * pulse);
+    });
+    spanNote.setAttribute('opacity', fade(8, 8, g));
+
+    // ── wedge + block view ──
+    {
+      const G = gz(cb === 1 ? 1 : cf === 1 ? 1 : cb), sx = i => G.x + i*G.p;
+      wedge1.setAttribute('points', `${X(0)+3},${FR_Y1} ${X(BLK)-3},${FR_Y1} ${sx(Z1)+G.z},${G.y-5} ${sx(Z1)},${G.y-5}`);
+      wedge2.setAttribute('points', `${X(BLK)+3},${FR_Y1} ${X(2*BLK)-3},${FR_Y1} ${sx(Z2)+G.z},${G.y-5} ${sx(Z2)},${G.y-5}`);
+      wedgeG.setAttribute('opacity', fade(1, 1, g) * .9);
+    }
+    blockG.setAttribute('opacity', fade(1, 4, g));
+    annG.setAttribute('opacity', fade(1, 1, g));
+    tcG.setAttribute('opacity', fade(2, 4, g));
+
+    // ── the playhead: cb 2 sweeps block 1, cb 4 sweeps block 2 ──
+    let tau = cb >= 4 ? 2*BLK : cb >= 2 ? BLK : 0, sweeping = false;
+    if(cb === 2 && cf === 1 && t < 1){ tau = BLK*t; sweeping = true; }
+    if(cb === 4 && cf === 3){ const f = BLK/PLAY_SPEED*1000/BEATS[5].ms;
+      if(t < f){ tau = BLK + BLK*t/f; sweeping = true; } }
+    playhead.setAttribute('x1', X(tau)); playhead.setAttribute('x2', X(tau));
+    playhead.setAttribute('opacity', sweeping ? .55 : 0);
+    curve.setAttribute('d', pathTo(tau));
+    samps.forEach(s => s.g.setAttribute('opacity', tau >= s.t ? 1 : 0));
+    tileHi.forEach(h => h.e.setAttribute('opacity', sweeping && tau >= h.t0 && tau < h.t0+EXC ? 1 : 0));
+    scanR.forEach(h => h.e.setAttribute('fill', sweeping && tau >= h.t0 && tau < h.t0+SCAN ? 'var(--blue)' : '#000'));
+    // sound in the silences: one play of the clip per natural excerpt
+    if(cb === 2 && sweeping){
+      const k = [0,1,2].find(k => tau >= k*TR && tau < k*TR+EXC);
+      if(k === undefined){ if(audioTile >= 0) stopAudio(); }
+      else if(k !== audioTile){ audioTile = k;
+        if(!muted){ try{ audio.currentTime = 0; const p = audio.play(); if(p) p.catch(()=>{}); }catch(e){} } }
+    } else if(audioTile >= 0) stopAudio();
+
+    // block 1's verdict (cb 3+), block 2's (end of cb 4)
+    const v1 = fade(3, 4, g);
+    drops[0].setAttribute('opacity', v1); means[0].setAttribute('opacity', v1);
+    dropA[0].setAttribute('opacity', .10*v1); winA[0].setAttribute('opacity', .17*v1);
+    let v2 = cb === 4 ? 1 : 0;
+    if(cb === 4 && cf === 3){ const f = BLK/PLAY_SPEED*1000/BEATS[5].ms; v2 = ease(clamp01((t - f)/(1 - f))); }
+    if(cf === 4 && cb !== 4) v2 = 1 - g;
+    drops[1].setAttribute('opacity', v2); means[1].setAttribute('opacity', v2);
+    dropA[1].setAttribute('opacity', .10*v2); winA[1].setAttribute('opacity', .17*v2);
+
+    // ── run view (cb 5): sweep the whole run, one bar per finished block ──
+    runG.setAttribute('opacity', fade(5, 5, g));
+    let rt = NB*BLK, rsweep = false;
+    if(cb === 5 && cf === 4 && t < 1){ rt = NB*BLK*clamp01((t - .24)/.72); rsweep = t < .96; }
+    const rx = s => RUN_X0 + s/BLK*RUN_P;
+    { const n = Math.round(rt/.1); let d = `M${rx(0)},${RUN_BASE - runResp[0]*RUN_H}`;
+      for(let i=5;i<=n;i+=5) d += `L${rx(i*.1).toFixed(1)},${(RUN_BASE - runResp[i]*RUN_H).toFixed(1)}`;
+      runCurve.setAttribute('d', n >= 5 ? d : ''); }
+    runBars.forEach((e, i) => { const b = design[0][0][i];
+      const h = rt >= (i+1)*BLK ? b.amp*70 : 0;
+      e.setAttribute('height', h); e.setAttribute('y', BAR_Y - h); });
+    runHead.setAttribute('x1', rx(rt)); runHead.setAttribute('x2', rx(rt));
+    runHead.setAttribute('opacity', rsweep ? .55 : 0);
+
+    // ── repeats: fly out as pairs (cb 9), merge per session (cb 10), average (cb 11) ──
+    const p9  = cb >= 9  ? (cb === 9  && cf === 8  ? t : 1) : 0;
+    const p10 = cb >= 10 ? (cb === 10 && cf === 9  ? ease(t) : 1) : 0;
+    const p11 = cb >= 11 ? (cb === 11 && cf === 10 ? ease(t) : 1) : 0;
+    repG.setAttribute('opacity', cb >= 9 ? 1 : 0);
+    const fT = ease(clamp01(p9/.45)), hT = ease(clamp01((p9-.45)/.35));
+    SPAN.forEach(([s,r,i], j) => {
+      const G = geo(7, s, r);
+      let z = lerp(G.z, PW, fT), x = lerp(G.x + i*G.p, presX(j), fT);
+      let h = lerp(z, REP[j]*REP_H, hT);
+      const yb = lerp(G.y + G.z, REP_BASE, fT);
+      x = lerp(x, CX[s] - SW/2, p10); z = lerp(z, SW, p10); h = lerp(h, SM[s]*REP_H, p10);
+      const e = flyR[j];
+      e.setAttribute('x', x); e.setAttribute('width', z); e.setAttribute('y', yb - h); e.setAttribute('height', h);
+      presLbl[j].setAttribute('opacity', hT*(1 - p10));
+    });
+    sessLbl.forEach(e => e.setAttribute('opacity', hT));
+    cmp.forEach(e => e.setAttribute('opacity', ease(clamp01((p9 - .8)/.2))*(1 - p10)));
+    perSess.setAttribute('opacity', p10*(1 - p11));
+    repMean.setAttribute('opacity', p11);
+    avgBar.setAttribute('height', MEANR*REP_H*p11); avgBar.setAttribute('y', REP_BASE - MEANR*REP_H*p11);
+    avgTxt.setAttribute('opacity', p11); avgOne.setAttribute('opacity', p11);
+
+    introG.setAttribute('opacity', fade(-1, -1, g));
+
+    // ── the anchor brain: regions glow with the response on the right ──
+    let lvl = [0,0,0];
+    if(cb >= 2 && cb <= 4 || cf >= 2 && cf <= 4){
+      const w = REGW[tau < BLK ? Z1 : Z2], r = rAt(tau);
+      lvl = w.map(x => x*r*fade(2, 4, g));
+    }
+    if(cb === 5){
+      const bi = Math.min(NB-1, Math.floor(rt/BLK)), r = runResp[Math.min(runResp.length-1, Math.round(rt/.1))];
+      lvl = REGW[bi].map(x => x*r*fade(5, 5, g));
+    }
+    GLOW.forEach((e, k) => e.setAttribute('opacity', (.68*clamp01(lvl[k])).toFixed(3)));
+    // the voxel pin flashes at each scan, and holds when its number is on screen
+    const scanNow = sweeping && scanR.some(h => tau >= h.t0 && tau < h.t0+SCAN);
+    const held = (cb === 3 || cb >= 9) ? .8 + .2*Math.sin(now/300) : 0;
+    pinHalo.setAttribute('opacity', scanNow ? 1 : held);
+
+    if(t >= 1 && from !== beat) from = beat;              // settle
+    requestAnimationFrame(draw);
+  }
+
+  let capTimer = null;
+  function render(){
+    [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', i <= beat - LO));
+    notesEl.innerHTML = SCRIPT[beat];
+    capEl.classList.add('swap'); clearTimeout(capTimer);
+    capTimer = setTimeout(() => { capEl.textContent = BEATS[beat].cap; capEl.classList.remove('swap'); }, 150);
+  }
+  // forward plays the beat's motion; back and jumps land settled (no replay)
+  function advance(){ if(beat < HI){ from = beat; beat++; tStart = performance.now(); render(); } }
+  function goBack(){ if(beat > LO){ beat--; from = beat; tStart = -1e9; stopAudio(); render(); } }
+  function jump(p){ beat = Math.max(LO, Math.min(HI, p)); from = beat; tStart = -1e9; stopAudio(); render(); }
+
+  document.body.addEventListener('click', e => { if(e.target.closest('#notes')) return; advance(); });
+  window.addEventListener('keydown', e => {
+    if(e.key==='ArrowRight' || e.key===' ' || e.key==='Enter'){ e.preventDefault(); advance(); }
+    else if(e.key==='ArrowLeft'){ e.preventDefault(); goBack(); }
+    else if(e.key==='n' || e.key==='N'){ notesEl.classList.toggle('on'); }
+    else if(e.key==='m' || e.key==='M'){ muted = !muted; if(muted) stopAudio(); }
+    else if(e.key==='r' || e.key==='R'){ jump(LO); }
+    else if(e.key>='1' && e.key<='9'){ jump(LO + +e.key - 1); }
+  });
+
+  window[SLIDE_NAME] = {
+    advance, back: goBack,
+    atStart: () => beat === LO,
+    atEnd:   () => beat === HI,
+    reset:      () => jump(LO),
+    resetToEnd: () => jump(HI),
+    getBeat: () => beat - LO, count: () => HI - LO + 1, setBeat: b => jump(LO + b),
+  };
+
+  render();
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

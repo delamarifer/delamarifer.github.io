@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thesis defense · Chapter 1 (draft for feedback)</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="vendor/fraunces.css">
+<link rel="stylesheet" href="vendor/calibri.css">
+<script>document.write(`<link rel="stylesheet" href="outline/deck.css?v=${Date.now()}">`);</script>
+<!-- anchor-brain box geometry, shared with the scenes (outline/contracts/anchor-brain.md) -->
+<script>document.write(`<link rel="stylesheet" href="scenes/shared/anchor.css?v=${Date.now()}">`);</script>
+</head>
+<body>
+<div id="root"></div>
+<div id="hud"><span id="hud-pos"></span></div>
+<div id="secbar"></div>
+<div id="help">→ advance · ← back · n notes · ⇞/⇟ jump slides</div>
+<div id="notes"><div class="nlab">Speaker notes</div><div id="notes-body"></div></div>
+
+<script>document.write(`<script src="outline/engine.js?v=${Date.now()}"><\/script><script src="outline/order.js?v=${Date.now()}"><\/script>`);</script>
+<script>
+/* Chapter 1 only, for feedback (deploy.py). */
+(function(){ const i = ORDER.findIndex(r => r[0] === 'ch1-summary'); if(i >= 0) ORDER.splice(i + 1); })();
+</script>
+<script>
+/* The final deck: only parts a chat has PUSHED (outline/publish.py) appear here,
+   frozen at the version pushed. Order comes from outline/order.js.
+   A part not pushed yet shows as a grey gap slide; ?gaps=0 hides the gaps
+   (use that to rehearse with what's final so far). */
+const showGaps = new URLSearchParams(location.search).get('gaps') === '1';
+(async () => {
+  let status = {};
+  try{ status = await (await fetch(`outline/final/status.json?v=${Date.now()}`)).json(); }catch(e){}
+  for(const [part, where, what] of ORDER){
+    const s = status[part];
+    if(!s){
+      if(showGaps){
+        st(`<div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; color:var(--muted);">
+          <div class="eyebrow">Not pushed yet · outline ${where}</div>
+          <h1 class="t" style="color:var(--muted);">${what}</h1>
+          <p class="lead" style="color:var(--muted);">part ${part}</p></div>`);
+      }
+      continue;
+    }
+    await new Promise(ok => {
+      const el = document.createElement('script');
+      el.src = `outline/final/parts/${part}.js?v=${s.version}`;
+      el.onload = ok; el.onerror = () => { console.error('missing pushed part', part); ok(); };
+      document.body.appendChild(el);
+    });
+  }
+  startDeck();
+})();
+</script>
+</body>
+</html>

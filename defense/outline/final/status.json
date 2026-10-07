@@ -1,0 +1,82 @@
+{
+ "intro": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:14:20",
+  "slides": 20
+ },
+ "ch1-adv-vulnerability": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:24:36",
+  "slides": 1
+ },
+ "ch1-adv-training": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:24:36",
+  "slides": 1
+ },
+ "ch1-current-methods": {
+  "version": 2,
+  "pushed_at": "2026-10-07T08:28:09",
+  "slides": 1
+ },
+ "ch1-mms-logic": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:24:37",
+  "slides": 2
+ },
+ "ch1-models": {
+  "version": 2,
+  "pushed_at": "2026-10-07T04:27:55",
+  "slides": 1
+ },
+ "ch1-sounds": {
+  "version": 1,
+  "pushed_at": "2026-10-07T07:04:47",
+  "slides": 1
+ },
+ "ch1-synthesis": {
+  "version": 3,
+  "pushed_at": "2026-10-07T07:46:38",
+  "slides": 1
+ },
+ "ch1-experiment": {
+  "version": 2,
+  "pushed_at": "2026-10-07T08:24:37",
+  "slides": 1
+ },
+ "ch1-scanning": {
+  "version": 5,
+  "pushed_at": "2026-10-07T08:26:42",
+  "slides": 3
+ },
+ "ch1-nse": {
+  "version": 2,
+  "pushed_at": "2026-10-07T08:14:21",
+  "slides": 1
+ },
+ "ch1-regions": {
+  "version": 2,
+  "pushed_at": "2026-10-07T08:24:37",
+  "slides": 1
+ },
+ "ch1-example-voxels": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:24:37",
+  "slides": 1
+ },
+ "ch1-hypotheses": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:26:42",
+  "slides": 2
+ },
+ "ch1-results": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:14:21",
+  "slides": 6
+ },
+ "ch1-regression": {
+  "version": 3,
+  "pushed_at": "2026-10-07T08:28:09",
+  "slides": 3
+ }
+}

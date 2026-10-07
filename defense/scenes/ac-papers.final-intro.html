@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where sensory information is processed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap">
+<style>
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b;
+    --border:#e2e8f0; --panel:#f8fafc;
+    --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--body); font-family:var(--sans); overflow:hidden;
+        cursor:pointer; user-select:none; -webkit-user-select:none; }
+  header{ position:absolute; left:6vw; top:7vh; right:6vw; z-index:5; pointer-events:none; }
+  h1{ font-family:var(--serif); font-weight:900; color:var(--ink);
+      font-size:clamp(1.8rem,3.5vw,3rem); line-height:1.08; letter-spacing:-.012em; }   /* deck-wide h1.t size */
+  h1 em{ font-style:normal; color:var(--slate); }
+
+  #brain{ position:absolute; transition:opacity .6s ease; }
+  #brain img{ width:100%; height:100%; display:block; }
+  body.popped #brain{ opacity:.12; }
+  #links{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:2; }
+  #links line{ stroke-width:2; opacity:0; transition:opacity .4s ease; }
+  #links line.on{ opacity:.85; transition-delay:.55s; }
+  body.popped #links line.on{ opacity:.25; }
+  #links circle{ opacity:0; transition:opacity .4s ease; }
+  #links circle.on{ opacity:1; }
+  #links circle.active{ animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ r:9px; } 50%{ r:14px; } }
+
+  /* a group of figures: no box, just the figures, each with its citation.
+     Laid out at BASE_W px wide, placed with translate + scale. */
+  .grp{ position:absolute; left:0; top:0; width:600px; transform-origin:0 0; opacity:0; z-index:3;
+        transition:transform .8s cubic-bezier(.3,.7,.2,1), opacity .45s ease; }
+  .grp.on{ opacity:1; }
+  .grp.big{ z-index:4; }
+  .grp .figs{ display:flex; gap:18px; align-items:flex-end; }
+  .grp figure{ flex:1; min-width:0; }
+  .grp .im{ height:270px; display:flex; align-items:flex-end; justify-content:center; }
+  .grp .im img{ max-width:100%; max-height:100%; object-fit:contain; display:block; }
+  .grp .ph{ width:100%; height:100%; border:2px dashed #cbd5e1; border-radius:8px; display:flex;
+            flex-direction:column; align-items:center; justify-content:center; gap:6px;
+            color:var(--muted); font-size:16px; text-align:center; padding:14px; }
+  .grp figcaption{ margin-top:8px; font-size:17px; color:var(--ink); text-align:center; }   /* deck-wide 2026-10-07: citations black */
+  .grp .gcite{ margin-top:4px; font-size:17px; color:var(--ink); text-align:center; }
+  .grp.flag .gcite{ font-size:38px; }   /* ≈1rem on screen at the flag scale */
+  .grp .take{ margin-top:16px; font-size:26px; line-height:1.3; color:var(--ink); text-align:center; }
+  .grp .tag{ display:none; margin-top:6px; font-size:34px; font-weight:700; line-height:1.1; text-align:center; }
+  .grp.flag .take{ display:none; }
+  .grp.flag .tag{ display:block; }
+  .grp.flag figcaption{ font-size:38px; }
+  /* a flag holding several papers shows one combined citation line, not one per figure */
+  .grp .fcite{ display:none; margin-top:6px; font-size:38px; line-height:1.15; color:var(--ink); text-align:center; }
+  .grp.flag .fcite{ display:block; }
+  .grp.flag:has(.fcite) figcaption{ display:none; }
+  .grp.flag .im{ height:220px; }
+
+  footer{ position:absolute; left:6vw; right:6vw; bottom:0; padding:.6rem 0 1.2rem; display:flex;
+          justify-content:space-between; align-items:flex-end; gap:2rem; z-index:6; pointer-events:none; }
+  #cap{ visibility:hidden;   /* per Fer: no caption on screen; the beat text lives in the notes */
+        font-size:clamp(14px,1.5vw,22px); font-weight:500; color:var(--ink); line-height:1.3;
+        max-width:70vw; min-height:1.3em; transition:opacity .3s ease; }
+  #cap.swap{ opacity:0; }
+  #dots{ display:flex; gap:.42rem; padding-bottom:.35em; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  body.instant *{ transition:none !important; }
+
+  /* the hand-off: the whole map grays out and a question rises over it */
+  #brain, #links, #groups, header{ transition:opacity .8s ease, filter .8s ease; }
+  body.asked #brain, body.asked #links, body.asked #groups, body.asked header{ filter:grayscale(1); opacity:.16; }
+  #question{ position:absolute; left:8vw; right:8vw; top:50%; z-index:7; pointer-events:none; text-align:center;
+             opacity:0; transform:translateY(calc(-50% + 24px)); transition:opacity .7s ease .3s, transform .7s ease .3s; }
+  body.asked #question{ opacity:1; transform:translateY(-50%); }
+  #question .q1{ font-family:var(--serif); font-weight:900; color:var(--ink);
+                 font-size:clamp(2rem,4.4vw,4rem); line-height:1.08; letter-spacing:-.015em; }
+  #question .q2{ margin-top:1.2rem; font-size:clamp(1.1rem,2vw,1.8rem); line-height:1.35; color:var(--body); }
+  #question em{ font-style:normal; color:var(--slate); }
+  #question .how{ color:var(--ochre); }
+</style>
+</head>
+<body>
+<header><h1>Neuroscience has mapped <em>where</em> senses are processed</h1></header>
+<div id="brain"><img src="../assets/final/intro/3mt/clearbrain.webp?v=3" alt="Lateral view of the left hemisphere"></div>
+<svg id="links"></svg>
+<div id="groups"></div>
+<div id="question"></div>
+<footer><p id="cap"></p><div id="dots"></div></footer>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// What fMRI has shown: each group's figures pop up large with the takeaway,
+// then shrink to a flag beside the brain with a line to where the result lives.
+// The flags accumulate into a map of what is known.
+//
+// ACT 0 — BRAIN   (0):     the lateral brain, alone.
+// ACT 1 — FINDINGS(1..N):  group k pops up big; groups before it are flags.
+// ACT 2 — THE MAP (N+1):   the last group becomes a flag; the whole map.
+//
+// Figures live at assets/outline/papers/<fig id>.png (downloaded from the
+// open-access papers). Missing files show a dashed placeholder naming the file.
+// Region anchors are schematic, in normalized coords over clearbrain.webp
+// (1404×1120, left hemisphere, front at left), not data.
+// Only studies cited in the Chapter 1 paper are used (per Fer). Norman-Haignere
+// & McDermott (2018) is not here: it opens the next slide ("clues").
+// ─────────────────────────────────────────────────────────────────────────────
+const SLIDE_NAME = 'acPapers';
+const BRAIN_AR = 1404 / 1120;
+const BASE_W = 600;                     // group layout width (px) before scaling
+
+const A = {                             // anchors over the brain image, [x, y] in [0,1]
+  primary:   [.570, .522],
+  hgPost:    [.605, .509],
+  pitch:     [.513, .549],
+  speech:    [.573, .629],
+  musicAnt:  [.452, .616],
+  musicPost: [.666, .546],
+  sts:       [.563, .688],
+  song:      [.499, .607],
+  nonprim:   [.627, .616],
+  visLat:    [.835, .640],   // lateral occipitotemporal (EBA)
+  visVent:   [.760, .745],   // toward ventral temporal cortex (FFA, PPA; on the underside)
+};
+// flag slots: side + vertical center (fraction of height)
+const GROUPS = [   // studies cited in the Chapter 1 paper, plus four added by Fer (2026-10-07):
+                   // Humphries 2010, Santoro 2014, Overath 2015, Kell & McDermott 2019
+  { tag:'Cortical areas', col:'--muted', slot:['R', .23], start:true, anchors:['primary','visLat'],   // on from the start, never zooms
+    take:'A map of cortical areas: <b>auditory</b>, <b>visual</b>, sensorimotor',
+    figs:[{id:'glasser2016', cite:'Glasser et al., 2016'}] },
+  { tag:'Primary cortex', col:'--ochre', slot:['R', .43], anchors:['primary','hgPost'],
+    take:'Primary cortex: <b>frequency maps</b> and <b>general-purpose</b> spectrotemporal tuning',
+    figs:[{id:'humphries2010', cite:'Humphries et al., 2010'}, {id:'santoro2014', cite:'Santoro et al., 2014'}] },
+  { tag:'Pitch', col:'--ochre', slot:['L', .30], anchors:['pitch'],
+    take:'<b>Pitch</b> regions just anterior to primary cortex',
+    figs:[{id:'normanhaignere2013pitch', cite:'Norman-Haignere et al., 2013'}] },
+  { tag:'Speech &amp; music', col:'--plum', slot:['L', .56], zoom:true, anchors:['speech','musicAnt','musicPost'],
+    take:'Distinct <b>speech</b>- and <b>music</b>-selective populations, not explained by acoustics',
+    figs:[{id:'normanhaignere2015speech', cite:'Speech'}, {id:'normanhaignere2015music', cite:'Music'}],
+    cite:'Norman-Haignere et al., 2015' },
+  { tag:'Speech structure', col:'--slate', slot:['L', .81], anchors:['sts'],
+    take:'STS tracks <b>speech-specific structure</b> up to ~500 ms',
+    figs:[{id:'overath2015', cite:'Overath et al., 2015'}] },
+  { tag:'Primary vs non-primary', col:'--pine', slot:['R', .63], anchors:['primary','nonprim'],
+    take:'Non-primary cortex: <b>robust to background noise</b>, best predicted by <b>later network stages</b>',
+    figs:[{id:'kell2019', cite:'Kell &amp; McDermott, 2019'}, {id:'kell2018', cite:'Kell et al., 2018'}] },
+  { tag:'Model-matched sounds', col:'--pine', slot:['R', .83], zoom:true, anchors:['primary','nonprim'],
+    take:'Sounds matched to a spectrotemporal model drive primary cortex like natural sounds — <b>non-primary much less</b>',
+    figs:[{id:'normanhaignere2018', cite:'Norman-Haignere &amp; McDermott, 2018'}] },
+];
+// Less zooming (Fer, 2026-10-07): only groups with zoom:true pop up big and then shrink;
+// the others appear directly at their pinned size; start:true groups are there from beat 0.
+const SEQ = GROUPS.filter(g => !g.start);
+const N = SEQ.length;
+const plain = s => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
+const BEATS = ['The cortex, seen from the side',
+  ...SEQ.map(g => `${plain(g.tag)}: ${g.cite ? plain(g.cite) : g.figs.map(f => plain(f.cite)).join('; ')}`),
+  'Where the senses are processed'];
+// Last beat: the map grays out and the question appears (Fer, 2026-10-07).
+// Three phrasings to choose from: ?q=a (default) | b | c
+const QUESTIONS = {
+  a: ['We know <em>where</em>.', 'But <em class="how">how</em> are these features computed — what are the underlying representations and transformations?'],
+  b: ['These maps tell us <em>where</em>, not <em class="how">how</em>.', 'What representations and transformations turn sound into these responses?'],
+  c: ['<em>Where</em> is not <em class="how">how</em>.', 'What computations produce these responses?'],
+};
+const Q = QUESTIONS[(new URLSearchParams(location.search).get('q') || 'a').toLowerCase()] || QUESTIONS.a;
+document.getElementById('question').innerHTML = `<div class="q1">${Q[0]}</div><div class="q2">${Q[1]}</div>`;
+BEATS.push('Question: where, but how?');
+const MAX = BEATS.length - 1;
+
+// ── build ──
+const NS = 'http://www.w3.org/2000/svg';
+const groupsEl = document.getElementById('groups'), links = document.getElementById('links');
+GROUPS.forEach(g => {
+  const el = document.createElement('div');
+  el.className = 'grp';
+  el.innerHTML = `<div class="figs">${g.figs.map(f => `<figure>
+      <div class="im"><img src="${f.src || `../assets/outline/papers/${f.id}.png`}" alt=""
+        onerror="this.outerHTML='<div class=ph><b>${f.id}.png</b>figure to come</div>'"></div>
+      <figcaption>${f.cite}</figcaption></figure>`).join('')}</div>
+    ${g.cite ? `<div class="gcite">${g.cite}</div>` : ''}
+    ${!g.cite && g.figs.length > 1 ? `<div class="fcite">${g.figs.map(f => f.cite).join('; ')}</div>` : ''}
+    <div class="take">${g.take}</div>
+    <div class="tag" style="color:var(${g.col})">${g.tag}</div>`;
+  groupsEl.appendChild(el);
+  g.el = el;
+  g.lines = g.anchors.map(() => { const l = document.createElementNS(NS, 'line');
+    l.setAttribute('stroke', `var(${g.col})`); links.appendChild(l); return l; });
+});
+const DOT = {};
+GROUPS.forEach(g => g.anchors.forEach(a => { if(!DOT[a]){ const d = document.createElementNS(NS, 'circle');
+  d.setAttribute('r', 9); d.setAttribute('fill', `var(${g.col})`); d.setAttribute('stroke', '#fff');
+  d.setAttribute('stroke-width', 3); DOT[a] = d; } }));
+Object.values(DOT).forEach(d => links.appendChild(d));
+
+// ── layout (recomputed on resize) ──
+let L = null;
+function layout(){
+  const W = innerWidth, H = innerHeight;
+  const top = H * .22, bottom = H * .92;
+  const bh = Math.min((bottom - top) * .95, W * .5 / BRAIN_AR), bw = bh * BRAIN_AR;
+  const bx = (W - bw) / 2, by = top + (bottom - top - bh) / 2;
+  Object.assign(document.getElementById('brain').style, {left:bx+'px', top:by+'px', width:bw+'px', height:bh+'px'});
+  L = { W, H, bx, by, bw, bh,
+        flagW: Math.min(W * .17, bx - W * .03),
+        bigW: Math.min(W * .7, H * .72 / (400 / BASE_W)),
+        pt: k => [bx + A[k][0] * bw, by + A[k][1] * bh] };
+}
+
+function place(g, mode){            // mode: 'hidden' | 'big' | 'flag'
+  const el = g.el;
+  el.classList.toggle('flag', mode !== 'big');
+  const h = el.offsetHeight;
+  let x, y, s;
+  if(mode === 'flag'){
+    s = L.flagW / BASE_W;
+    x = g.slot[0] === 'L' ? L.W * .02 : L.W * .98 - L.flagW;
+    y = L.H * g.slot[1] - h * s / 2;
+  } else if(mode === 'hidden' && !g.zoom){   // non-zooming papers fade in where they are pinned
+    s = L.flagW / BASE_W;
+    x = g.slot[0] === 'L' ? L.W * .02 : L.W * .98 - L.flagW;
+    y = L.H * g.slot[1] - h * s / 2;
+  } else {                          // hidden zooming cards wait at the center, small
+    s = L.bigW / BASE_W * (mode === 'big' ? 1 : .55);
+    x = (L.W - BASE_W * s) / 2; y = L.H * .57 - h * s / 2;
+  }
+  el.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  el.classList.toggle('on', mode !== 'hidden');
+  el.classList.toggle('big', mode === 'big');
+  // leader lines from the flag's inner edge to each anchor
+  const fx = g.slot[0] === 'L' ? L.W * .02 + L.flagW : L.W * .98 - L.flagW, fy = L.H * g.slot[1];
+  g.anchors.forEach((a, j) => {
+    const [ax, ay] = L.pt(a), l = g.lines[j];
+    l.setAttribute('x1', fx); l.setAttribute('y1', fy); l.setAttribute('x2', ax); l.setAttribute('y2', ay);
+    l.classList.toggle('on', mode === 'flag');
+  });
+}
+
+let beat = 0;
+function render(){
+  const cur = beat >= 1 && beat <= N ? beat - 1 : -1;      // newest paper (index into SEQ), if any
+  GROUPS.filter(g => g.start).forEach(g => place(g, 'flag'));
+  SEQ.forEach((g, i) => place(g, i === cur ? (g.zoom ? 'big' : 'flag') : ((cur >= 0 ? i < cur : i < beat) ? 'flag' : 'hidden')));
+  document.body.classList.toggle('popped', cur >= 0 && !!SEQ[cur].zoom);
+  document.body.classList.toggle('asked', beat === MAX);
+  const on = new Set(), active = new Set();
+  GROUPS.filter(g => g.start).forEach(g => g.anchors.forEach(a => on.add(a)));
+  SEQ.forEach((g, i) => {
+    if(i < beat) g.anchors.forEach(a => on.add(a));
+    if(i === cur) g.anchors.forEach(a => active.add(a));
+  });
+  Object.keys(DOT).forEach(a => {
+    const [x, y] = L.pt(a);
+    DOT[a].setAttribute('cx', x); DOT[a].setAttribute('cy', y);
+    DOT[a].classList.toggle('on', on.has(a)); DOT[a].classList.toggle('active', active.has(a));
+  });
+  const cap = document.getElementById('cap');
+  cap.classList.add('swap');
+  setTimeout(() => { cap.textContent = BEATS[beat]; cap.classList.remove('swap'); }, 150);
+  document.getElementById('dots').innerHTML =
+    BEATS.map((_, i) => `<span class="dot ${i <= beat ? 'on' : ''}"></span>`).join('');
+}
+function jump(b){
+  beat = Math.max(0, Math.min(MAX, b));
+  document.body.classList.add('instant'); render();
+  void document.body.offsetHeight;
+  requestAnimationFrame(() => document.body.classList.remove('instant'));
+}
+window[SLIDE_NAME] = {
+  advance(){ if(beat < MAX){ beat++; render(); } },
+  back(){ if(beat > 0){ beat--; render(); } },
+  atStart(){ return beat <= 0; }, atEnd(){ return beat >= MAX; },
+  reset(){ jump(0); }, resetToEnd(){ jump(MAX); },
+  getBeat(){ return beat; }, count(){ return MAX + 1; }, setBeat: jump,
+};
+addEventListener('resize', () => { layout(); jump(beat); });
+// images change heights as they load: re-place once they settle
+addEventListener('load', () => { layout(); jump(beat); });
+addEventListener('click', () => window[SLIDE_NAME].advance());
+if(window.parent === window){
+  addEventListener('keydown', e => {
+    if(['ArrowRight',' ','Enter'].includes(e.key)) window[SLIDE_NAME].advance();
+    else if(e.key === 'ArrowLeft') window[SLIDE_NAME].back();
+  });
+}
+layout(); jump(0);
+</script>
+</body>
+</html>

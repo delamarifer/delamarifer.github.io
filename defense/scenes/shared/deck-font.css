@@ -1,0 +1,7 @@
+/* Injected by outline/engine.js into every scene iframe (Fer, 2026-10-07): the whole deck in
+   Calibri. Fonts only; scene owners remove colored TEXT themselves (see
+   outline/feedback/_deck-wide.md), because some labels sit on colored data. */
+@import url('../../vendor/calibri.css');
+html, body, body *:not(svg):not(path):not(code):not(pre), svg text, svg tspan{
+  font-family: 'Deck Calibri', Calibri, Carlito, 'Helvetica Neue', Arial, sans-serif !important;
+}

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How models are compared to cortex today</title>
+<link rel="stylesheet" href="../vendor/fraunces.css">
+<style>
+  /* Owned by part ch1-current-methods. Mirrors the deck's static-slide chrome
+     (deck.css .stage / h1.t / ul.frag / .cite) so it reads as a deck slide. */
+  :root{
+    --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0; --faint:#cbd5e1;
+    --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309;
+    --serif:'Fraunces', Georgia, serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; overflow:hidden; background:#fff; color:var(--body); font-family:var(--sans);
+             font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+             cursor:pointer; user-select:none; -webkit-user-select:none; }
+  .stage{ position:absolute; inset:0; padding:9vh 6vw 11vh; display:flex; flex-direction:column; }
+  h1.t{ font-family:var(--serif); font-weight:900; color:var(--ink);
+        font-size:clamp(1.8rem, 3.5vw, 3rem); line-height:1.05; letter-spacing:-.015em; margin-bottom:1rem; }
+  h1.t em{ font-style:normal; color:var(--slate); }
+  .q{ font-family:var(--serif); font-weight:700; color:var(--ink); font-size:clamp(1.3rem,2.3vw,2rem);
+      margin:-.4rem 0 1rem; }
+  #fig{ flex:1 1 auto; min-height:0; width:100%; display:block; }
+
+  ul.frag{ list-style:none; display:grid; grid-template-columns:1fr 1fr; column-gap:3vw; row-gap:.7rem; margin-top:1.2rem; }
+  ul.frag li{ font-size:clamp(1rem,1.65vw,1.45rem); line-height:1.3; padding-left:1.15em; position:relative; }
+  ul.frag li::before{ content:""; position:absolute; left:0; top:.5em; width:.42em; height:.42em; border-radius:50%; background:var(--slate); }
+  ul.frag li.ochre::before{ background:var(--ochre); }
+  ul.frag li.pine::before{ background:var(--pine); }
+  ul.frag li.pine .hl{ color:var(--pine); }
+  ul.frag li .hl{ color:var(--ink); font-weight:700; }
+  .cite{ position:absolute; left:6vw; right:8vw; bottom:5.2vh; font-size:1rem; color:var(--ink); }
+  /* the first half's lines (c1) give way to the second half's (c2) at the question */
+  body:not(.half2) .c2, body.half2 .c1{ display:none !important; }
+
+  .b{ opacity:0; transform:translateY(12px); transition:opacity .45s ease, transform .45s ease; }
+  .b.shown{ opacity:1; transform:none; }
+
+  /* ── figure ─────────────────────────────────────────────────────────────── */
+  svg text{ font-family:var(--sans); }
+  .lab{ font-size:17px; fill:var(--body); transition:fill .4s ease, font-weight .4s; }
+  .hd{ font-size:15px; fill:var(--muted); font-weight:600; letter-spacing:.02em; }
+  .ph{ font-size:22px; fill:var(--ink); font-weight:700; }
+  .ax{ font-size:14px; fill:var(--muted); }
+  .rv{ font-size:18px; font-weight:700; }
+  .panel{ transition:opacity .5s ease; }
+  .panel.dim{ opacity:.34; }
+  /* an element with data-on appears at that beat; with data-off it leaves at that beat */
+  .on{ opacity:0; transition:opacity .45s ease; transition-delay:var(--d,0s); }
+  .on.shown{ opacity:1; }
+  .cell{ transition:opacity .35s ease, fill .5s ease; transition-delay:var(--d,0s); }
+  .act.ignored .cell{ fill:#d7dde5; }
+  .w .cell{ fill:var(--ink); }
+  .w.ignored .cell{ fill:#fff; stroke:var(--faint); stroke-dasharray:3 3; }
+  .rowhi{ fill:none; stroke:var(--pine); stroke-width:2.5; opacity:0; transition:opacity .4s ease; transition-delay:var(--d,0s); }
+  .rowhi.shown{ opacity:1; }
+  body.natural .lab.snd{ fill:var(--pine); font-weight:700; }
+  body.settling *{ transition:none !important; }
+
+  footer{ position:absolute; right:2rem; bottom:1.1rem; }
+  #dots{ display:flex; gap:.45rem; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on2{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:absolute; left:0; right:0; bottom:0; background:rgba(255,255,255,.965);
+          border-top:1px solid var(--border); padding:16px 4% 18px; display:none;
+          font-size:clamp(13px,1.15vw,16px); line-height:1.6; pointer-events:none; }
+  #notes.on{ display:block; }
+  #notes b{ color:var(--ink); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <h1 class="t" id="title"></h1>
+    <p class="q b" data-beat="5">But have they learned the same solution as the brain?</p>
+    <svg id="fig" viewBox="0 0 1200 430" preserveAspectRatio="xMidYMid meet"></svg>
+    <ul class="frag">
+      <li class="b c1" data-beat="1">A network stage’s activations: <span class="hl">one row per natural sound</span></li>
+      <li class="b c1" data-beat="2"><span class="hl">Regression</span>: weights fit per voxel predict its responses</li>
+      <li class="b c1 ochre" data-beat="3">Task-optimized networks <span class="hl">predict well</span> — better than earlier models</li>
+      <li class="b c1" data-beat="4"><span class="hl">RSA</span>: do model and region treat the <span class="hl">same sounds as similar</span>?</li>
+      <li class="b c2" data-beat="6">Natural sounds <span class="hl">co-vary</span> — features can <span class="hl">correlate</span> with what matters</li>
+      <li class="b c2" data-beat="7">Fitted weights <span class="hl">ignore</span> what doesn’t help — different models can <span class="hl">tie</span></li>
+      <li class="b c2 ochre" data-beat="8">Standard networks still <span class="hl">score well</span> on brain benchmarks</li>
+      <li class="b c2 pine" data-beat="9">Model-matched stimuli <span class="hl">isolate what a model represents</span></li>
+    </ul>
+  </div>
+  <div class="cite c1">Yamins et al. (2014); Kell et al. (2018); Schrimpf et al. (2018); Tuckute et al. (2023); Kriegeskorte et al. (2008)</div>
+  <div class="cite c2">Naselaris et al. (2011); Tuckute et al. (2023); Conwell et al. (2024); Schrimpf et al. (2018); Feather et al. (2023), Fig. 7b; Norman-Haignere &amp; McDermott (2018)</div>
+  <footer><div id="dots"></div></footer>
+  <div id="notes"></div>
+<script>
+// ═══ HOW MODELS ARE COMPARED TO CORTEX TODAY → WHY NATURAL STIMULI ARE NOT ENOUGH ═══
+// Pattern B (SVG step reveal), schematic toy data. One continuous scene (Fer,
+// 2026-10-07): it used to be two slides split by ?from=&to=, but publish.py
+// rewrites scene queries to ?v=N, so the push played every beat on both slides.
+// The title switches at the question (beat 5).
+//
+// ACT 0 — SOUNDS      (0):   the natural sounds, one per row.
+// ACT 1 — REGRESSION  (1-3): stage activations fill row by row; weights fit for one
+//                            voxel give a predicted column; measured column + scatter.
+// ACT 2 — RSA         (4):   sound × sound dissimilarity for model and region, compared.
+// ACT 3 — THE GAP     (5-7): the question; natural sounds co-vary; weights ignore
+//                            some features.
+// ACT 4 — BENCHMARKS  (8-9): Feather et al. 2023 Fig. 7b (Brain-Score IT, a vision
+//                            result; real data, cropped, never redrawn); hand-off to
+//                            model-matched stimuli (the next part, ch1-mms-logic).
+//
+// COLOUR: matrices and voxel columns are viridis, styled after the paper's Fig. 3A
+// (assets/outline/image14.png: viridis activations, bracketed voxel vectors, the
+// network with its red stage, the × w node). Labels: slate = model, ochre = cortex;
+// ink = fitted weights; pine = the conclusion. Plum is kept free: in this talk it
+// means model-matched, which arrives on the next slide.
+(function(){
+  'use strict';
+  const SLIDE_NAME = 'currentMethods';
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('fig');
+
+  // ── toy data (seeded, so every load draws the same figure) ─────────────────
+  let seed = 11;
+  const rnd = () => (seed = (seed*1103515245 + 12345) % 2147483648) / 2147483648;
+  const SOUNDS = ['speech','dog bark','piano','rain','siren','laughter','guitar','footsteps'];
+  const NR = SOUNDS.length, NU = 10;
+  const A = SOUNDS.map(() => [...Array(NU)].map(() => rnd()));
+  // weights: units 2, 5, 8 come out near zero — the features regression ignores (beat 7)
+  const IGN = [2, 5, 8];
+  const W = [...Array(NU)].map((_, j) => IGN.includes(j) ? .04 : .35 + .65*rnd());
+  // viridis, 0..1 (matplotlib stops), as in the paper's matrices
+  const VIR = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[110,206,88],[181,222,43],[253,231,37]];
+  const viridis = t => { t = Math.max(0, Math.min(1, t)) * (VIR.length - 1); const i = Math.min(VIR.length - 2, Math.floor(t)), f = t - i;
+    return 'rgb(' + VIR[i].map((c, k) => Math.round(c + f*(VIR[i+1][k] - c))).join(',') + ')'; };
+  const norm = v => { const lo = Math.min(...v), hi = Math.max(...v); return v.map(x => (x-lo)/(hi-lo)); };
+  const PRED = norm(A.map(r => r.reduce((s, a, j) => s + a*W[j], 0)));
+  const MEAS = norm(PRED.map(p => p + 1.3*(rnd() - .5)));
+  const corr = (x, y) => { const n=x.length, mx=x.reduce((a,b)=>a+b)/n, my=y.reduce((a,b)=>a+b)/n;
+    let sxy=0, sx=0, sy=0; for(let i=0;i<n;i++){ sxy+=(x[i]-mx)*(y[i]-my); sx+=(x[i]-mx)**2; sy+=(y[i]-my)**2; }
+    return sxy/Math.sqrt(sx*sy); };
+  const RDM_M = SOUNDS.map((_, i) => SOUNDS.map((_, k) => i === k ? 0 : 1 - corr(A[i], A[k])));
+  const RDM_B = RDM_M.map((r, i) => r.map((d, k) => i === k ? 0 : d));
+  for(let i=0;i<NR;i++) for(let k=i+1;k<NR;k++){ const v = Math.max(0, RDM_M[i][k] + 1.1*(rnd()-.5)); RDM_B[i][k] = RDM_B[k][i] = v; }
+  const rdmMax = Math.max(...RDM_M.flat(), ...RDM_B.flat());
+  // beat 6: a feature the model uses vs a property cortex tracks, across the same sounds
+  // evenly spaced, in a fixed order, so the sound labels never collide
+  const FX = [.05, .62, .48, .9, .33, 1, .76, .19];
+  const FY = norm(FX.map(x => x + .18*(rnd() - .5)));
+
+  // ── geometry (viewBox units) ───────────────────────────────────────────────
+  const Y0 = 64, RH = 34;                 // first row top, row height
+  const MX = 160, CW = 26;                // activation matrix x, column width
+  const PX = 466, MXX = 560, VW = 34;     // predicted / measured columns
+  const WY = Y0 + NR*RH + 14;             // weights row
+  const SC = {x:648, y:96, w:120, h:120}; // regression scatter
+  const RX = [806, 1022], RC = 18, RY = 88;  // RDMs: x of each, cell, top
+  const CV = {x:850, y:84, w:300, h:220}; // beat-6 covariation scatter
+
+  const el = (tag, attrs, parent=svg, text) => { const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]); if(text != null) e.textContent = text; parent.appendChild(e); return e; };
+  // data-on="b": shown from beat b on; data-off="b": hidden from beat b on
+  const on = (e, b, delay=0, off) => { e.classList.add('on'); e.dataset.on = b; if(off != null) e.dataset.off = off;
+    if(delay) e.style.setProperty('--d', delay + 's'); return e; };
+
+  // ── regression panel ───────────────────────────────────────────────────────
+  const gReg = el('g', {class:'panel', id:'reg'});
+  el('text', {x:0, y:22, class:'ph'}, gReg, 'Regression');
+  SOUNDS.forEach((s, i) => {
+    el('text', {x:146, y:Y0 + i*RH + 22, 'text-anchor':'end', class:'lab snd'}, gReg, s);
+    // a pine outline around each sound's label, for the last beat
+    const hi = el('rect', {x:30, y:Y0 + i*RH + 2, width:122, height:RH - 4, rx:5, class:'rowhi'}, gReg);
+    hi.dataset.on = 8; hi.style.setProperty('--d', (i*.06) + 's');
+  });
+  // the network, as in the paper: slabs shrinking left to right, one stage in red
+  const gNet = on(el('g', {}, gReg), 1);
+  [44, 40, 40, 36, 36, 32, 28, 24].forEach((h, k) => {
+    const x = MX + k*13, y = Y0 - 12 - h, red = k === 4;
+    el('path', {d:`M${x},${y} l5,-5 h8 l-5,5 z M${x+8},${y} l5,-5 v${h} l-5,5 z`, fill:'#f1f5f9', stroke:red ? '#dc2626' : '#94a3b8', 'stroke-width':1.3}, gNet);
+    el('rect', {x, y, width:8, height:h, fill:'#fff', stroke:red ? '#dc2626' : '#94a3b8', 'stroke-width':red ? 2 : 1.3}, gNet);
+  });
+  el('text', {x:MX + 116, y:Y0 - 22, class:'hd'}, gNet, 'one stage · units →');
+  // activations: one <g> per unit column, so a whole column can be marked "ignored"
+  const cols = [...Array(NU)].map((_, j) => el('g', {class:'act'}, gReg));
+  A.forEach((row, i) => row.forEach((v, j) => {
+    const c = el('rect', {x:MX + j*CW, y:Y0 + i*RH, width:CW - 1, height:RH - 1, class:'cell'}, cols[j]);
+    c.setAttribute('fill', viridis(v)); c.dataset.on = 1; c.dataset.v = 1; c.style.setProperty('--d', (i*.12 + j*.015) + 's');
+  }));
+  // weights, aligned under the columns they multiply
+  on(el('text', {x:146, y:WY + 18, 'text-anchor':'end', class:'lab'}, gReg, 'weights'), 2);
+  const wcols = W.map((w, j) => { const g = el('g', {class:'w'}, gReg);
+    const c = el('rect', {x:MX + j*CW, y:WY, width:CW - 2, height:24, rx:2, class:'cell'}, g);
+    c.dataset.on = 2; c.dataset.v = (.15 + .8*w).toFixed(2); c.style.setProperty('--d', (j*.04) + 's'); return g; });
+  on(el('text', {x:MX, y:WY + 46, class:'ax'}, gReg, 'fit for one voxel'), 2);
+  const ign = on(el('text', {x:MX, y:WY + 46, class:'ax', style:'fill:var(--ink); font-weight:700'}, gReg,
+    'weights ≈ 0: these features never count'), 7);
+  // predicted (outlined) and measured (filled) voxel columns
+  on(el('text', {x:PX + VW/2, y:Y0 - 10, 'text-anchor':'middle', class:'hd'}, gReg, 'predicted'), 2);
+  on(el('text', {x:MXX + VW/2, y:Y0 - 10, 'text-anchor':'middle', class:'hd', style:'fill:var(--ochre)'}, gReg, 'measured'), 3);
+  const xw = (MX + NU*CW + PX)/2 - 4, yw = Y0 + NR*RH/2;
+  const gXw = on(el('g', {}, gReg), 2, .25);
+  el('circle', {cx:xw, cy:yw, r:17, fill:'#fff', stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
+  el('text', {x:xw, y:yw + 6, 'text-anchor':'middle', style:'font-size:16px; fill:var(--ink)'}, gXw, '× w');
+  el('path', {d:`M${xw + 19},${yw} H${PX - 10}`, stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
+  el('path', {d:`M${PX - 4},${yw} l-8,-5 v10 z`, fill:'var(--ink)'}, gXw);
+  const bracket = (x, g) => { const y0 = Y0 - 4, y1 = Y0 + NR*RH + 3;
+    el('path', {d:`M${x - 3},${y0} h-6 V${y1} h6 M${x + VW + 3},${y0} h6 V${y1} h-6`, fill:'none', stroke:'var(--ink)', 'stroke-width':1.5}, g); };
+  const gP = on(el('g', {}, gReg), 2, .5), gM = on(el('g', {}, gReg), 3);
+  bracket(PX, gP); bracket(MXX, gM);
+  PRED.forEach((p, i) => {
+    on(el('rect', {x:PX, y:Y0 + i*RH, width:VW, height:RH - 1, fill:viridis(p)}, gReg), 2, .6 + i*.1);
+    on(el('rect', {x:MXX, y:Y0 + i*RH, width:VW, height:RH - 1, fill:viridis(MEAS[i])}, gReg), 3, i*.06);
+  });
+  // scatter: predicted vs measured
+  const gSc = on(el('g', {}, gReg), 3, .5);
+  el('rect', {x:SC.x, y:SC.y, width:SC.w, height:SC.h, fill:'none', stroke:'var(--border)'}, gSc);
+  el('line', {x1:SC.x, y1:SC.y + SC.h, x2:SC.x + SC.w, y2:SC.y, stroke:'var(--faint)', 'stroke-dasharray':'4 4'}, gSc);
+  PRED.forEach((p, i) => el('circle', {cx:SC.x + 10 + p*(SC.w - 20), cy:SC.y + SC.h - 10 - MEAS[i]*(SC.h - 20), r:5.5, fill:'var(--ink)'}, gSc));
+  el('text', {x:SC.x + SC.w/2, y:SC.y + SC.h + 20, 'text-anchor':'middle', class:'ax'}, gSc, 'predicted');
+  el('text', {x:SC.x - 8, y:SC.y + SC.h/2, 'text-anchor':'middle', class:'ax', transform:`rotate(-90 ${SC.x - 8} ${SC.y + SC.h/2})`}, gSc, 'measured');
+  el('text', {x:SC.x + SC.w/2, y:SC.y - 14, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gSc,
+    'r = ' + corr(PRED, MEAS).toFixed(2));
+
+  el('line', {x1:782, y1:0, x2:782, y2:420, stroke:'var(--border)', 'stroke-width':1.5}, svg);
+
+  // ── RSA panel (beat 4) ─────────────────────────────────────────────────────
+  const gRsa = el('g', {class:'panel', id:'rsa'});
+  on(el('text', {x:806, y:22, class:'ph'}, gRsa, 'RSA'), 4);
+  [[RDM_M, 'model stage', 'var(--slate)', 0], [RDM_B, 'cortical region', 'var(--ochre)', .6]].forEach(([D, name, col, d0], m) => {
+    const g = on(el('g', {}, gRsa), 4, d0);
+    el('text', {x:RX[m] + NR*RC/2, y:RY - 14, 'text-anchor':'middle', class:'hd', style:`fill:${col}`}, g, name);
+    D.forEach((r, i) => r.forEach((v, k) => el('rect', {x:RX[m] + k*RC, y:RY + i*RC, width:RC, height:RC,
+      fill:viridis(v/rdmMax)}, g)));
+    el('text', {x:RX[m] + NR*RC/2, y:RY + NR*RC + 20, 'text-anchor':'middle', class:'ax'}, g, 'sound × sound');
+  });
+  const gCmp = on(el('g', {}, gRsa), 4, 1.2);
+  el('text', {x:(RX[0] + NR*RC + RX[1])/2, y:RY + NR*RC/2 + 7, 'text-anchor':'middle', style:'font-size:22px; fill:var(--muted)'}, gCmp, 'vs');
+  const triU = D => D.flatMap((r, i) => r.filter((_, k) => k > i));
+  const by = RY + NR*RC + 42;
+  el('path', {d:`M${RX[0] + NR*RC/2},${by} v14 H${RX[1] + NR*RC/2} v-14`, fill:'none', stroke:'var(--muted)', 'stroke-width':1.5}, gCmp);
+  el('text', {x:(RX[0] + RX[1] + NR*RC)/2, y:by + 42, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gCmp,
+    'similarity of similarities: ρ = ' + corr(triU(RDM_M), triU(RDM_B)).toFixed(2));
+
+  // ── covariation panel (beat 6, replaces RSA on slide 2) ────────────────────
+  const gCov = el('g', {class:'panel', id:'cov'});
+  on(el('text', {x:806, y:22, class:'ph'}, gCov, 'Across natural sounds'), 6);
+  const gCv = on(el('g', {}, gCov), 6, .2);
+  el('line', {x1:CV.x, y1:CV.y + CV.h, x2:CV.x + CV.w, y2:CV.y + CV.h, stroke:'var(--muted)', 'stroke-width':1.5}, gCv);
+  el('line', {x1:CV.x, y1:CV.y, x2:CV.x, y2:CV.y + CV.h, stroke:'var(--muted)', 'stroke-width':1.5}, gCv);
+  el('line', {x1:CV.x + 8, y1:CV.y + CV.h - 8, x2:CV.x + CV.w - 8, y2:CV.y + 8, stroke:'var(--faint)', 'stroke-width':2, 'stroke-dasharray':'5 5'}, gCv);
+  el('text', {x:CV.x + CV.w/2, y:CV.y + CV.h + 24, 'text-anchor':'middle', class:'ax', style:'fill:var(--slate); font-size:15px'}, gCv, 'a feature the model uses');
+  el('text', {x:CV.x - 14, y:CV.y + CV.h/2, 'text-anchor':'middle', class:'ax', style:'fill:var(--ochre); font-size:15px',
+    transform:`rotate(-90 ${CV.x - 14} ${CV.y + CV.h/2})`}, gCv, 'a property cortex tracks');
+  SOUNDS.forEach((s, i) => {
+    const cx = CV.x + 14 + FX[i]*(CV.w - 28), cy = CV.y + CV.h - 14 - FY[i]*(CV.h - 28);
+    const g = on(el('g', {}, gCv), 6, .4 + i*.08);
+    el('circle', {cx, cy, r:6, fill:'var(--ink)'}, g);
+    el('text', {x:cx + (FX[i] > .75 ? -10 : 10), y:cy + 5, 'text-anchor':FX[i] > .75 ? 'end' : 'start', class:'ax', style:'fill:var(--body)'}, g, s);
+  });
+  on(el('text', {x:CV.x + CV.w/2, y:CV.y + CV.h + 52, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gCov,
+    'natural sounds co-vary'), 6, 1.1);
+
+  // ── benchmark panel (beat 8): Feather et al. 2023 Fig. 7b, Brain-Score IT ───
+  // assets/outline/feather2023-brainscore-it.png (1293×1188, 600 dpi crop of p. 13;
+  // panel letter removed, y-axis label + ticks taken from the V1 panel beside it)
+  const gBs = el('g', {class:'panel', id:'bs'});
+  const BS_H = 372, BS_W = BS_H*1293/1188;
+  on(el('text', {x:806, y:22, class:'ph'}, gBs, 'Brain-Score benchmarks (vision, IT)'), 8);
+  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=2', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 8, .2);
+
+  // ── beats ──────────────────────────────────────────────────────────────────
+  // Each beat is data; render() reads BEATS[beat] only, so any jump lands settled.
+  //   dimReg / dimRsa : push that panel back   panel : which right-hand panel shows
+  //   ignored : grey the ignored feature columns   natural : sound labels go pine
+  const BEATS = [
+    { panel:'rsa' },
+    { panel:'rsa' },
+    { panel:'rsa' },
+    { panel:'rsa' },
+    { panel:'rsa', dimReg:true },
+    { panel:'rsa', dimReg:true, dimRsa:true },
+    { panel:'cov', dimReg:true },
+    { panel:'cov', dimRsa:true, ignored:true },
+    { panel:'bs',  dimReg:true, ignored:true },
+    { panel:'bs',  dimRsa:true, ignored:true, natural:true },
+  ];
+  const N = BEATS.length;
+  const QS = new URLSearchParams(location.search);
+  const LO = Math.max(0, Math.min(N-1, +(QS.get('from') || 0)));
+  const HI = Math.max(LO, Math.min(N-1, QS.get('to') != null ? +QS.get('to') : N-1));
+  const titleEl = document.getElementById('title');
+  const TITLES = ['How models are compared to <em>cortex</em> today', 'Testing models with <em>natural stimuli</em>'];
+
+  // Speaker notes: everything on the slide gets said; the prose lives here.
+  const SCRIPT = [
+    `<b>The sounds.</b> How are networks like these compared to cortex today? Every standard method starts from a set of natural sounds — speech, a dog barking, piano, rain, and so on. Keep an eye on the left edge: each row is one of these sounds.`,
+    `<b>Activations.</b> Play each sound through the network and take one stage’s activations. That gives a matrix: one row per natural sound, one column per unit.`,
+    `<b>Regression.</b> For each voxel, fit a weight for every unit, so that a weighted sum of the activations predicts that voxel’s response to each sound.`,
+    `<b>Predicted vs. measured.</b> Compare the predictions with the measured responses to held-out sounds. Task-optimized networks do this well — better than earlier models of auditory cortex, as in the work I showed earlier (Kell et al. 2018; Tuckute et al. 2023).`,
+    `<b>RSA.</b> The other common method is representational similarity analysis. For every pair of sounds, ask how different the model’s activations are, and how different the region’s responses are. Then ask whether the model and the region treat the same sounds as similar — a similarity of similarities.`,
+    `<b>The question.</b> So task-optimized networks predict cortical responses to natural sounds better than earlier models. But have they learned the same solution — the same representations — as the brain?`,
+    `<b>Properties covary.</b> Natural sounds vary in many properties at once. Networks trained to make human-relevant judgments learn features correlated with behaviorally relevant properties of natural sounds. Across natural sounds, a feature the model uses can rise and fall with a property cortex tracks, so responses can be predicted well even if the model’s features differ from those of the brain (Naselaris et al. 2011).`,
+    `<b>Weights ignore what doesn’t help.</b> And the fitted weights can ignore features that do not aid prediction — here these columns get weights near zero, so they never count. Whatever a model does with them is invisible to the score, so two models that represent sound differently can tie (Tuckute et al. 2023; Conwell et al. 2024).`,
+    `<b>Benchmarks.</b> This shows up in the standard benchmarks. Despite their adversarial susceptibility, standard-trained networks score well on the commonly used network–brain benchmarks. This is from Feather et al. (2023), and it is a vision result: each point is a network, the x-axis is its average Brain-Score on the IT benchmarks, and the y-axis is how often humans recognized metamers from the network’s committed stage. Networks whose metamers humans can’t recognize score about the same on the benchmark as networks whose metamers they can (ρ = 0.45, P = 0.08).`,
+    `<b>The way out.</b> These evaluations are confounded by the correlations in natural stimuli — and every test here is a natural sound. Model-matched stimuli isolate what a model represents (Norman-Haignere &amp; McDermott 2018): they ask what a model discards, not only what it can predict. Here is the logic.`,
+  ];
+
+  const notesEl = document.getElementById('notes');
+  const dotsEl = document.getElementById('dots');
+  for(let b = LO; b <= HI; b++){ const d = document.createElement('div'); d.className = 'dot'; dotsEl.appendChild(d); }
+  let beat = LO;
+
+  function render(){
+    const cur = BEATS[beat];
+    document.querySelectorAll('[data-beat]').forEach(e => e.classList.toggle('shown', beat >= +e.dataset.beat));
+    svg.querySelectorAll('[data-on]').forEach(e => {
+      const shown = beat >= +e.dataset.on && !(e.dataset.off != null && beat >= +e.dataset.off);
+      e.classList.toggle('shown', shown);
+      if(e.dataset.v) e.style.opacity = shown ? e.dataset.v : 0;   // cells carry their own value
+    });
+    document.getElementById('reg').classList.toggle('dim', !!cur.dimReg);
+    ['rsa', 'cov', 'bs'].forEach(id => { const g = document.getElementById(id);
+      g.style.display = cur.panel === id ? '' : 'none'; g.classList.toggle('dim', !!cur.dimRsa); });
+    const half2 = beat >= 5;
+    document.body.classList.toggle('half2', half2);
+    titleEl.innerHTML = TITLES[half2 ? 1 : 0];
+    IGN.forEach(j => { cols[j].classList.toggle('ignored', !!cur.ignored); wcols[j].classList.toggle('ignored', !!cur.ignored); });
+    // the "fit for one voxel" caption gives way to the ignored-weights caption
+    gReg.querySelectorAll('text.ax').forEach(t => { if(t.textContent === 'fit for one voxel') t.style.display = cur.ignored ? 'none' : ''; });
+    document.body.classList.toggle('natural', !!cur.natural);
+    [...dotsEl.children].forEach((d, k) => d.classList.toggle('on2', k <= beat - LO));
+    notesEl.innerHTML = SCRIPT[beat];
+  }
+
+  function advance(){ if(beat < HI){ beat++; render(); } }
+  function goBack(){ if(beat > LO){ beat--; render(); } }
+  function jump(b){
+    beat = Math.max(LO, Math.min(HI, b));
+    document.body.classList.add('settling');
+    render();
+    void document.body.offsetWidth;
+    requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('settling')));
+  }
+
+  document.body.addEventListener('click', e => { if(!e.target.closest('#notes')) advance(); });
+  window.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); advance(); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); goBack(); }
+    else if(e.key === 'n' || e.key === 'N'){ notesEl.classList.toggle('on'); }
+    else if(e.key === 'r' || e.key === 'R'){ jump(LO); }
+  });
+
+  window[SLIDE_NAME] = {
+    advance, back: goBack,
+    atStart: () => beat === LO, atEnd: () => beat === HI,
+    reset: () => jump(LO), resetToEnd: () => jump(HI),
+    getBeat: () => beat, count: () => N, setBeat: jump,
+  };
+  jump(LO);
+})();
+</script>
+</body>
+</html>

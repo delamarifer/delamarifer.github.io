@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adversarial training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0; --panel:#f8fafc;
+    --blue:#38506e;    /* natural sound, correct class */
+    --purple:#7a5ea0;  /* the robust network */
+    --green:#3f7357;   /* same / correct / yes */
+    --amber:#b45309;   /* the perturbation, the search */
+    --red:#dc2626;     /* the wrong answer */
+    --purple-soft:#efeaf6; --blue-soft:#e7ecf3; --green-soft:#e6f0ea; --red-soft:#fdeaea;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    background:#fff; color:var(--body); font-family:var(--sans);
+    display:flex; flex-direction:column; overflow:hidden;
+    cursor:pointer; user-select:none; -webkit-user-select:none;
+  }
+  /* The caption gets a reserved band rather than floating over the figure. Overlaying
+     it worked until the training-loop rail arrived along the bottom of the figure and
+     the two landed on top of each other; a band cannot collide by construction. */
+  #stage{ flex:1 1 auto; min-height:0; position:relative;
+          display:flex; flex-direction:column; }
+  #figWrap{ flex:1 1 auto; min-height:0; opacity:0; transition:opacity .6s ease; }
+  #fig{ width:100%; height:100%; display:block; }
+  /* the padding keeps the shrunken kicker clear of the column headers */
+  body.compact #figWrap{ opacity:1; padding-top:clamp(20px,4.2vh,40px); }
+  #capBand{ flex:0 0 auto; min-height:clamp(46px,7.2vh,84px);
+            padding:0 3.2% .4rem; display:flex; align-items:flex-end; }
+
+  /* ── title: large at beat 0, shrinks to a kicker afterwards ─────────────── */
+  #title{
+    position:absolute; left:5.5%; top:50%; transform:translateY(-50%);
+    font-family:var(--serif); font-weight:900; color:var(--ink);
+    font-size:clamp(28px,4.1vw,58px); line-height:1.07; letter-spacing:-.015em;
+    max-width:44%; z-index:3;
+    transition:font-size .75s cubic-bezier(.4,0,.2,1), top .75s cubic-bezier(.4,0,.2,1),
+               transform .75s cubic-bezier(.4,0,.2,1), left .75s cubic-bezier(.4,0,.2,1),
+               color .75s ease, max-width .75s ease;
+  }
+  #title .sub{
+    display:block; font-family:var(--sans); font-weight:400; color:var(--muted);
+    font-size:clamp(13px,1.15vw,17px); line-height:1.55; letter-spacing:0;
+    margin-top:.85em; max-width:24em; transition:opacity .45s ease;
+  }
+  body.compact #title{ font-size:clamp(13px,1.15vw,16px); top:3.2%; left:3.2%;
+                       transform:none; color:var(--muted); font-weight:700;
+                       letter-spacing:.09em; text-transform:uppercase; max-width:none; }
+  body.compact #title .sub{ opacity:0; pointer-events:none; height:0; margin:0; }
+
+  /* ── caption, in its own band ───────────────────────────────────────────── */
+  #cap{
+    max-width:62vw;
+    font-size:clamp(15px,1.62vw,24px); font-weight:500; color:var(--ink);
+    letter-spacing:-.01em; line-height:1.3;
+    transition:opacity .32s ease, transform .32s ease;
+  }
+  #cap.swap{ opacity:0; transform:translateY(7px); }
+
+  /* ── speaker notes (n) ──────────────────────────────────────────────────── */
+  #notes{
+    position:absolute; right:3.2%; bottom:4.4%; width:min(36vw,540px); z-index:4;
+    background:#fff; border:1px solid var(--border); border-radius:12px;
+    padding:1.1em 1.25em; font-size:clamp(12px,1.02vw,15px); line-height:1.62;
+    color:var(--body); box-shadow:0 10px 34px rgba(15,23,42,.10);
+    opacity:0; pointer-events:none; transform:translateY(8px);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  #notes.on{ opacity:1; transform:none; }
+  #notes b{ color:var(--ink); }
+
+  /* ── SVG element styling ────────────────────────────────────────────────── */
+  .lbl{ font-family:var(--sans); font-size:15px; fill:var(--muted); }
+  .lbl.strong{ fill:var(--body); font-weight:600; }
+  .lbl.tiny{ font-size:12.5px; }
+  .hd{ font-family:var(--sans); font-size:11.5px; font-weight:700; letter-spacing:.12em;
+       text-transform:uppercase; fill:#94a3b8; }
+  .ttl{ font-family:var(--serif); font-weight:700; font-size:19px; fill:var(--ink); }
+
+  /* every built element fades up; CSS owns the motion, JS only toggles .shown */
+  [data-step]{ opacity:0; transition:opacity .55s ease; }
+  [data-step].shown{ opacity:1; }
+
+  .wave{ fill:none; stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round; }
+  .wave.nat{ stroke:var(--blue); }
+  .wave.pert{ stroke:var(--amber); stroke-width:1.7; }
+  .wave.adv{ stroke:var(--blue); }
+
+  /* answer chips — the network's, and the listener's */
+  .chip rect{ rx:8; transition:fill .5s ease, stroke .5s ease; }
+  .chipTxt{ font-family:var(--sans); font-size:15.5px; font-weight:600;
+            transition:fill .5s ease; }
+
+  /* the decision space */
+  #space rect.frame{ fill:#fff; stroke:var(--border); stroke-width:1.5; rx:14; }
+  .region{ transition:d .85s cubic-bezier(.4,0,.2,1), opacity .5s ease; }
+  .bline{ fill:none; stroke:var(--ink); stroke-width:2.4;
+          transition:d .85s cubic-bezier(.4,0,.2,1); }
+  .ball{ fill:rgba(56,80,110,.07); stroke:var(--blue); stroke-width:1.6;
+         stroke-dasharray:5 4; }
+
+  /* the training loop rail along the bottom */
+  .loopBox rect{ rx:10; transition:fill .45s ease, stroke .45s ease; }
+  .loopTxt{ font-family:var(--sans); font-size:14.5px; font-weight:500;
+            transition:fill .45s ease, font-weight .45s ease; }
+
+  @keyframes breathe{ 0%,100%{ opacity:0; r:9 } 55%{ opacity:.75 } 100%{ r:26 } }
+  .pulsing{ animation:breathe 1.9s ease-out infinite; }
+
+  /* ── minimal chrome ─────────────────────────────────────────────────────── */
+  footer{ flex:0 0 auto; padding:.4rem 2rem 1.1rem; display:flex;
+          justify-content:space-between; align-items:center; }
+  #hint{ font-size:12px; color:#cbd5e1; letter-spacing:.02em; }
+  #dots{ display:flex; gap:.45rem; margin-left:auto; }
+  .dot-i{ width:8px; height:8px; border-radius:50%; background:#fff;
+          border:1.5px solid #cbd5e1; transition:background .2s, border-color .2s; }
+  .dot-i.on{ background:var(--ink); border-color:var(--ink); }
+
+  /* A jump — a deck restoring this scene, or a number key — must land settled, not
+     mid-sweep. Killing every transition for one paint is what makes that true; the
+     title in particular animates its own font-size and would otherwise be caught
+     travelling across the figure. */
+  body.settling *, body.settling *::before, body.settling *::after{
+    transition:none !important; animation:none !important;
+  }
+
+  @media print{
+    [data-step]{ opacity:1 !important; }
+    #notes{ opacity:1 !important; position:static; width:auto; }
+  }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <h1 id="title">Adversarial training, and a second network<span class="sub">
+      A network can be near-perfect on natural sounds and still be flipped to any answer
+      you like by a change no listener can hear. Training against that changes what the
+      network represents — and, most relevant here, what it is invariant to.</span></h1>
+
+    <div id="figWrap"><svg id="fig" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet"
+         xmlns="http://www.w3.org/2000/svg"><!-- built in script --></svg></div>
+    <div id="capBand"><div id="cap"></div></div>
+
+    <div id="notes"></div>
+  </div>
+  <footer><span id="hint">click or → to advance · n for notes</span><div id="dots"></div></footer>
+
+<script>
+// ═══ WHAT THIS SLIDE SHOWS ═══════════════════════════════════════════════════
+// Adversarial training, told so that it lands as INVARIANCE SURGERY rather than as
+// a robustness trick — because the next slides test invariances with metamers, and
+// this is the slide that has to earn that link.
+//
+// The argument in one line: a perturbation too small to hear flips the network's
+// answer, which means the network's decision boundary runs right past a natural
+// sound; adversarial training pushes that boundary out past everything within
+// epsilon of the sound; and "everything within epsilon gets the same answer" IS a
+// statement about invariance. So of course the invariances change — that is what
+// was optimised. Metamers are how we then listen to them.
+//
+// Two coupled panels, left and right, showing the SAME example:
+//   left  — the stimulus. natural wave, the perturbation, their sum, and two
+//           verdicts: the network's and the listener's. The listener's never moves.
+//   right — the representation. the example as a dot, the decision boundary as a
+//           line, and the epsilon-ball as the set of sounds that are "the same sound".
+//
+// ACT STRUCTURE
+//   ACT 0 — VULNERABILITY (0-3): natural -> correct; +delta -> wrong; the boundary
+//                                was that close all along.
+//   ACT 1 — THE LOOP      (4-7): train / find the worst point inside the ball /
+//                                add it / repeat. The boundary is pushed clear.
+//   ACT 2 — WHAT CHANGED  (8-10): the ball is now an enforced invariance; the known
+//                                consequences; hand off to metamers.
+//
+// COLOR CODE (fixed across the talk, per references/palette.md)
+//   blue   = the natural sound and its correct class
+//   ochre  = the perturbation, and the search for it
+//   brick  = the wrong answer
+//   pine   = same / correct / yes
+//   plum   = the robust network        (matches the "Robust network" tab in the deck)
+//
+// Deck hook: window.adversarialTraining = {advance, back, atStart, atEnd, reset,
+//                                          resetToEnd, getBeat, count, setBeat}
+(function(){
+  'use strict';
+
+  const SLIDE_NAME = 'ch1AdvTraining';
+  // Copy of adversarial-training.html for the outline part ch1-metamers.
+  // ?from=&to= plays only that range of beats, so the deck can show the
+  // adversarial example (0–3) and the training loop (4–10) as two slides.
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  // ── geometry ───────────────────────────────────────────────────────────────
+  // viewBox units. Left column is the stimulus, right column the representation.
+  const L = {x:52, w:396};                     // stimulus column
+  const SP = {x:512, y:56, w:436, h:330};      // decision space frame
+  const LOOP_Y = 418, LOOP_H = 52;             // the training-loop rail
+
+  // The example, in space coordinates. The adversarial twin sits inside the ball
+  // (it is an admissible "same sound") but on the far side of the boundary.
+  const NAT = {x:632, y:238}, ADV = {x:706, y:222}, EPS = 76;
+  // Boundary x-offset per act: 0 = grazing the example, +104 = pushed clear of the
+  // whole ball. Everything about the fix is carried by this one number.
+  const SHIFT_NEAR = 0, SHIFT_FAR = 104;
+
+  // ── beats ──────────────────────────────────────────────────────────────────
+  // Each beat is data. render() reads BEATS[beat] and nothing else, so jumping to
+  // any beat lands in a valid settled state by construction.
+  //   shift  : where the decision boundary sits
+  //   answer : what the network says       ('guitar' | 'siren')
+  //   ball   : show the epsilon-ball
+  //   adv    : show the perturbed example
+  //   search : draw the PGD search path inside the ball
+  //   loop   : which loop box is live (-1 none, 0..3)
+  //   robust : the network has become the robust one (plum)
+  const BEATS = [
+    { act:0, cap:'', answer:'guitar', shift:SHIFT_NEAR, loop:-1 },
+
+    { act:0, cap:'A network that gets it right', answer:'guitar', shift:SHIFT_NEAR, loop:-1 },
+
+    { act:0, cap:'Add a change no listener can hear', answer:'guitar', adv:true,
+      shift:SHIFT_NEAR, loop:-1 },
+
+    { act:0, cap:'The network changes its mind. The listener does not.',
+      answer:'siren', adv:true, shift:SHIFT_NEAR, loop:-1 },
+
+    { act:0, cap:'Every sound a listener would call the same one', answer:'siren', adv:true,
+      ball:true, shift:SHIFT_NEAR, loop:-1 },
+
+    // ACT 1 — the loop. Each beat lights one box on the rail and does one thing
+    // in the space, so the rail reads as a caption for the geometry.
+    { act:1, cap:'Train', answer:'siren', adv:true, ball:true, shift:SHIFT_NEAR, loop:0 },
+
+    { act:1, cap:'Search inside the ball for the worst case', answer:'siren', adv:true,
+      ball:true, search:true, shift:SHIFT_NEAR, loop:1 },
+
+    { act:1, cap:'Add it to training — the boundary moves', answer:'guitar', adv:true,
+      ball:true, search:true, shift:SHIFT_FAR, loop:2, robust:true },
+
+    { act:1, cap:'Repeat, for every sound', answer:'guitar', adv:true, ball:true,
+      shift:SHIFT_FAR, loop:3, robust:true },
+
+    // ACT 2 — the reading. Same picture, new claim laid over it.
+    { act:2, cap:'Now the whole ball gets one answer — that is an invariance',
+      answer:'guitar', adv:true, ball:true, shift:SHIFT_FAR, loop:-1, robust:true },
+
+    { act:2, cap:'',
+      answer:'guitar', adv:true, ball:true, shift:SHIFT_FAR, loop:-1, robust:true },
+  ];
+  const N = BEATS.length;
+  const QS = new URLSearchParams(location.search);
+  const LO = Math.max(0, Math.min(N-1, +(QS.get('from') || 0)));
+  const HI = Math.max(LO, Math.min(N-1, QS.get('to') != null ? +QS.get('to') : N-1));
+  // each clip names itself: the example clip is not about training yet
+  const titleEl = document.getElementById('title');
+  if(HI < 4){
+    titleEl.firstChild.textContent = 'Adversarial examples';
+    titleEl.querySelector('.sub').textContent =
+      'Near-perfect on natural sounds, yet flipped by a change no listener can hear.';
+  } else if(LO >= 4){
+    titleEl.firstChild.textContent = 'Adversarial training';
+  }
+
+  // Speaker notes. Josh's rule: everything on the slide gets said, and the prose
+  // lives here rather than on screen.
+  const SCRIPT = [
+    `<b>The setup.</b> We have a network that does the task well. The question on this slide is
+     not whether it is accurate — it is. The question is what it is accurate <i>about</i>, and the
+     way in is to try to break it.`,
+    `<b>It gets it right.</b> A natural sound goes in, and the network names it correctly and
+     confidently. On the right is the same fact drawn a second way: the sound is a point in the
+     network's representation, sitting on the correct side of the boundary it learned.`,
+    `<b>Now the perturbation.</b> We search for the smallest change that would make it answer
+     differently — here, L2 projected gradient descent with epsilon 1, following Madry and
+     colleagues, 2018. I am showing the perturbation amplified about fifty times, because at its
+     real size you would not see it on this slide any more than you would hear it.`,
+    `<b>The network changes its mind, and the listener does not.</b> Same confidence, different
+     answer. This is the gap the slide is about: two sounds that are the same sound to a listener
+     and different sounds to the network. Something the network treats as meaningful is something
+     perception discards entirely.`,
+    `<b>Draw the set.</b> The dashed ball is every sound within epsilon of the original — for our
+     purposes, every sound a listener would call the same one. Notice where the boundary is: it
+     runs straight through that ball. The adversarial example was not exotic, it was just the part
+     of the ball that happened to be on the wrong side.`,
+    `<b>So: train.</b> The loop starts from the ordinary trained network — the boundary as it
+     stands, cutting through the ball.`,
+    `<b>Find the worst case.</b> Rather than one perturbation, gradient descent hunts inside the
+     ball for the point the network is most wrong about. That is the search path in ochre.`,
+    `<b>Add it to training.</b> The worst point is added as a training example with the correct
+     label, and the boundary is pushed away from it. Watch the boundary move clear of the ball.`,
+    `<b>And repeat.</b> Every sound, every epoch. Same architecture, same task, same data as the
+     standard network — the only difference is that the training set keeps being refilled with the
+     examples the current network is most wrong about.`,
+    `<b>Here is the part that matters for this thesis.</b> Read what the finished picture says. Every
+     point in that ball now gets the same answer. That is not a robustness statement, it is an
+     invariance statement — we have explicitly optimised the network to ignore a set of differences,
+     so its invariances change.`,
+    `<b>The question this raises.</b> Are the robust network's invariances now closer to a
+     listener's? Metamers let us listen to them, so we can ask listeners directly — next slide.`,
+  ];
+
+  // ── deterministic waveform generation ──────────────────────────────────────
+  // Seeded so the shapes never change between reloads: the audience should read the
+  // natural and adversarial traces as the SAME sound, and any wobble between beats
+  // would undo that. Shape carries meaning — smooth+enveloped = a structured sound,
+  // dense high-frequency jitter = the perturbation.
+  function lcg(seed){ let s = seed >>> 0;
+    return () => (s = (s*1664525 + 1013904223) >>> 0) / 4294967296; }
+
+  function natSamples(n, seed){
+    const rnd = lcg(seed), out = [];
+    // Three partials plus a slow envelope. Deliberately smooth: it has to read as a
+    // structured sound at a glance, against the perturbation's dense jitter below it.
+    // Crowd more harmonics in and the two traces start to look like the same kind of
+    // thing, which is exactly the contrast the beat depends on.
+    const ph = [rnd()*6.3, rnd()*6.3, rnd()*6.3];
+    for(let i=0; i<n; i++){
+      const t = i/n;
+      const env = Math.pow(Math.sin(Math.PI*Math.min(1, t*1.06)), 0.62);
+      const v = 0.68*Math.sin(t*38 + ph[0])
+              + 0.24*Math.sin(t*97 + ph[1])
+              + 0.10*Math.sin(t*169 + ph[2])
+              + 0.035*(rnd()*2-1);
+      out.push(v*env);
+    }
+    return out;
+  }
+  function pertSamples(n, seed){
+    const rnd = lcg(seed), out = [];
+    // structured-but-inaudible: not white noise, it is a targeted direction
+    for(let i=0; i<n; i++){
+      const t = i/n;
+      out.push(0.72*(rnd()*2-1) + 0.4*Math.sin(t*366 + 1.1) + 0.28*Math.sin(t*503));
+    }
+    return out;
+  }
+  function toPath(vals, x0, yMid, w, amp){
+    const n = vals.length;
+    let d = '';
+    for(let i=0; i<n; i++){
+      const x = x0 + (i/(n-1))*w, y = yMid - vals[i]*amp;
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    }
+    return d.trim();
+  }
+
+  const NS = 240;
+  const natV  = natSamples(NS, 20260907);
+  const pertV = pertSamples(NS, 77);
+  // The real epsilon is inaudible, so at true scale the sum would be pixel-identical
+  // to the natural trace and the slide would look like a mistake. Drawn at a visible
+  // fraction, with the amplification stated on screen — the honesty matters more than
+  // the drama, and saying "x50" out loud is itself part of the point.
+  const ADV_MIX = 0.16;
+  const advV  = natV.map((v,i) => v + ADV_MIX*pertV[i]);
+
+  // ── decision-space geometry ────────────────────────────────────────────────
+  // One boundary curve, drawn at an x-offset. Regions are the same curve closed
+  // against the left or right wall, so they can never disagree with the line.
+  function bSeg(shift){
+    const x = SP.x + 188 + shift;
+    return `M ${x-34} ${SP.y} C ${x+34} ${SP.y+92}, ${x-42} ${SP.y+156}, ${x+14} ${SP.y+226} `
+         + `S ${x-16} ${SP.y+300}, ${x+2} ${SP.y+SP.h}`;
+  }
+  const leftRegion  = s => bSeg(s) + ` L ${SP.x} ${SP.y+SP.h} L ${SP.x} ${SP.y} Z`;
+  const rightRegion = s => bSeg(s) + ` L ${SP.x+SP.w} ${SP.y+SP.h} L ${SP.x+SP.w} ${SP.y} Z`;
+
+  // PGD: a few steps uphill from the natural example, staying inside the ball and
+  // ending on the adversarial twin. Drawn, not simulated — but shaped like the real
+  // thing: big first step, then smaller ones as it settles against the constraint.
+  const SEARCH = (() => {
+    const pts = [[NAT.x, NAT.y]];
+    const steps = [[34,-16],[24,4],[14,-6],[8,2]];
+    let x = NAT.x, y = NAT.y;
+    for(const [dx,dy] of steps){
+      x += dx; y += dy;
+      const d = Math.hypot(x-NAT.x, y-NAT.y);
+      if(d > EPS-4){ const k = (EPS-4)/d; x = NAT.x + (x-NAT.x)*k; y = NAT.y + (y-NAT.y)*k; }
+      pts.push([x,y]);
+    }
+    return pts;
+  })();
+
+  // ── build the figure ───────────────────────────────────────────────────────
+  const fig = document.getElementById('fig');
+  const el = (tag, attrs, parent) => {
+    const n = document.createElementNS(SVG_NS, tag);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    (parent || fig).appendChild(n);
+    return n;
+  };
+  // `fill` goes on style, never as an attribute. The .lbl / .lbl.strong rules declare
+  // fill in CSS, and a CSS declaration beats a presentation attribute — set fill as an
+  // attribute here and every semantic colour on this slide silently renders as the
+  // class default grey, which is exactly the bug this helper exists to prevent.
+  const txt = (x, y, s, cls, parent, extra) => {
+    const a = Object.assign({x, y, class:cls||'lbl'}, extra||{});
+    const fill = a.fill; delete a.fill;
+    const n = el('text', a, parent);
+    if(fill) n.style.fill = fill;
+    n.textContent = s; return n;
+  };
+
+  // arrowheads
+  const defs = el('defs', {});
+  [['ah', '#334155'], ['ahA', '#b45309'], ['ahM', '#94a3b8']].forEach(([id, col]) => {
+    const m = el('marker', {id, viewBox:'0 0 10 10', refX:8.5, refY:5, markerWidth:6,
+                            markerHeight:6, orient:'auto-start-reverse'}, defs);
+    el('path', {d:'M 0 0 L 10 5 L 0 10 z', fill:col}, m);
+  });
+
+  // ── LEFT: the stimulus chain ───────────────────────────────────────────────
+  const gL = el('g', {});
+  txt(L.x, 40, 'The sound', 'hd', gL);
+
+  // Amplitude and label offset are locked together: the label sits below the trough,
+  // never across it. WA*1 is the half-height, so labels go at mid + WA + 16.
+  const WA = 30;
+  // natural
+  const gNat = el('g', {'data-step':1}, gL);
+  el('path', {class:'wave nat', d:toPath(natV, L.x, 86, L.w, WA)}, gNat);
+  txt(L.x, 86 + WA + 18, 'a natural sound', 'lbl', gNat);
+
+  // perturbation
+  const gPert = el('g', {'data-step':2}, gL);
+  txt(L.x - 22, 182, '+', 'ttl', gPert, {'text-anchor':'middle'});
+  el('path', {class:'wave pert', d:toPath(pertV, L.x, 176, L.w, WA*0.38)}, gPert);
+  txt(L.x, 176 + 12 + 18, 'the perturbation', 'lbl', gPert, {fill:'var(--amber)'});
+  txt(L.x + 118, 176 + 12 + 18, '— drawn ×50; at its real size it is invisible', 'lbl tiny', gPert);
+
+  // sum
+  const gAdv = el('g', {'data-step':2}, gL);
+  txt(L.x - 22, 258, '=', 'ttl', gAdv, {'text-anchor':'middle'});
+  el('path', {class:'wave adv', d:toPath(advV, L.x, 252, L.w, WA)}, gAdv);
+  txt(L.x, 252 + WA + 18, 'the two sounds a listener is given', 'lbl', gAdv);
+
+  // ── the two verdicts ───────────────────────────────────────────────────────
+  // The whole of act 0 is the disagreement between these two boxes, so they sit
+  // side by side and change independently.
+  const gV = el('g', {'data-step':1}, gL);
+  txt(L.x, 326, 'The verdicts', 'hd', gV);
+
+  function verdict(x, y, w, who){
+    const g = el('g', {}, gV);
+    txt(x + 2, y + 16, who, 'lbl tiny', g);
+    const chip = el('g', {class:'chip'}, g);
+    const r = el('rect', {x, y:y+26, width:w, height:42, rx:8,
+                          fill:'var(--green-soft)', stroke:'#bcd0c4', 'stroke-width':1.5}, chip);
+    const t = txt(x + w/2, y + 53, 'acoustic guitar', 'chipTxt', chip,
+                  {'text-anchor':'middle', fill:'var(--green)'});
+    return {rect:r, text:t};
+  }
+  const vNet  = verdict(L.x, 338, 186, 'the network says');
+  const vEar  = verdict(L.x + 210, 338, 186, 'a listener hears');
+
+  // ── RIGHT: the decision space ──────────────────────────────────────────────
+  const gS = el('g', {id:'space'});
+  txt(SP.x, 40, 'What the network represents', 'hd', gS);
+  el('rect', {class:'frame', x:SP.x, y:SP.y, width:SP.w, height:SP.h}, gS);
+
+  const clipId = 'spClip';
+  const cp = el('clipPath', {id:clipId}, defs);
+  el('rect', {x:SP.x, y:SP.y, width:SP.w, height:SP.h, rx:14}, cp);
+  const gClip = el('g', {'clip-path':`url(#${clipId})`}, gS);
+
+  const regL = el('path', {class:'region', d:leftRegion(SHIFT_NEAR),
+                           fill:'var(--blue-soft)', opacity:.85}, gClip);
+  const regR = el('path', {class:'region', d:rightRegion(SHIFT_NEAR),
+                           fill:'var(--red-soft)', opacity:.85}, gClip);
+  const bline = el('path', {class:'bline', d:bSeg(SHIFT_NEAR)}, gClip);
+
+  // region labels sit in the corners so the moving boundary never collides with them
+  const labL = txt(SP.x + 20, SP.y + 26, '“acoustic guitar”', 'lbl strong', gClip);
+  const labR = txt(SP.x + SP.w - 20, SP.y + 26, '“siren”', 'lbl strong', gClip,
+                   {'text-anchor':'end', fill:'var(--red)'});
+
+  // epsilon ball
+  const gBall = el('g', {'data-step':4}, gClip);
+  el('circle', {class:'ball', cx:NAT.x, cy:NAT.y, r:EPS}, gBall);
+  // above the ball, not below: the act-2 badge takes the lower strip of the frame
+  txt(NAT.x - EPS + 2, NAT.y - EPS - 11, 'every sound within ε', 'lbl tiny', gBall,
+      {fill:'var(--blue)'});
+
+  // the PGD search path
+  const gSearch = el('g', {'data-step':6}, gClip);
+  el('path', {d:SEARCH.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' '),
+              fill:'none', stroke:'var(--amber)', 'stroke-width':2,
+              'stroke-dasharray':'4 3', 'marker-end':'url(#ahA)'}, gSearch);
+  SEARCH.slice(1,-1).forEach(p =>
+    el('circle', {cx:p[0], cy:p[1], r:2.6, fill:'var(--amber)'}, gSearch));
+
+  // the two examples
+  const gDots = el('g', {}, gClip);
+  const dAdv = el('g', {'data-step':2}, gDots);
+  // The halo pulses, not the dot — breathing the dot itself makes it read as
+  // uncertain, when the point of the beat is that the network is confidently wrong.
+  const halo = el('circle', {cx:ADV.x, cy:ADV.y, r:15, fill:'none',
+                             stroke:'var(--red)', 'stroke-width':2, opacity:0}, dAdv);
+  const advRing = el('circle', {cx:ADV.x, cy:ADV.y, r:7, fill:'#fff', stroke:'var(--red)',
+                                'stroke-width':2.6}, dAdv);
+  // clear of the halo at its widest (r 26), or the pulse eats the label
+  const advLab = txt(ADV.x + 32, ADV.y - 14, '+ δ', 'lbl tiny', dAdv, {fill:'var(--red)'});
+
+  const dNat = el('g', {'data-step':1}, gDots);
+  el('circle', {cx:NAT.x, cy:NAT.y, r:7.5, fill:'var(--blue)'}, dNat);
+  txt(NAT.x - 13, NAT.y - 11, 'the sound', 'lbl tiny', dNat,
+      {'text-anchor':'end', fill:'var(--blue)'});
+
+  // ── the training-loop rail ─────────────────────────────────────────────────
+  // Echoes the four boxes from the slide it replaces, but they light one at a time
+  // and each one is doing something visible in the space above.
+  const LOOPS = ['train', 'find the worst\nperturbation', 'add it to training', 'repeat'];
+  const gLoop = el('g', {'data-step':5});
+  const bw = 208, gap = 26;
+  const loopBoxes = LOOPS.map((label, i) => {
+    const x = 52 + i*(bw + gap);
+    const g = el('g', {class:'loopBox'}, gLoop);
+    const r = el('rect', {x, y:LOOP_Y, width:bw, height:LOOP_H,
+                          fill:'var(--panel)', stroke:'var(--border)', 'stroke-width':1.5}, g);
+    const lines = label.split('\n');
+    const ts = lines.map((ln, k) => txt(x + bw/2, LOOP_Y + LOOP_H/2 + 5 + (k - (lines.length-1)/2)*17,
+                                        ln, 'loopTxt', g,
+                                        {'text-anchor':'middle', fill:'var(--body)'}));
+    if(i < LOOPS.length - 1)
+      el('path', {d:`M ${x+bw+5} ${LOOP_Y+LOOP_H/2} L ${x+bw+gap-6} ${LOOP_Y+LOOP_H/2}`,
+                  stroke:'#94a3b8', 'stroke-width':1.8, 'marker-end':'url(#ahM)'}, gLoop);
+    return {rect:r, texts:ts};
+  });
+  // the "repeat" arrow curling back to the start
+  el('path', {d:`M ${52 + 3*(bw+gap) + bw/2} ${LOOP_Y+LOOP_H+5}
+                 C ${52 + 3*(bw+gap) + bw/2} ${LOOP_Y+LOOP_H+22},
+                   ${52 + bw/2} ${LOOP_Y+LOOP_H+22},
+                   ${52 + bw/2} ${LOOP_Y+LOOP_H+5}`,
+              fill:'none', stroke:'#cbd5e1', 'stroke-width':1.8,
+              'marker-end':'url(#ahM)'}, gLoop);
+
+  // ── the act-2 reading, laid over the finished picture ──────────────────────
+  const gRead = el('g', {'data-step':9});
+  el('rect', {x:SP.x, y:SP.y, width:SP.w, height:SP.h, rx:14,
+              fill:'none', stroke:'var(--purple)', 'stroke-width':2.5}, gRead);
+  const readBadge = el('g', {}, gRead);
+  el('rect', {x:SP.x + SP.w - 250, y:SP.y + SP.h - 52, width:234, height:38, rx:8,
+              fill:'var(--purple-soft)', stroke:'#d8cce8'}, readBadge);
+  txt(SP.x + SP.w - 133, SP.y + SP.h - 27, 'one answer for the whole ball', 'chipTxt',
+      readBadge, {'text-anchor':'middle', fill:'var(--purple)', 'font-size':'14.5'});
+
+  // act 2 close: the question training raises, in the verdicts' place. The metamer
+  // slide that follows answers it.
+  const gCons = el('g', {'data-step':10});
+  txt(L.x, 326, 'The question', 'hd', gCons);
+  ['Are its invariances now', 'closer to a listener’s?'].forEach((s, i) =>
+    txt(L.x, 364 + i*32, s, 'ttl', gCons, {fill:'var(--purple)', 'font-size':'26'}));
+
+  // ── state and rendering ────────────────────────────────────────────────────
+  let beat = LO;
+  const capEl = document.getElementById('cap');
+  const notesEl = document.getElementById('notes');
+  const dotsEl = document.getElementById('dots');
+  for(let i=LO; i<=HI; i++){
+    const d = document.createElement('div'); d.className = 'dot-i'; dotsEl.appendChild(d);
+  }
+
+  let capTimer = null;
+  function render(instant){
+    const b = BEATS[beat];
+
+    // chrome
+    document.body.classList.toggle('compact', beat > 0);
+    [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', LO + i <= beat));
+    notesEl.innerHTML = SCRIPT[beat];
+
+    // caption swaps rather than cuts; clearing the timer keeps fast clicking from
+    // stranding a stale caption on screen. A jump sets it outright — the 150 ms
+    // hand-off would leave the previous beat's caption under a settled figure.
+    clearTimeout(capTimer);
+    if(instant){
+      capEl.textContent = b.cap; capEl.classList.remove('swap');
+    } else {
+      capEl.classList.add('swap');
+      capTimer = setTimeout(() => {
+        capEl.textContent = b.cap; capEl.classList.remove('swap');
+      }, 150);
+    }
+
+    // build-ins. gCons replaces the verdict block in act 2, so they trade places.
+    fig.querySelectorAll('[data-step]').forEach(n =>
+      n.classList.toggle('shown', beat >= +n.getAttribute('data-step')));
+    // The verdicts hold through the first act-2 beat — by then both boxes read
+    // "acoustic guitar" again, which is the payoff, and dropping them a beat early
+    // would throw that away and leave the column empty. They hand over to the
+    // consequences list at the last beat.
+    gV.classList.toggle('shown', beat >= 1 && beat < 10);
+    gLoop.classList.toggle('shown', b.act === 1);
+
+    // the boundary and its regions
+    const s = b.shift;
+    bline.setAttribute('d', bSeg(s));
+    regL.setAttribute('d', leftRegion(s));
+    regR.setAttribute('d', rightRegion(s));
+
+    // The network's verdict — the listener's is deliberately never touched; the whole
+    // of act 0 is the disagreement between these two boxes. Solid brick rather than a
+    // tint: this is the beat the slide turns on, and a pale wash of red reads as the
+    // same colour as the pale wash of green from the back of a lecture hall.
+    const wrong = b.answer === 'siren';
+    vNet.rect.setAttribute('fill',   wrong ? 'var(--red)' : 'var(--green-soft)');
+    vNet.rect.setAttribute('stroke', wrong ? 'var(--red)' : '#bcd0c4');
+    vNet.text.style.fill = wrong ? '#ffffff' : 'var(--green)';   // style, per txt() above
+    vNet.text.textContent = wrong ? 'siren' : 'acoustic guitar';
+
+    // which example is the network currently being asked about
+    halo.classList.toggle('pulsing', beat === 3);
+    advLab.style.fill = wrong ? 'var(--red)' : 'var(--muted)';
+    // Once training has moved the boundary, the perturbed sound is classified
+    // correctly — leaving its marker brick red would keep asserting "this one is
+    // wrong" over a picture that has just stopped being about that.
+    advRing.setAttribute('stroke', wrong ? 'var(--red)' : 'var(--blue)');
+
+    // the loop rail: one box live at a time
+    loopBoxes.forEach((lb, i) => {
+      const live = b.loop === i;
+      lb.rect.setAttribute('fill',   live ? 'var(--purple-soft)' : 'var(--panel)');
+      lb.rect.setAttribute('stroke', live ? 'var(--purple)' : 'var(--border)');
+      lb.texts.forEach(t => {
+        t.setAttribute('fill', live ? 'var(--purple)' : 'var(--body)');
+        t.setAttribute('font-weight', live ? '700' : '500');
+      });
+    });
+
+    // once trained, the correct region is the robust network's — recolour the frame
+    // so "which network are we looking at" is never ambiguous
+    gS.querySelector('rect.frame').setAttribute('stroke',
+      b.robust ? 'var(--purple)' : 'var(--border)');
+    labL.style.fill = b.robust ? 'var(--purple)' : 'var(--body)';
+  }
+
+  // ── controller ─────────────────────────────────────────────────────────────
+  function advance(){ if(beat < HI){ beat++; render(); } }
+  function goBack(){ if(beat > LO){ beat--; render(); } }
+  function jump(b){
+    beat = Math.max(LO, Math.min(HI, b));
+    document.body.classList.add('settling');
+    render(true);
+    void document.body.offsetWidth;                 // flush the untransitioned state
+    // two frames: one to paint it, one to re-arm transitions for the next press
+    requestAnimationFrame(() => requestAnimationFrame(() =>
+      document.body.classList.remove('settling')));
+  }
+
+  document.body.addEventListener('click', e => {
+    if(e.target.closest('#notes')) return;
+    advance();
+  });
+  window.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); advance(); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); goBack(); }
+    else if(e.key === 'n' || e.key === 'N'){ notesEl.classList.toggle('on'); }
+    else if(e.key === 'r' || e.key === 'R'){ jump(LO); }
+    else if(e.key >= '1' && e.key <= '9'){ jump(+e.key - 1); }
+    else if(e.key === '0'){ jump(9); }
+  });
+
+  window[SLIDE_NAME] = {
+    advance, back: goBack,
+    atStart: () => beat === LO,
+    atEnd:   () => beat === HI,
+    reset:      () => jump(LO),
+    resetToEnd: () => jump(HI),
+    getBeat: () => beat,
+    count:   () => N,
+    setBeat: jump,
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

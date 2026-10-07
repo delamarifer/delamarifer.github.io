@@ -1,0 +1,34 @@
+/* The anchor brain's box: one shared geometry for every Ch. 1 experiment scene.
+   Owned by the brain-experiment chat (ch1-experiment). Status: LOOK DECIDED; see
+   outline/contracts/anchor-brain.md. Change these numbers here and nowhere else.
+
+   Use in a scene:
+     <link rel="stylesheet" href="shared/anchor.css">        (from scenes/*.html)
+     <link rel="stylesheet" href="scenes/shared/anchor.css"> (from a root-level scene)
+     <div class="anchor-brain"> … the brain (live or snapshot) … </div>
+     <div class="anchor-content"> … your scene's own content … </div>
+*/
+:root{
+  --anchor-left: 2vw;    /* the brain's box, in viewport units, identical in every scene */
+  --anchor-top: 14vh;
+  --anchor-w: 22vw;      /* Fer, 2026-10-07: smaller — was 34vw x 70vh */
+  --anchor-h: 62vh;      /* locator + zoom are ~0.65 wide:tall; 22vw on 16:9 ~ 60vh tall */
+  --anchor-gap: 2.5vw;   /* space between the brain and the scene's content */
+}
+.anchor-brain{
+  position: absolute;
+  left: var(--anchor-left); top: var(--anchor-top);
+  width: var(--anchor-w); height: var(--anchor-h);
+}
+/* until the experiment chat exports the final look, show where the brain will sit */
+.anchor-brain.placeholder{
+  border: 2px dashed #cbd5e1; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #94a3b8; font: 13px/1.4 'Helvetica Neue', Arial, sans-serif; text-align: center;
+}
+.anchor-brain.placeholder::after{ content: "anchor brain (from ch1-experiment)"; }
+.anchor-content{
+  position: absolute;
+  left: calc(var(--anchor-left) + var(--anchor-w) + var(--anchor-gap));
+  right: 3vw; top: var(--anchor-top); bottom: 10vh;
+}

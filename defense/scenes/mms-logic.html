@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The logic of model-matched stimuli</title>
+<link rel="stylesheet" href="../vendor/fraunces.css">
+<style>
+  /* Owned by part ch1-mms-logic. Mirrors the deck's static-slide chrome (deck.css
+     .stage / h1.t / ul.frag) so it reads as the same slide it replaced. */
+  :root{
+    --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0;
+    --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309;
+    --serif:'Fraunces', Georgia, serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; overflow:hidden; background:#fff; color:var(--body); font-family:var(--sans);
+             font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
+             cursor:pointer; user-select:none; -webkit-user-select:none; }
+  .stage{ position:absolute; inset:0; padding:9vh 6vw 11vh; display:flex; flex-direction:column; }
+  h1.t{ font-family:var(--serif); font-weight:900; color:var(--ink);
+        font-size:clamp(1.8rem, 3.5vw, 3rem); line-height:1.08; letter-spacing:-.012em; margin-bottom:1.6rem; }
+  /* matches deck.css h1.t (Fer, 2026-10-07: smaller titles, more room for figures) */
+  h1.t em{ font-style:normal; color:var(--slate); }
+  #figwrap{ flex:1 1 auto; min-height:0; position:relative; }
+  #cv{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  ul.frag{ list-style:none; display:flex; flex-direction:column; gap:1.15rem; margin-top:1.4rem; }
+  ul.frag li{ font-size:clamp(1.15rem,1.9vw,1.65rem); line-height:1.35; padding-left:1.15em; position:relative; max-width:30em; }
+  ul.frag li::before{ content:""; position:absolute; left:0; top:.52em; width:.42em; height:.42em; border-radius:50%; background:var(--slate); }
+  ul.frag li.pine::before{ background:var(--pine); }
+  ul.frag li .hl{ color:var(--ink); font-weight:700; }
+  .b{ opacity:0; transform:translateY(12px); transition:opacity .45s ease, transform .45s ease; }
+  .b.shown{ opacity:1; transform:none; }
+
+  footer{ position:absolute; right:2rem; bottom:1.1rem; }
+  #dots{ display:flex; gap:.45rem; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:absolute; left:0; right:0; bottom:0; background:rgba(255,255,255,.965);
+          border-top:1px solid var(--border); padding:16px 4% 18px; display:none;
+          font-size:clamp(13px,1.15vw,16px); line-height:1.6; pointer-events:none; }
+  #notes.on{ display:block; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <h1 class="t">The logic of <em>model-matched stimuli</em></h1>
+    <div id="figwrap"><canvas id="cv"></canvas></div>
+    <ul class="frag">
+      <li class="b" data-beat="11">Same time-averaged response as a natural sound <span class="hl">at one model stage</span> — otherwise unconstrained</li>
+      <li class="b pine" data-beat="12">If that stage accounts for a voxel, the two sounds should evoke <span class="hl">the same response</span></li>
+    </ul>
+  </div>
+  <footer><div id="dots"></div></footer>
+  <div id="notes"></div>
+<script>
+// ═══ THE LOGIC OF MODEL-MATCHED STIMULI ══════════════════════════════════════
+// Pattern A: the paper's panel A (assets/outline/mms-logic.png = image1.png cropped
+// to (110,60)-(1850,660)) drawn to canvas, with white covers revealing it left to
+// right and light composited on top to show the signal flowing through it.
+//
+// ACT 0 — TITLE        (0):    title only.
+// ACT 1 — TWO SOUNDS   (1-2):  natural sound plays; model-matched sound plays; "Different".
+// ACT 2 — THE MODEL    (3):    both sounds run through the model to the matched stage.
+// ACT 3 — RESPONSES    (4-6):  responses come out of the stage and differ over time;
+//                              time-averaged, they collapse into columns; "Matched" —
+//                              and that match feeds back: it is what made the sound.
+// ACT 4 — THE BRAIN    (7-10): the model's middle grays out; the natural sound plays and
+//                              its voxel lights (nothing travels); kept; then the model-
+//                              matched sound; "Similar?"
+// ACT 5 — LOGIC        (11-12): the middle returns; the two bullets.
+//
+// COLOUR: blue = natural sound (and the voxel response it evoked), plum = model-
+// matched sound (and its voxel response), ochre = the matched stage, pine = matched. The figure's own
+// colours (viridis responses, red labels) are never restyled.
+
+const SLIDE_NAME = 'mmsLogic';
+const IMG_SRC = '../assets/outline/mms-logic.png';
+const IMG_W = 1740, IMG_H = 600;
+
+// ── anchors: pixels in mms-logic.png, detected with PIL (whitespace / ink /
+//    marker colours), normalised at use. Rows are 269 px apart. ──────────────
+const ROW_Y   = [177, 446];             // arrow centre line of each row
+const DY      = [0, 269];               // row offset applied to top-row boxes
+const WAVE    = [156, 382];             // waveform x extent
+const MODEL   = [437, 649];             // model drawing x extent; y = rowY ± 25
+const STAGE   = [[624, 180], [624.5, 448]];   // dark-purple matched block (617-631)
+const ARROW2  = [656, 688];
+const STACK   = {x0:748, x1:990, y0:123, y1:232};   // top row; bottom row + DY
+const PANEL   = {x0:748, x1:879, y0:165, y1:232, dx:27.75, dy:-10.5, n:5};
+const COLS    = {x0:1232, x1:1368, y0:123, y1:232};
+const MIDDLE  = [389, 0, 1411, 600];     // model → responses → columns, washed back on beat 6
+const VOXEL   = [[1610, 209.5], [1609.5, 477.5]];
+const SIMILAR = [1557, 280, 1670, 320];
+
+// colours for light on a white figure (drawn source-over)
+const BLUE  = [48, 104, 196];
+const PLUM  = [138, 92, 204];
+const OCHRE = [226, 138, 18];
+const PINE  = [52, 140, 92];
+const ROWC  = [BLUE, PLUM];
+
+// ── covers: [x0,y0,x1,y1] px; each fades (or wipes left→right) on its beat,
+//    between t0 and t1 seconds after the beat starts. Together they tile the figure.
+const COVERS = [
+  {r:[0,    60,  389, 262], b:1, t:[0, .5]},              // natural sound
+  {r:[0,   358,  389, 545], b:2, t:[0, .5]},              // model-matched sound
+  {r:[190, 262,  350, 358], b:2, t:[.7, 1.2]},            //   "Different"
+  {r:[389,   0,  705, 200], b:3, t:[0, .5]},              // model (top) + heading
+  {r:[389, 418,  705, 545], b:3, t:[0, .5]},              // model (bottom)
+  {r:[389, 200,  705, 418], b:3, t:[1.4, 1.9]},           //   "Matched model stage" bracket
+  {r:[705,   0, 1038, 110], b:4, t:[0, .4]},              // "Time-varying responses"
+  {r:[705, 110, 1038, 262], b:4, t:[2.15, 2.45]},         //   top stack (under its flying panels)
+  {r:[705, 358, 1038, 545], b:4, t:[2.15, 2.6]},          //   bottom stack + Freq/Time/Channels
+  {r:[705, 262, 1038, 358], b:4, t:[2.6, 3.1]},           //   "Different"
+  {r:[630, 545, 1105, 600], b:4, t:[2.6, 3.1]},           //   "2048 channels × 7 freq × 19 time"
+  {r:[1038,  0, 1200, 262], b:5, t:[0, .8], wipe:1},      // "Time average" →  (top)
+  {r:[1038, 262, 1200, 545], b:5, t:[0, .8], wipe:1},     // "Time average" →  (bottom)
+  {r:[1200,  0, 1445, 110], b:5, t:[0, .4]},              // "Time-averaged power" (overhangs its column)
+  {r:[1200, 110, 1400, 262], b:5, t:[2.45, 2.85]},        //   top columns (under the collapsing copy)
+  {r:[1200, 358, 1400, 545], b:5, t:[2.45, 2.85]},        //   bottom columns + Freq/Channels
+  {r:[1105, 545, 1400, 600], b:5, t:[2.7, 3.2]},          //   "2048 × 7"
+  {r:[1200, 262, 1400, 358], b:6, t:[.1, .6]},            // "Matched" (its own click)
+  {r:[1445,  0, 1740, 110], b:7, t:[.3, .9]},             // "fMRI voxel response"
+  {r:[1400, 110, 1740, 262], b:7, t:[.3, .9]},            // fMRI voxel (top)
+  {r:[1400, 358, 1740, 600], b:7, t:[.3, .9]},            // fMRI voxel (bottom)
+  {r:[1400, 262, 1740, 358], b:10, t:[0, .5]},            //   "Similar?"
+];
+// bracket + label, tinted ochre once the pulse reaches the matched stage
+const BRACKET_TINT = [[389, 200, 705, 418], [615, 188, 636, 200], [615, 418, 636, 439]];
+
+const SCRIPT = [
+  '<b>Title.</b> How do we test a model with sounds other than natural ones?',
+  '<b>Natural sound.</b> We start from a natural sound.',
+  '<b>Model-matched sound.</b> We synthesize a second sound. Physically it is <i>different</i>.',
+  '<b>Model.</b> Both sounds go through the model. One stage is the matched stage.',
+  '<b>Time-varying responses.</b> At that stage the responses unfold over time, and over time they are different.',
+  '<b>Time average.</b> Average each channel over time: 2048 channels by 7 frequencies.',
+  '<b>Matched.</b> Time-averaged, the two responses are matched. That is how the model-matched sound was made: it was synthesized until this matched. (How, in a moment.)',
+  '<b>fMRI.</b> Now set the model aside. Listeners in the scanner hear the sounds themselves.',
+  '<b>Natural sound → voxel.</b> We play the natural sound and measure a voxel’s response.',
+  '<b>Model-matched sound → voxel.</b> We play the model-matched sound and measure the same voxel.',
+  '<b>Similar?</b> Does the voxel respond similarly to the two sounds?',
+  '<b>Logic (1).</b> A model-matched sound has the same time-averaged response as the natural sound at one model stage, and is otherwise unconstrained.',
+  '<b>Logic (2).</b> If that stage accounts for a voxel, the two sounds should evoke the same response.',
+];
+const N = SCRIPT.length;
+
+// ── canvas, sizing ───────────────────────────────────────────────────────────
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const wrap = document.getElementById('figwrap');
+let W = 0, H = 0, IW = 0, IH = 0, IX = 0, IY = 0;
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const s = Math.min(W/IMG_W, H/IMG_H);          // letterbox, never stretch
+  IW = IMG_W*s; IH = IMG_H*s; IX = (W-IW)/2; IY = (H-IH)/2;
+}
+addEventListener('resize', resize);
+const X = x => IX + x/IMG_W*IW;                  // image px → screen
+const Y = y => IY + y/IMG_H*IH;
+const S = v => v/IMG_W*IW;
+
+// ── offscreen layers built from the figure's own pixels ──────────────────────
+// ink: the figure's dark strokes as an alpha mask, recoloured per tint colour.
+const img = new Image();
+let INK = {}, ready = false;
+function buildLayers(){
+  const c = document.createElement('canvas'); c.width = IMG_W; c.height = IMG_H;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+  const src = g.getImageData(0, 0, IMG_W, IMG_H).data;
+  const inkFor = rgb => {
+    const o = document.createElement('canvas'); o.width = IMG_W; o.height = IMG_H;
+    const og = o.getContext('2d'), d = og.createImageData(IMG_W, IMG_H);
+    for(let i = 0; i < src.length; i += 4){
+      const dark = 1 - (src[i] + src[i+1] + src[i+2])/765;
+      d.data[i] = rgb[0]; d.data[i+1] = rgb[1]; d.data[i+2] = rgb[2];
+      d.data[i+3] = Math.min(255, dark*1.5*255);
+    }
+    og.putImageData(d, 0, 0); return o;
+  };
+  INK = {blue:inkFor(BLUE), plum:inkFor(PLUM), ochre:inkFor(OCHRE)};
+  ready = true;
+}
+img.onload = () => { resize(); buildLayers(); };
+img.src = IMG_SRC;
+
+// ── state ────────────────────────────────────────────────────────────────────
+let beat = 0, beatT0 = performance.now(), jumped = true;
+const dotsEl = document.getElementById('dots'), notesEl = document.getElementById('notes');
+for(let i = 0; i < N; i++){ const d = document.createElement('div'); d.className = 'dot'; dotsEl.appendChild(d); }
+const bullets = [...document.querySelectorAll('[data-beat]')];
+
+function render(jump){
+  // Only a forward click animates; steps back and deck jumps land on the
+  // finished state of the beat.
+  jumped = jump;
+  beatT0 = performance.now();
+  bullets.forEach(e => {
+    e.style.transition = jump ? 'none' : '';
+    e.classList.toggle('shown', beat >= +e.dataset.beat);
+  });
+  void document.body.offsetHeight;
+  requestAnimationFrame(() => bullets.forEach(e => e.style.transition = ''));
+  [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', i <= beat));
+  notesEl.innerHTML = SCRIPT[beat];
+}
+function advance(){ if(beat < N-1){ beat++; render(false); } }
+function back(){ if(beat > 0){ beat--; render(true); } }
+function jump(i){ beat = Math.max(0, Math.min(N-1, i)); render(true); }
+window[SLIDE_NAME] = { advance, back, atStart:() => beat === 0, atEnd:() => beat === N-1,
+                       reset:() => jump(0), resetToEnd:() => jump(N-1) };
+addEventListener('click', advance);
+addEventListener('keydown', e => {
+  if(['ArrowRight',' ','Enter'].includes(e.key)){ e.preventDefault(); advance(); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); back(); }
+  else if(e.key === 'n' || e.key === 'N') notesEl.classList.toggle('on');
+  else if(e.key === 'r' || e.key === 'R') jump(0);
+});
+render(true);
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const sstep = t => t*t*(3 - 2*t);
+const lerp = (a, b, u) => a + (b - a)*u;
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+let T = 0, t = 0;                                // T: build clock (∞ when jumped); t: loop clock
+const rv = (b, t0, t1) => beat > b ? 1 : beat < b ? 0 : sstep(clamp01((T - t0)/(t1 - t0)));
+// loop phase in [0,1) for a cycle of `per` seconds starting at `t0`; -1 before it starts
+const cyc = (t0, per) => t < t0 ? -1 : ((t - t0) % per)/per;
+
+function tint(ink, box, a){                      // recolour the figure's ink inside box
+  if(a <= .01) return;
+  const [x0, y0, x1, y1] = box;
+  ctx.save(); ctx.beginPath(); ctx.rect(X(x0), Y(y0), S(x1 - x0), S(y1 - y0)); ctx.clip();
+  ctx.globalAlpha = a; ctx.drawImage(ink, IX, IY, IW, IH); ctx.restore();
+}
+function glow(x, y, rPx, c, a){                  // soft spot, source-over (white ground)
+  if(a <= .01) return;
+  const r = S(rPx), g = ctx.createRadialGradient(X(x), Y(y), 0, X(x), Y(y), r);
+  g.addColorStop(0, rgba(c, a)); g.addColorStop(.4, rgba(c, a*.55)); g.addColorStop(1, rgba(c, 0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X(x), Y(y), r, 0, 7); ctx.fill();
+}
+function spark(x, y, c, a){                      // a travelling pulse: halo + core
+  glow(x, y, 22, c, .45*a);
+  ctx.fillStyle = rgba(c, .95*a); ctx.beginPath(); ctx.arc(X(x), Y(y), Math.max(2.5, S(5)), 0, 7); ctx.fill();
+}
+function halo(box, c, a, padPx = 10){            // rounded outline glow around a box
+  if(a <= .01) return;
+  const [x0, y0, x1, y1] = box, p = padPx;
+  ctx.save();
+  ctx.strokeStyle = rgba(c, a); ctx.lineWidth = Math.max(2, S(4));
+  ctx.shadowColor = rgba(c, a); ctx.shadowBlur = S(16);
+  ctx.beginPath(); ctx.roundRect(X(x0 - p), Y(y0 - p), S(x1 - x0 + 2*p), S(y1 - y0 + 2*p), S(12)); ctx.stroke();
+  ctx.restore();
+}
+// One channel panel of a response stack (k = 0 front … 4 back), copied from the
+// figure. The source rect includes whatever overlaps it in the stack, so drawing
+// back to front at full size rebuilds the stack exactly; squeezed, it's a
+// transient that crossfades into the paper's real columns.
+const panelBox = (r, k) => [PANEL.x0 + k*PANEL.dx, PANEL.y0 + k*PANEL.dy + DY[r],
+                            PANEL.x1 - PANEL.x0, PANEL.y1 - PANEL.y0];
+function drawPanel(r, k, x, y, w, h, a){
+  if(a <= .01 || w <= .5) return;
+  const [sx, sy, sw, sh] = panelBox(r, k);
+  ctx.globalAlpha = a;
+  ctx.drawImage(img, sx, sy, sw, sh, X(x), Y(y), S(w), S(h));
+  ctx.globalAlpha = 1;
+}
+const pulse = () => .5 + .5*Math.sin(t*4.2);
+// a pulse that runs xFrom → xTo along row r during the first `frac` of each cycle
+function runner(r, xFrom, xTo, t0, per, frac = .55){
+  const u = cyc(t0, per); if(u < 0) return null;
+  const k = clamp01(u/frac), x = lerp(xFrom, xTo, sstep(k));
+  const a = u < frac ? 1 : clamp01(1 - (u - frac)/(1 - frac)*2.5);
+  return {x, a, k, u};
+}
+
+// ── frame ────────────────────────────────────────────────────────────────────
+function frame(now){
+  requestAnimationFrame(frame);
+  t = (now - beatT0)/1000; T = jumped ? 1e3 : t;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  if(!ready) return;
+  ctx.drawImage(img, IX, IY, IW, IH);
+
+  // ── tints (under the covers) ──
+  // ACT 1: each sound "plays": its waveform fills with colour behind a playhead
+  [1, 2].forEach((b, r) => {
+    if(beat !== b) return;
+    const u = cyc(.5, 2.8); if(u < 0) return;
+    const k = clamp01(u/.65), x = lerp(WAVE[0], WAVE[1], k);
+    const a = u < .78 ? 1 : clamp01(1 - (u - .78)/.22);
+    tint(r ? INK.plum : INK.blue, [WAVE[0] - 4, ROW_Y[r] - 60, x, ROW_Y[r] + 60], .9*a);
+  });
+  // ACT 2: the model fills, block by block, as the pulse passes through it
+  if(beat === 3) [0, 1].forEach(r => {
+    const p = runner(r, WAVE[1], STAGE[r][0], .5, 3.0);
+    if(p) tint(r ? INK.plum : INK.blue, [MODEL[0], ROW_Y[r] - 26, Math.min(p.x, STAGE[r][0] + 8), ROW_Y[r] + 26], .85*p.a);
+  });
+  // the matched-stage bracket and label turn ochre once the first pulse arrives
+  const brk = beat >= 3 ? rv(3, 1.4, 1.9) : 0;
+  BRACKET_TINT.forEach(bx => tint(INK.ochre, bx, brk));
+
+  // ── covers ──
+  ctx.fillStyle = '#fff';
+  COVERS.forEach(c => {
+    const v = rv(c.b, c.t[0], c.t[1]); if(v >= 1) return;
+    const [x0, y0, x1, y1] = c.r;
+    if(c.wipe){ const xs = lerp(x0, x1, v); ctx.globalAlpha = 1; ctx.fillRect(X(xs) - .5, Y(y0) - .5, S(x1 - xs) + 1, S(y1 - y0) + 1); }
+    else { ctx.globalAlpha = 1 - v; ctx.fillRect(X(x0) - .5, Y(y0) - .5, S(x1 - x0) + 1, S(y1 - y0) + 1); }
+  });
+  ctx.globalAlpha = 1;
+
+  // ── light (over the covers) ──
+  // ACT 1: playhead spark on the sound that is playing
+  [1, 2].forEach((b, r) => {
+    if(beat !== b) return;
+    const u = cyc(.5, 2.8); if(u < 0 || u > .7) return;
+    spark(lerp(WAVE[0], WAVE[1], clamp01(u/.65)), ROW_Y[r], ROWC[r], 1 - clamp01((u - .62)/.08));
+  });
+  // ACT 2: pulses into the model; the matched stage lights as they arrive
+  if(beat === 3) [0, 1].forEach(r => {
+    const p = runner(r, WAVE[1], STAGE[r][0], .5, 3.0);
+    if(p && p.u < .55) spark(p.x, ROW_Y[r], ROWC[r], 1);
+    const hit = p ? clamp01(1 - Math.abs(p.u - .58)/.2) : 0;
+    glow(STAGE[r][0], STAGE[r][1], 34, OCHRE, Math.max(.5*brk, .9*hit));
+  });
+  // the stage keeps a quiet ochre mark for the rest of the slide (it pulses on the first bullet)
+  if(beat > 3) [0, 1].forEach(r =>
+    glow(STAGE[r][0], STAGE[r][1], 30, OCHRE, beat === 11 ? .35 + .5*pulse() : .4));
+  // ACT 3a: the time-varying responses come out of the matched stage — one channel
+  // panel at a time, back to front, each growing from the stage into its slot
+  if(beat === 4 && T < 2.5) [0, 1].forEach(r => {
+    const [sx, sy] = STAGE[r];
+    for(let i = 0; i < PANEL.n; i++){
+      const k = PANEL.n - 1 - i, g = clamp01((T - (.3 + i*.28))/.7);
+      if(g <= 0) continue;
+      const e = sstep(g), [px, py, pw, ph] = panelBox(r, k), sc = lerp(.06, 1, e);
+      const cx = lerp(sx, px + pw/2, e), cy = lerp(sy, py + ph/2, e);
+      drawPanel(r, k, cx - pw*sc/2, cy - ph*sc/2, pw*sc, ph*sc, clamp01(g*4));
+      if(g < .25) glow(sx, sy, 34, OCHRE, .9*(1 - g/.25));
+    }
+  });
+  // ACT 3b: time average — a copy of each stack slides along the arrow, then every
+  // panel squeezes along its time axis into one column (panel pitch 27.75 px ≈
+  // column pitch 28 px, so panel k lands on column k), then hands over to the
+  // figure's own columns
+  if(beat === 5 && T < 3.0) [0, 1].forEach(r => {
+    const m = sstep(clamp01((T - .5)/.9)), q = sstep(clamp01((T - 1.5)/1.0));
+    const a = .92*(1 - clamp01((T - 2.5)/.4)), dx = (COLS.x0 - STACK.x0)*m;
+    for(let k = PANEL.n - 1; k >= 0; k--){
+      const [px, py, pw, ph] = panelBox(r, k);
+      drawPanel(r, k, px + dx, py, lerp(pw, 24, q), ph, a);
+    }
+  });
+  // ACT 3c: matched — both column sets share one pine halo, breathing together;
+  // then the match runs back along the bottom row to the sound it defines
+  if(beat >= 6){
+    const on = beat === 6 ? rv(6, .1, .6) : 1;
+    const a = beat === 6 || beat === 11 ? (.35 + .45*pulse())*on : .3;
+    [0, 1].forEach(r => halo([COLS.x0, COLS.y0 + DY[r], COLS.x1 + 6, COLS.y1 + DY[r]], PINE, a));
+  }
+  if(beat === 6){
+    const u = cyc(.9, 2.8);
+    if(u >= 0){
+      const k = clamp01(u/.6), x = lerp(COLS.x0 - 6, WAVE[1], sstep(k));
+      if(u < .6) for(let j = 4; j >= 0; j--)        // a short trail behind it
+        spark(Math.min(COLS.x0 - 6, x + j*14), ROW_Y[1], PINE, j ? .22*(5 - j)/5 : 1);
+      const hit = clamp01(1 - Math.abs(u - .68)/.14);
+      tint(INK.plum, [WAVE[0] - 4, ROW_Y[1] - 60, WAVE[1] + 4, ROW_Y[1] + 60], .85*hit);
+      glow(WAVE[1] - 8, ROW_Y[1], 40, PINE, .5*hit);
+    }
+  }
+
+  // ACT 4: everything between the sounds and the brain grays out
+  const wash = beat === 7 ? rv(7, 0, .6) : beat >= 8 && beat <= 10 ? 1 : beat === 11 ? 1 - rv(11, 0, .6) : 0;
+  if(wash > .01){
+    const [x0, y0, x1, y1] = MIDDLE;
+    ctx.fillStyle = `rgba(255,255,255,${.8*wash})`;
+    ctx.fillRect(X(x0), Y(y0), S(x1 - x0), S(y1 - y0));
+  }
+  // each sound plays (its waveform lights behind a playhead) and its voxel lights
+  // up; nothing travels through the grayed-out pipeline (Fer: only the sound and
+  // the brain light up). Loops until the next click; the first response is kept.
+  const PLAY = [8, 9], CYC = 2.4, ARRIVE = .3 + .75;
+  PLAY.forEach((b, r) => {
+    if(beat !== b) return;
+    const u = cyc(.3, CYC); if(u < 0) return;
+    const sec = u*CYC, [vx, vy] = VOXEL[r];
+    const ph = clamp01(sec/.6);                                   // playhead 0 → .6 s
+    const fade = sec < 1.6 ? 1 : clamp01(1 - (sec - 1.6)/.6);
+    tint(r ? INK.plum : INK.blue, [WAVE[0] - 4, ROW_Y[r] - 60, lerp(WAVE[0], WAVE[1] + 4, ph), ROW_Y[r] + 60], .9*fade);
+    glow(vx, vy, 46, ROWC[r], .65*clamp01(sec < .75 ? (sec - .45)/.3 : 1 - (sec - .75)/1.1));  // the voxel answers
+  });
+  // the voxel response each sound evoked, kept in that sound's colour
+  [0, 1].forEach(r => {
+    const b = PLAY[r], held = beat > b ? 1 : beat === b ? rv(b, ARRIVE, ARRIVE + .4) : 0;
+    if(held <= 0) return;
+    const breathe = beat === 10 || beat === 12 ? .45 + .4*pulse() : .7;
+    const [vx, vy] = VOXEL[r], c = ROWC[r].map(v => Math.min(255, v + 60));
+    glow(vx, vy, 40, c, (breathe + .15)*held);
+    // the voxel itself filled with the colour of the sound that drove it
+    const h = S(13);
+    ctx.globalAlpha = held;
+    ctx.fillStyle = rgba(ROWC[r], 1); ctx.fillRect(X(vx) - h/2, Y(vy) - h/2, h, h);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1.5, S(2.5)); ctx.strokeRect(X(vx) - h/2, Y(vy) - h/2, h, h);
+    ctx.globalAlpha = 1;
+  });
+  if(beat === 12){
+    const [x0, y0, x1, y1] = SIMILAR;
+    halo([x0, y0, x1, y1], OCHRE, .45 + .5*pulse(), 9);
+  }
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
