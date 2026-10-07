@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>What we average</title>
+<title>Sparse-scanning</title>
 <link rel="stylesheet" href="../vendor/fraunces.css">
 <link rel="stylesheet" href="shared/anchor.css">
 <style>
@@ -82,14 +82,14 @@
            Everything inside #bw is in whole-regions.png pixels; the enlargement re-uses it. -->
       <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
         <defs>
-          <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region1.png?v=5" width="1947" height="1580"/></mask>
-          <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region2.png?v=5" width="1947" height="1580"/></mask>
-          <mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region3.png?v=5" width="1947" height="1580"/></mask>
+          <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region1.png?v=6" width="1947" height="1580"/></mask>
+          <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region2.png?v=6" width="1947" height="1580"/></mask>
+          <mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/final/ch1-scanning/outline/anchor/mask-region3.png?v=6" width="1947" height="1580"/></mask>
           <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
           <radialGradient id="pinGlow"><stop offset="0" stop-color="#b45309" stop-opacity=".55"/><stop offset="1" stop-color="#b45309" stop-opacity="0"/></radialGradient>
         </defs>
         <g id="bw">
-          <image href="../assets/final/ch1-scanning/outline/anchor/whole-regions.png?v=5" width="1947" height="1580"/>
+          <image href="../assets/final/ch1-scanning/outline/anchor/whole-regions.png?v=6" width="1947" height="1580"/>
           <rect class="glow" mask="url(#m1)" x="0" y="0" width="1947" height="1580" opacity="0"/>
           <rect class="glow" mask="url(#m2)" x="0" y="0" width="1947" height="1580" opacity="0"/>
           <rect class="glow" mask="url(#m3)" x="0" y="0" width="1947" height="1580" opacity="0"/>
@@ -106,7 +106,7 @@
       </svg>
     </div>
     <div class="anchor-content"><svg id="fig" viewBox="0 0 1100 800" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <h1 id="title">What we average</h1>
+    <h1 id="title">Sparse-scanning</h1>
     <p id="cap"></p>
     <div id="notes"></div>
   </div>
@@ -312,9 +312,9 @@
   const BLOCKS = [{t0:0, k:'natural', name:'Natural: Spanish speech', tiles:[1,2,3]},
                   {t0:BLK, k:'rob_l3', name:'Robust L3: Piano', tiles:[4,5,6]}];
   // literal paths, so outline/publish.py can find and freeze them
-  const TILE_SRC = ['../assets/final/ch1-scanning/outline/scan-tile-1.png?v=5', '../assets/final/ch1-scanning/outline/scan-tile-2.png?v=5',
-    '../assets/final/ch1-scanning/outline/scan-tile-3.png?v=5', '../assets/final/ch1-scanning/outline/scan-tile-4.png?v=5',
-    '../assets/final/ch1-scanning/outline/scan-tile-5.png?v=5', '../assets/final/ch1-scanning/outline/scan-tile-6.png?v=5'];
+  const TILE_SRC = ['../assets/final/ch1-scanning/outline/scan-tile-1.png?v=6', '../assets/final/ch1-scanning/outline/scan-tile-2.png?v=6',
+    '../assets/final/ch1-scanning/outline/scan-tile-3.png?v=6', '../assets/final/ch1-scanning/outline/scan-tile-4.png?v=6',
+    '../assets/final/ch1-scanning/outline/scan-tile-5.png?v=6', '../assets/final/ch1-scanning/outline/scan-tile-6.png?v=6'];
   const tileHi = [], scanR = [];
   BLOCKS.forEach(B => {
     const [bc, bf] = COND[B.k];
