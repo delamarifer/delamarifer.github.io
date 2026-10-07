@@ -80,10 +80,10 @@
     <ul class="frag">
       <li class="b c1" data-beat="1">A network stage’s activations: <span class="hl">one row per natural sound</span></li>
       <li class="b c1" data-beat="2"><span class="hl">Regression</span>: weights fit per voxel predict its responses</li>
-      <li class="b c1 ochre" data-beat="3">Task-optimized networks <span class="hl">predict well</span> — better than earlier models</li>
+      <li class="b c1 ochre" data-beat="3">Task-optimized networks <span class="hl">predict responses better</span> than earlier models</li>
       <li class="b c1" data-beat="4"><span class="hl">RSA</span>: do model and region treat the <span class="hl">same sounds as similar</span>?</li>
-      <li class="b c2" data-beat="6">Natural sounds <span class="hl">co-vary</span> — features can <span class="hl">correlate</span> with what matters</li>
-      <li class="b c2" data-beat="7">Fitted weights <span class="hl">ignore</span> what doesn’t help — different models can <span class="hl">tie</span></li>
+      <li class="b c2" data-beat="6">Natural sounds vary in <span class="hl">many properties at once</span>, so model features can predict a region’s responses without being what the region computes</li>
+      <li class="b c2" data-beat="7">Fitted weights can ignore features that do not aid prediction, so models that represent sound differently can <span class="hl">receive the same score</span></li>
       <li class="b c2 ochre" data-beat="8">Standard networks still <span class="hl">score well</span> on brain benchmarks</li>
       <li class="b c2 pine" data-beat="9">Model-matched stimuli <span class="hl">isolate what a model represents</span></li>
     </ul>
@@ -266,7 +266,7 @@
   const gBs = el('g', {class:'panel', id:'bs'});
   const BS_H = 372, BS_W = BS_H*1293/1188;
   on(el('text', {x:806, y:22, class:'ph'}, gBs, 'Brain-Score benchmarks (vision, IT)'), 8);
-  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=2', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 8, .2);
+  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=3', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 8, .2);
 
   // ── beats ──────────────────────────────────────────────────────────────────
   // Each beat is data; render() reads BEATS[beat] only, so any jump lands settled.
