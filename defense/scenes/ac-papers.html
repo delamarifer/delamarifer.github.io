@@ -51,6 +51,8 @@
   .grp figcaption{ margin-top:8px; font-size:17px; color:var(--ink); text-align:center; }   /* deck-wide 2026-10-07: citations black */
   .grp .gcite{ margin-top:4px; font-size:17px; color:var(--ink); text-align:center; }
   .grp.flag .gcite{ font-size:38px; }   /* ≈1rem on screen at the flag scale */
+  /* round 4 (2026-10-08): no explanatory text on screen; takeaways live in the speaker notes */
+  .grp .take{ display:none !important; }
   .grp .take{ margin-top:16px; font-size:26px; line-height:1.3; color:var(--ink); text-align:center; }
   .grp .tag{ display:none; margin-top:6px; font-size:34px; font-weight:700; line-height:1.1; text-align:center; }
   .grp.flag .take{ display:none; }
@@ -81,8 +83,8 @@
   #question{ position:absolute; left:8vw; right:8vw; top:50%; z-index:7; pointer-events:none; text-align:center;
              opacity:0; transform:translateY(calc(-50% + 24px)); transition:opacity .7s ease .3s, transform .7s ease .3s; }
   body.asked #question{ opacity:1; transform:translateY(-50%); }
-  #question .q1{ font-family:var(--serif); font-weight:300; color:var(--ink);
-                 font-size:clamp(2rem,4.4vw,4rem); line-height:1.08; letter-spacing:-.015em; }
+  #question .q1{ font-family:var(--serif); font-weight:300; color:var(--ink); max-width:24em; margin:0 auto;
+                 font-size:clamp(1.6rem,3.1vw,2.8rem); line-height:1.2; letter-spacing:0; }
   #question .q2{ margin-top:1.2rem; font-size:clamp(1.1rem,2vw,1.8rem); line-height:1.35; color:var(--ink); }
   #question em{ font-style:normal; color:var(--ink); }   /* no colored text */
 </style>
@@ -152,7 +154,7 @@ const GROUPS = [   // studies cited in the Chapter 1 paper, plus four added by F
     take:'Non-primary cortex: <b>robust to background noise</b>, best predicted by <b>later network stages</b>',
     figs:[{id:'kell2019', cite:'Kell &amp; McDermott, 2019'}, {id:'kell2018', cite:'Kell et al., 2018'}] },
   { tag:'Model-matched sounds', col:'--pine', slot:['R', .83], zoom:true, anchors:['primary','nonprim'],
-    take:'Sounds matched to a spectrotemporal model drive primary cortex like natural sounds — <b>non-primary much less</b>',
+    take:'Sounds matched to a spectrotemporal model drive primary cortex like natural sounds, but drive <b>non-primary cortex much less</b>',
     figs:[{id:'normanhaignere2018', cite:'Norman-Haignere &amp; McDermott, 2018'}] },
 ];
 // Less zooming (Fer, 2026-10-07): only groups with zoom:true pop up big and then shrink;
@@ -163,16 +165,11 @@ const plain = s => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
 const BEATS = ['The cortex, seen from the side',
   ...SEQ.map(g => `${plain(g.tag)}: ${g.cite ? plain(g.cite) : g.figs.map(f => plain(f.cite)).join('; ')}`),
   'Where the senses are processed'];
-// Last beat: the map grays out and the question appears (Fer, 2026-10-07).
-// Three phrasings (Fer / coordinator, 2026-10-07): ?q=a (default) | b | c
-const QUESTIONS = {
-  a: ['We know the locations of these features.', 'But what are the underlying representations, and how are they transformed?'],
-  b: ['These studies map the locations of features.', 'They don’t tell us what the underlying representations are, or how they are transformed.'],
-  c: ['Knowing a feature’s location is not knowing its computation.', 'What are the underlying representations, and how are they transformed?'],
-};
-const Q = QUESTIONS[(new URLSearchParams(location.search).get('q') || 'a').toLowerCase()] || QUESTIONS.a;
-document.getElementById('question').innerHTML = `<div class="q1">${Q[0]}</div><div class="q2">${Q[1]}</div>`;
-BEATS.push('Question: where, but how?');
+// Last beat: the map grays out and one statement appears (Josh via Fer, 2026-10-08: the cited
+// work does constrain representations; what is missing is a full computational account).
+const STATEMENT = 'This work has mapped how auditory cortex is organized and constrained what it represents, but we have only partial computational accounts of its responses.';
+document.getElementById('question').innerHTML = `<div class="q1">${STATEMENT}</div>`;
+BEATS.push('Statement: organization mapped and representations constrained; only partial computational accounts');
 const MAX = BEATS.length - 1;
 
 // ── build ──

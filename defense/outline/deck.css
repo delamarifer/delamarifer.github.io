@@ -180,3 +180,11 @@
   h1.t em{font-style:normal;}
   /* feedback numbering "14.3" (slide.click): readable over scenes too */
   #hud{z-index:70; font-size:13px; color:var(--ink); background:rgba(255,255,255,.85); padding:2px 8px; border-radius:999px; font-variant-numeric:tabular-nums;}
+
+/* section progress (Fer, 2026-10-08): the active section's underline is a track that fills as the
+   section advances (--p, set by the engine); finished sections keep a full thin line. */
+#secbar span{position:relative; border-bottom:0; padding-bottom:6px;}
+#secbar span::before, #secbar span::after{content:''; position:absolute; left:0; bottom:0; height:2px; border-radius:2px;}
+#secbar span.active::before{right:0; background:rgba(15,23,42,.14);}
+#secbar span.active::after{width:calc(var(--p, 0) * 100%); background:var(--ink); transition:width .35s ease;}
+#secbar span.done::after{right:0; height:1px; background:rgba(15,23,42,.35);}

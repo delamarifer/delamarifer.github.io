@@ -206,7 +206,29 @@ function startDeck(){
   const SECTIONS = [...new Set(S.map(x => x.sec))].filter(x => x && x !== 'Title');
   $('#secbar').innerHTML = SECTIONS.map(x => `<span>${x}</span>`).join('');
 
-  /* ---- feedback numbering (Fer, 2026-10-07): "14.3" = slide 14, click 3 ----
+  /* ---- slide numbers (Fer, 2026-10-08): whole numbers, no click count. Consecutive slides
+     that continue one thing (the same scene file split with ?from=&to=, or the same title, in
+     the same section) share a number with letters: 3A, 3B. A part can force it per slide with
+     {sub: true} (join the previous number) or {sub: false} (start a new one). ---- */
+  const groupKey = s => {
+    if(s.kind === 'scene') return 'sc:' + s.src.split('?')[0].replace(/\.final-[\w-]+(?=\.html$)/, '');
+    const m = (s.html || '').match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
+    return m ? 'h1:' + m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : null;
+  };
+  const NUM = [], SUBI = [];
+  S.forEach((s, i) => {
+    const p = S[i-1], k = groupKey(s);
+    const join = i > 0 && (s.sub === true || (s.sub !== false && k && k === groupKey(p) && s.sec === p.sec));
+    NUM[i] = join ? NUM[i-1] : (i ? NUM[i-1] + 1 : 1);
+    SUBI[i] = join ? SUBI[i-1] + 1 : 0;
+  });
+  const LABEL = S.map((s, i) => {
+    const multi = SUBI[i] > 0 || (i+1 < S.length && NUM[i+1] === NUM[i]);
+    return NUM[i] + (multi ? String.fromCharCode(65 + SUBI[i]) : '');
+  });
+  window.slideLabel = i => LABEL[i];
+
+  /* ---- (old) feedback numbering "14.3" (2026-10-07) replaced by LABEL above ----
      Shown on every slide, scenes included. Static slides count build groups; scenes use their
      controller's own beat when they expose getBeat()/beat, else the clicks counted here. */
   let click = 0; const maxClick = {};
@@ -217,8 +239,7 @@ function startDeck(){
     return null;
   }
   function updateHud(){
-    const b = sceneBeat(), n = (b != null) ? b : click;
-    $('#hud-pos').textContent = `${cur+1}${n ? '.' + n : ''} / ${S.length}`;
+    $('#hud-pos').textContent = `${LABEL[cur]} / ${NUM[S.length-1]}`;
   }
   setInterval(() => { if(S[cur] && S[cur].kind === 'scene') updateHud(); }, 300);
 
@@ -246,6 +267,12 @@ function startDeck(){
     updateHud();
     const ci = SECTIONS.indexOf(s.sec);
     [...$('#secbar').children].forEach((el,k) => { el.classList.toggle('active', k === ci); el.classList.toggle('done', k < ci && ci >= 0); });
+    /* progress within the current section (Fer, 2026-10-08): the active label's underline fills */
+    if(ci >= 0){
+      const idx = S.map((x, j) => j).filter(j => S[j].sec === s.sec);
+      const pos = idx.indexOf(cur), frac = idx.length ? (pos + 1) / idx.length : 1;
+      $('#secbar').children[ci].style.setProperty('--p', frac.toFixed(3));
+    }
     renderNotes();
     try{ history.replaceState(null, '', location.pathname + location.search + '#' + (cur+1)); }catch(e){}
   }

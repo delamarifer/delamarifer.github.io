@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What a model cannot see</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap">
+<!-- the anchor brain's box, shared by every Ch. 1 experiment scene (owned by ch1-experiment) -->
+<link rel="stylesheet" href="shared/anchor.css">
+<style>
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b;
+    --border:#e2e8f0; --panel:#f8fafc;
+    --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309; --brick:#dc2626;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    /* Figure 4's region blues (anchor.json), never restyled */
+    --r1:#b7cfe8; --r2:#5d8fc7; --r3:#1f3f7a;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--body); font-family:var(--sans);
+        overflow:hidden; cursor:pointer; user-select:none; -webkit-user-select:none; }
+  #stage{ position:absolute; inset:0; }
+  h1{ position:absolute; left:var(--anchor-left); top:3.6vh;
+      font-family:var(--serif); font-weight:900; color:var(--ink);
+      font-size:clamp(1.6rem,3.3vw,2.9rem); line-height:1.05; letter-spacing:-.015em; }
+  h1 em{ font-style:normal; color:var(--plum); }
+  #brain, #fig{ position:absolute; inset:0; width:100%; height:100%; display:block; overflow:visible; }
+  text{ font-family:var(--sans); }
+  .lab{ font-size:21px; font-weight:700; }
+  .sub{ font-size:17px; fill:var(--muted); }
+  .halo{ stroke:var(--panel); stroke-width:7; paint-order:stroke; stroke-linejoin:round; }
+  .stamp{ font-size:14px; font-weight:700; letter-spacing:.14em; fill:var(--ochre); }
+  .numeral text{ font-family:var(--sans); font-weight:700; fill:#fff; stroke:#000; stroke-width:9;
+                 paint-order:stroke; text-anchor:middle; dominant-baseline:central; }
+
+  [data-step]{ opacity:0; transition:opacity .55s ease; }
+  [data-step].shown{ opacity:1; }
+  .back{ opacity:.3 !important; }
+  .seed{ transition:transform 1.3s cubic-bezier(.45,0,.2,1), opacity .4s ease; }
+  .seed.jump{ transition:none; }
+  .seed .ring{ transition:stroke .4s ease, stroke-width .4s ease; }
+  .wash{ transition:opacity .45s ease; }
+  .diff{ stroke-dasharray:1; stroke-dashoffset:1; transition:stroke-dashoffset .8s ease; }
+  .shown .diff{ stroke-dashoffset:0; }
+
+  #cap{ position:absolute; left:var(--anchor-left); bottom:4.6vh; max-width:80vw;
+        font-size:clamp(15px,1.6vw,23px); font-weight:500; color:var(--ink); line-height:1.3;
+        min-height:1.3em; transition:opacity .3s ease; pointer-events:none; }
+  #cap.swap{ opacity:0; }
+  #dots{ position:absolute; right:2rem; bottom:5vh; display:flex; gap:.42rem; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:fixed; inset:auto 0 0 0; max-height:52vh; overflow:auto; background:#0f172a;
+          color:#e2e8f0; padding:1.5rem 3vw 2rem; font-size:15px; line-height:1.6; display:none; }
+  #notes.on{ display:block; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <h1>Why model-matched stimuli <em>differentiate models</em></h1>
+  <div class="anchor-brain">
+    <!-- the anchor brain, built exactly as in scanning-run.html / expected-outcomes.html so
+         the cut between parts is continuous (contracts/anchor-brain.md) -->
+    <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/outline/anchor/mask-region1.png" width="1947" height="1580"/></mask>
+        <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/outline/anchor/mask-region2.png" width="1947" height="1580"/></mask>
+        <mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="1947" height="1580"><image href="../assets/outline/anchor/mask-region3.png" width="1947" height="1580"/></mask>
+        <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
+      </defs>
+      <g id="bw">
+        <image href="../assets/outline/anchor/whole-regions.png" width="1947" height="1580"/>
+        <rect class="wash" data-r="1" mask="url(#m1)" width="1947" height="1580" fill="#8c8c8c" opacity="0"/>
+        <rect class="wash" data-r="2" mask="url(#m2)" width="1947" height="1580" fill="#8c8c8c" opacity="0"/>
+        <rect class="wash" data-r="3" mask="url(#m3)" width="1947" height="1580" fill="#8c8c8c" opacity="0"/>
+      </g>
+      <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
+      <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
+      <g class="numeral" font-size="96">
+        <text x="771" y="2029">1</text><text x="1373" y="2364">2</text><text x="629" y="2401">3</text>
+      </g>
+    </svg>
+  </div>
+  <div class="anchor-content"><svg id="fig" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet"
+    role="img" aria-label="Schematic sound space: a model's null space through a natural sound, model-matched sounds inside it, and cortex judging them"></svg></div>
+  <p id="cap"></p>
+  <div id="dots"></div>
+</div>
+<div id="notes"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Negative space: what a model leaves unconstrained (Fer, 2026-10-07).
+// SCHEMATIC sound space, not data. A model-matched sound matches the natural
+// sound's time-averaged model statistics at one stage; everything with those
+// statistics is the model's null set (for sound, the "metameric black" of the
+// color-metamer backup). Synthesis lands somewhere in it, set by the noise seed,
+// so natural − matched lives entirely in what the model cannot see. Cortex then
+// judges: same response = cortex is blind there too; different = the model is
+// missing something cortex represents.
+//
+// Colours: slate = natural sounds; plum = model A / its matched sounds;
+// ochre = another model; region blues = cortex (Fig. 4A); pine / brick rings =
+// same / different response.
+//
+// ACT 0 — THE SPACE   (0):   all sounds; one natural sound.
+// ACT 1 — NULL SPACE  (1-3): model A's null set; synthesis lands in it; the
+//                            difference is only what A can't see.
+// ACT 2 — THE JUDGE   (4-5): Region 1 responds alike (blind there too);
+//                            Region 3 responds differently (A is missing it).
+// ACT 3 — WHY IT WORKS (6-7): another model isn't blind there → models separate;
+//                            natural sounds stay on a thin slice → they can't.
+// ─────────────────────────────────────────────────────────────────────────────
+const SLIDE_NAME = 'negativeSpace';
+const NS = 'http://www.w3.org/2000/svg';
+
+// cubic Bézier helpers; every set is a thick stroke along one curve
+const bez = (P, t) => { const u = 1-t;
+  return [0,1].map(k => u*u*u*P[0][k] + 3*u*u*t*P[1][k] + 3*u*t*t*P[2][k] + t*t*t*P[3][k]); };
+const bezD = (P, t) => { const u = 1-t;
+  return [0,1].map(k => 3*u*u*(P[1][k]-P[0][k]) + 6*u*t*(P[2][k]-P[1][k]) + 3*t*t*(P[3][k]-P[2][k])); };
+const dOf = P => `M${P[0]} C${P[1]} ${P[2]} ${P[3]}`;
+
+const NAT = [460, 336];                                   // the natural sound (all curves pass through it)
+const SET_A  = [[120,380],[260,230],[640,450],[860,270]];  // model A's null set
+const SET_B  = [[206,120],[336,250],[566,420],[766,560]];  // another model's null set
+const SET_R1 = [[105,365],[265,250],[635,440],[875,295]];  // Region 1: nearly the same set as A
+const SET_R3 = [[330,580],[400,420],[520,260],[600,100]];  // Region 3: a different shape
+const NATSL  = [[155,554],[335,414],[565,254],[825,134]];   // natural sounds: a thin slice
+const W = { A:92, B:64, R1:124, R3:70, NATSL:26 };
+
+// where four noise seeds land inside A's set (t along the curve, offset across it)
+const LAND = [[.09, 14],[.27,-22],[.72, 20],[.91,-12]].map(([t,o]) => {
+  const p = bez(SET_A,t), d = bezD(SET_A,t), n = Math.hypot(d[0],d[1]);
+  return [p[0] - o*d[1]/n, p[1] + o*d[0]/n];
+});
+const START = [[150,120],[330,560],[700,110],[905,520]];  // where the noise starts
+
+const fig = document.getElementById('fig');
+const band = (P, w, col, op, extra='') =>
+  `<path d="${dOf(P)}" fill="none" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}"
+     stroke-linecap="round" ${extra}/>`;
+
+// natural sounds along the slice (deterministic jitter)
+let natDots = '';
+for(let i=0;i<26;i++){ const t = .03 + .94*i/25, p = bez(NATSL,t), j = Math.sin(i*12.9898)*9;
+  if(Math.hypot(p[0]-NAT[0],p[1]-NAT[1]) > 24) natDots += `<circle cx="${p[0]}" cy="${p[1]+j}" r="6" fill="var(--slate)" opacity=".55"/>`; }
+
+fig.innerHTML = `
+  <rect x="20" y="40" width="960" height="580" rx="18" fill="var(--panel)" stroke="var(--border)" stroke-width="2"/>
+  <text class="sub" x="44" y="76">all possible sounds</text>
+  <text class="stamp" x="956" y="76" text-anchor="end">SCHEMATIC</text>
+
+  <g data-step="7" id="gSlice">${band(NATSL, W.NATSL, 'var(--slate)', .16)}${natDots}
+    <text class="lab" x="836" y="140" fill="var(--slate)">natural sounds</text></g>
+
+  <g data-step="4" data-until="5">${band(SET_R1, W.R1, 'var(--r1)', .5, 'id="setR1"')}
+    <text class="lab" x="96" y="300" fill="var(--r2)">Region 1</text></g>
+  <g data-step="5" data-until="6">${band(SET_R3, W.R3, 'var(--r3)', .28, 'id="setR3"')}
+    <text class="lab" x="620" y="112" fill="var(--r3)">Region 3</text></g>
+  <g data-step="6" id="gB">${band(SET_B, W.B, 'var(--ochre)', .2, 'id="setB"')}
+    <text class="lab" x="200" y="108" text-anchor="middle" fill="var(--ochre)">another model</text></g>
+
+  <g data-step="1" id="gA">${band(SET_A, W.A, 'var(--plum)', .22, 'id="setA"')}
+    <text class="lab" x="56" y="268" fill="var(--plum)">same model statistics</text>
+    <text class="sub" x="56" y="242">the model’s null space</text></g>
+
+  <g data-step="3" id="gDiff">${LAND.map(p =>
+    `<line class="diff" pathLength="1" x1="${NAT[0]}" y1="${NAT[1]}" x2="${p[0]}" y2="${p[1]}"
+       stroke="var(--plum)" stroke-width="2.5" stroke-dasharray="1"/>`).join('')}
+    <text class="sub" x="${(NAT[0]+LAND[2][0])/2+6}" y="${(NAT[1]+LAND[2][1])/2+34}" fill="var(--plum)"
+      style="fill:var(--plum)">only what the model can’t see</text></g>
+
+  <g id="seeds">${LAND.map((p,i) => `<g class="seed" data-i="${i}">
+     <circle class="ring" r="15" fill="none" stroke="transparent" stroke-width="0"/>
+     <circle class="core" r="9" fill="var(--plum)"/></g>`).join('')}</g>
+
+  <g id="gNat"><circle cx="${NAT[0]}" cy="${NAT[1]}" r="12" fill="var(--slate)" stroke="#fff" stroke-width="3"/>
+    <text class="lab halo" x="${NAT[0]}" y="${NAT[1]+46}" text-anchor="middle" fill="var(--slate)">a natural sound</text></g>
+`;
+
+// same/different ring per seed, computed from the geometry (not hand-set)
+const inSet = (id, p) => document.getElementById(id).isPointInStroke(new DOMPoint(p[0],p[1]));
+
+const BEATS = [
+  {cap:'All possible sounds, and one natural sound',                                     focus:null},
+  {cap:'Every sound with the same model statistics: the model’s null space',             focus:null},
+  {cap:'Synthesis lands anywhere in it: wherever the noise happened to start',           focus:null},
+  {cap:'Natural and matched differ only in what the model can’t see',                    focus:null},
+  {cap:'Region 1 responds alike: blind to those differences too',                        focus:[1], judge:'setR1'},
+  {cap:'Region 3 responds differently: it represents something the model is missing',    focus:[3], judge:'setR3'},
+  {cap:'Another model is not blind there: model-matched sounds pull models apart',       focus:null, judge:'setB'},
+  {cap:'Natural sounds stay on a thin slice, where models and cortex agree',              focus:null},
+];
+const NOTES = 'Schematic, not data. [0] Picture the space of all possible sounds; here is one natural sound. [click] A model-matched sound has the same time-averaged statistics as the natural sound, at one stage of the model. Every sound that shares those statistics is a set the model cannot tell apart: its null space. For color this is the metameric black. [click] Synthesis starts from noise and lands somewhere in that set; where is set by the noise, not by the model. [click] So everything that differs between the natural and the matched sound is something the model does not represent. [click] Then cortex is the judge. If a region responds the same, as Region 1 tends to, it is blind to those differences too. [click] If a region responds differently, as Region 3 does, it represents something in the model’s blind spot: the model is missing it. [click] And another model is generally not blind in the same place, so its responses to these sounds differ: model-matched stimuli separate models without our having to choose a contrast in advance. [click] Natural sounds can’t do this. They occupy a thin slice of sound space where the features a model learned travel together with the features cortex uses, so a model can predict cortex using different features. Model-matched sounds step off that slice.';
+document.getElementById('notes').innerHTML = NOTES;
+
+const MAX = BEATS.length - 1;
+let beat = 0, prevBeat = 0, capTimer = 0, flyTimer = 0;
+const seeds = [...fig.querySelectorAll('.seed')];
+const place = (g, p, jump) => { g.classList.toggle('jump', !!jump); g.style.transform = `translate(${p[0]}px,${p[1]}px)`; };
+
+function render(){
+  fig.querySelectorAll('[data-step]').forEach(el =>
+    el.classList.toggle('shown', beat >= +el.dataset.step &&
+      (el.dataset.until == null || beat < +el.dataset.until)));
+
+  // the seeds: hidden before beat 2; on stepping forward into 2 they appear as noise and fly in
+  clearTimeout(flyTimer);
+  seeds.forEach((g,i) => {
+    g.style.opacity = beat >= 2 ? 1 : 0;
+    if(beat === 2 && prevBeat === 1){
+      place(g, START[i], true); void g.getBoundingClientRect();
+      flyTimer = setTimeout(() => seeds.forEach((h,k) => place(h, LAND[k], false)), 450);
+    } else place(g, beat >= 2 ? LAND[i] : START[i], true);
+  });
+
+  // the judge: rings say same (pine) / different (brick) for the set in play
+  const j = BEATS[beat].judge;
+  seeds.forEach((g,i) => { const r = g.querySelector('.ring');
+    if(!j){ r.setAttribute('stroke','transparent'); r.setAttribute('stroke-width',0); return; }
+    r.setAttribute('stroke', inSet(j, LAND[i]) ? 'var(--pine)' : 'var(--brick)');
+    r.setAttribute('stroke-width', 5); });
+
+  // what steps back: the difference lines once cortex judges; A and its sounds on the last beat
+  document.getElementById('gDiff').classList.toggle('back', beat >= 4);
+  document.getElementById('gB').classList.toggle('back', beat >= 7);
+
+  // region focus on the anchor brain
+  const f = BEATS[beat].focus;
+  document.querySelectorAll('.wash').forEach(r =>
+    r.setAttribute('opacity', f && !f.includes(+r.dataset.r) ? .72 : 0));
+
+  prevBeat = beat;
+  const cap = document.getElementById('cap');
+  cap.classList.add('swap'); clearTimeout(capTimer);
+  capTimer = setTimeout(() => { cap.textContent = BEATS[beat].cap; cap.classList.remove('swap'); }, 150);
+  document.getElementById('dots').innerHTML =
+    BEATS.map((_,i) => `<span class="dot ${i<=beat?'on':''}"></span>`).join('');
+}
+window[SLIDE_NAME] = {
+  advance(){ if(beat<MAX){ beat++; render(); } },
+  back(){ if(beat>0){ beat--; render(); } },
+  atStart(){ return beat<=0; }, atEnd(){ return beat>=MAX; },
+  reset(){ beat=0; prevBeat=0; render(); }, resetToEnd(){ beat=MAX; prevBeat=MAX; render(); },
+  getBeat(){ return beat; }, count(){ return MAX+1; },
+  setBeat(b){ beat=Math.max(0,Math.min(MAX,b)); prevBeat=beat; render(); },
+};
+addEventListener('click', e => { if(!e.target.closest('#notes')) window[SLIDE_NAME].advance(); });
+if(window.parent === window){
+  addEventListener('keydown', e => {
+    if(['ArrowRight',' ','Enter'].includes(e.key)) window[SLIDE_NAME].advance();
+    else if(e.key === 'ArrowLeft') window[SLIDE_NAME].back();
+    else if(e.key === 'n') document.getElementById('notes').classList.toggle('on');
+  });
+}
+render();
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../vendor/fraunces.css">
 <style>
   /* Owned by part ch1-mms-logic. Mirrors the deck's static-slide chrome (deck.css
-     .stage / h1.t / ul.frag) so it reads as the same slide it replaced. */
+     .stage / h1.t) so it reads as a deck slide. */
   :root{
     --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0;
     --slate:#38506e; --plum:#7a5ea0; --pine:#3f7357; --ochre:#b45309;
@@ -19,20 +19,13 @@
              font-size:16px; line-height:1.45; -webkit-font-smoothing:antialiased;
              cursor:pointer; user-select:none; -webkit-user-select:none; }
   .stage{ position:absolute; inset:0; padding:9vh 6vw 11vh; display:flex; flex-direction:column; }
-  h1.t{ font-family:var(--serif); font-weight:900; color:var(--ink);
-        font-size:clamp(1.8rem, 3.5vw, 3rem); line-height:1.08; letter-spacing:-.012em; margin-bottom:1.6rem; }
+  h1.t{ font-family:var(--serif); font-weight:300; color:var(--ink);
+        font-size:clamp(1.8rem, 3.5vw, 3rem); line-height:1.08; letter-spacing:0; margin-bottom:1.6rem; }
   /* matches deck.css h1.t (Fer, 2026-10-07: smaller titles, more room for figures) */
-  h1.t em{ font-style:normal; color:var(--slate); }
+  h1.t em{ font-style:normal; color:var(--ink); }   /* no coloured text (deck-wide, 2026-10-07) */
   #figwrap{ flex:1 1 auto; min-height:0; position:relative; }
   #cv{ position:absolute; inset:0; width:100%; height:100%; display:block; }
 
-  ul.frag{ list-style:none; display:flex; flex-direction:column; gap:1.15rem; margin-top:1.4rem; }
-  ul.frag li{ font-size:clamp(1.15rem,1.9vw,1.65rem); line-height:1.35; padding-left:1.15em; position:relative; max-width:30em; }
-  ul.frag li::before{ content:""; position:absolute; left:0; top:.52em; width:.42em; height:.42em; border-radius:50%; background:var(--slate); }
-  ul.frag li.pine::before{ background:var(--pine); }
-  ul.frag li .hl{ color:var(--ink); font-weight:700; }
-  .b{ opacity:0; transform:translateY(12px); transition:opacity .45s ease, transform .45s ease; }
-  .b.shown{ opacity:1; transform:none; }
 
   footer{ position:absolute; right:2rem; bottom:1.1rem; }
   #dots{ display:flex; gap:.45rem; }
@@ -48,10 +41,6 @@
   <div class="stage">
     <h1 class="t">The logic of <em>model-matched stimuli</em></h1>
     <div id="figwrap"><canvas id="cv"></canvas></div>
-    <ul class="frag">
-      <li class="b" data-beat="11">Same time-averaged response as a natural sound <span class="hl">at one model stage</span> — otherwise unconstrained</li>
-      <li class="b pine" data-beat="12">If that stage accounts for a voxel, the two sounds should evoke <span class="hl">the same response</span></li>
-    </ul>
   </div>
   <footer><div id="dots"></div></footer>
   <div id="notes"></div>
@@ -70,14 +59,15 @@
 // ACT 4 — THE BRAIN    (7-10): the model's middle grays out; the natural sound plays and
 //                              its voxel lights (nothing travels); kept; then the model-
 //                              matched sound; "Similar?"
-// ACT 5 — LOGIC        (11-12): the middle returns; the two bullets.
+// ACT 5 — LOGIC        (11-12): the middle returns and the stage pulses; ring on "Similar?".
+//                              (The logic is spoken, not written: see SCRIPT 11-12.)
 //
 // COLOUR: blue = natural sound (and the voxel response it evoked), plum = model-
 // matched sound (and its voxel response), ochre = the matched stage, pine = matched. The figure's own
 // colours (viridis responses, red labels) are never restyled.
 
 const SLIDE_NAME = 'mmsLogic';
-const IMG_SRC = '../assets/final/ch1-mms-logic/outline/mms-logic.png?v=3';
+const IMG_SRC = '../assets/final/ch1-mms-logic/outline/mms-logic.png?v=4';
 const IMG_W = 1740, IMG_H = 600;
 
 // ── anchors: pixels in mms-logic.png, detected with PIL (whitespace / ink /
@@ -128,23 +118,23 @@ const COVERS = [
   {r:[1400, 358, 1740, 600], b:7, t:[.3, .9]},            // fMRI voxel (bottom)
   {r:[1400, 262, 1740, 358], b:10, t:[0, .5]},            //   "Similar?"
 ];
-// bracket + label, tinted ochre once the pulse reaches the matched stage
-const BRACKET_TINT = [[389, 200, 705, 418], [615, 188, 636, 200], [615, 418, 636, 439]];
+// bracket lines (not the label: no coloured text), tinted ochre once the pulse reaches the matched stage
+const BRACKET_TINT = [[389, 200, 705, 285], [389, 335, 705, 418], [615, 188, 636, 200], [615, 418, 636, 439]];
 
-const SCRIPT = [
-  '<b>Title.</b> How do we test a model with sounds other than natural ones?',
-  '<b>Natural sound.</b> We start from a natural sound.',
-  '<b>Model-matched sound.</b> We synthesize a second sound. Physically it is <i>different</i>.',
-  '<b>Model.</b> Both sounds go through the model. One stage is the matched stage.',
-  '<b>Time-varying responses.</b> At that stage the responses unfold over time, and over time they are different.',
-  '<b>Time average.</b> Average each channel over time: 2048 channels by 7 frequencies.',
-  '<b>Matched.</b> Time-averaged, the two responses are matched. That is how the model-matched sound was made: it was synthesized until this matched. (How, in a moment.)',
-  '<b>fMRI.</b> Now set the model aside. Listeners in the scanner hear the sounds themselves.',
-  '<b>Natural sound → voxel.</b> We play the natural sound and measure a voxel’s response.',
-  '<b>Model-matched sound → voxel.</b> We play the model-matched sound and measure the same voxel.',
-  '<b>Similar?</b> Does the voxel respond similarly to the two sounds?',
-  '<b>Logic (1).</b> A model-matched sound has the same time-averaged response as the natural sound at one model stage, and is otherwise unconstrained.',
-  '<b>Logic (2).</b> If that stage accounts for a voxel, the two sounds should evoke the same response.',
+const SCRIPT = [   // presenter transcript, one passage per click (deck-wide round 4)
+  'Our approach builds on model-matched stimuli. The logic is as follows.',
+  'We start from a natural sound.',
+  'We then synthesize a second sound, the model-matched sound. Physically, it is different from the natural sound.',
+  'Both sounds are passed through a model, and we choose one stage of that model: the matched stage.',
+  'At that stage the model’s response varies over time: 2048 channels, 7 frequency bins and 19 time bins. Over time, the responses to the two sounds are different.',
+  'We then average each channel’s response over time, which leaves 2048 channels by 7 frequency bins. We use time-averaged responses because the fMRI signal reflects neural activity averaged over several seconds.',
+  'After time averaging, the responses to the two sounds are matched. This is how the model-matched sound is generated: it is synthesized so that its time-averaged response at the matched stage equals that of the natural sound. I will describe the synthesis in a moment.',
+  'We then set the model aside and measure responses in auditory cortex with fMRI. Listeners in the scanner hear the sounds themselves.',
+  'We present the natural sound and measure the response of a voxel.',
+  'We then present the model-matched sound and measure the response of the same voxel.',
+  'The question is whether the voxel responds similarly to the two sounds.',
+  'A model-matched sound produces the same time-averaged response as the natural sound at one model stage, and is otherwise unconstrained.',
+  'So if that model stage accounts for a voxel’s response, the two sounds should evoke similar responses in that voxel. If they evoke different responses, the voxel is sensitive to something the model stage does not capture.',
 ];
 const N = SCRIPT.length;
 
@@ -193,19 +183,12 @@ img.src = IMG_SRC;
 let beat = 0, beatT0 = performance.now(), jumped = true;
 const dotsEl = document.getElementById('dots'), notesEl = document.getElementById('notes');
 for(let i = 0; i < N; i++){ const d = document.createElement('div'); d.className = 'dot'; dotsEl.appendChild(d); }
-const bullets = [...document.querySelectorAll('[data-beat]')];
 
 function render(jump){
   // Only a forward click animates; steps back and deck jumps land on the
   // finished state of the beat.
   jumped = jump;
   beatT0 = performance.now();
-  bullets.forEach(e => {
-    e.style.transition = jump ? 'none' : '';
-    e.classList.toggle('shown', beat >= +e.dataset.beat);
-  });
-  void document.body.offsetHeight;
-  requestAnimationFrame(() => bullets.forEach(e => e.style.transition = ''));
   [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', i <= beat));
   notesEl.innerHTML = SCRIPT[beat];
 }
@@ -213,7 +196,8 @@ function advance(){ if(beat < N-1){ beat++; render(false); } }
 function back(){ if(beat > 0){ beat--; render(true); } }
 function jump(i){ beat = Math.max(0, Math.min(N-1, i)); render(true); }
 window[SLIDE_NAME] = { advance, back, atStart:() => beat === 0, atEnd:() => beat === N-1,
-                       reset:() => jump(0), resetToEnd:() => jump(N-1) };
+                       reset:() => jump(0), resetToEnd:() => jump(N-1),
+                       getBeat:() => beat, count:() => N, setBeat:jump };
 addEventListener('click', advance);
 addEventListener('keydown', e => {
   if(['ArrowRight',' ','Enter'].includes(e.key)){ e.preventDefault(); advance(); }

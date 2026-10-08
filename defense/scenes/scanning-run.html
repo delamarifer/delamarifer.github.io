@@ -141,6 +141,11 @@
 (function(){
   'use strict';
   const SLIDE_NAME = 'scanningRun';
+  // ?quick=1 (Fer, 2026-10-08, after Josh's review): sparse scanning "in passing". The deck shows
+  // only beats 2-5 (one block of Spanish speech, then piano, with the response and the brain),
+  // with no strip, drop marks or run/session detail on screen, and QSCRIPT as the presenter
+  // transcript. Without it, the scene is the full three-slide version (kept as a backup).
+  const QUICK = new URLSearchParams(location.search).has('quick');
 
   // ── design facts (check against the paper's methods) ───────────────────────
   const TR = 4.45, EXC = 3, GAP = 0.225, SCAN = 1;      // image6 / block-design
@@ -170,18 +175,18 @@
   // ── beats ──────────────────────────────────────────────────────────────────
   const BEATS = [
     { cap:'', ms:1200 },
-    { cap:'One run: a stream of blocks, one sound per block',                    ms:600 },
-    { cap:'One block: three excerpts of one sound, a scan after each',           ms:1100 },
-    { cap:'The listener hears the sound; the scanner reads out in the gaps',     ms:EXC*0+BLK/PLAY_SPEED*1000 },
-    { cap:'Drop the first scan, average the other two: one number',              ms:1400 },
-    { cap:'Next block, next sound: another number',                              ms:BLK/PLAY_SPEED*1000+900 },
-    { cap:'A whole run: one number per block',                                   ms:4600 },
-    { cap:'Twelve runs in a session',                                            ms:1700 },
-    { cap:'Three sessions per listener · ten listeners',                         ms:1500 },
-    { cap:'Each natural sound comes back: twice per session',                    ms:900 },
-    { cap:'Within a session: compare presentation 1 and 2',                      ms:2400 },
-    { cap:'Each session: save one number',                                       ms:1200 },
-    { cap:'Average the three sessions: one number per sound, per voxel',         ms:1400 },
+    { cap:'Each run presented a sequence of blocks, one sound per block.',                    ms:600 },
+    { cap:'Each block contained three excerpts of one sound, each followed by a scan.',           ms:1100 },
+    { cap:'Each excerpt played in silence, and the scanner acquired one volume after it.',     ms:EXC*0+BLK/PLAY_SPEED*1000 },
+    { cap:'The first volume was discarded and the other two were averaged.',              ms:1400 },
+    { cap:'The next block presented a different sound.',                              ms:BLK/PLAY_SPEED*1000+900 },
+    { cap:'Each block gave one response per voxel.',                                   ms:4600 },
+    { cap:'Each session contained twelve runs.',                                            ms:1700 },
+    { cap:'Each of the ten participants completed three sessions.',                         ms:1500 },
+    { cap:'Each natural sound was presented twice per session.',                    ms:900 },
+    { cap:'Within a session, the two presentations were compared.',                      ms:2400 },
+    { cap:'Each session gave one response per sound.',                                       ms:1200 },
+    { cap:'Responses were averaged across the three sessions.',         ms:1400 },
   ];
   const N = BEATS.length;
 
@@ -226,6 +231,24 @@
     to Spanish speech. Do this for every sound and every voxel, and that table of numbers is what
     every comparison in the rest of this chapter is built on.`,
   ];
+
+  const QCAP = {5:'One number per sound, per voxel.'};
+  const QSCRIPT = {
+   2:`Sounds were presented in silent gaps between scans, a standard approach called sparse
+    scanning, because the noise of the scanner would otherwise mask the sounds. Each block
+    contained three 3-second excerpts of one sound, and each excerpt was followed by the
+    acquisition of one volume.`,
+   3:`Here is one block of a natural sound, Spanish speech. The curve below is the response of one
+    voxel. The hemodynamic response develops over several seconds, so each volume measures the
+    response to the excerpts that preceded it. The shape is a canonical hemodynamic response
+    function; the amplitudes are illustrative.`,
+   4:`The first volume of each block was discarded, because the response had not yet developed, and
+    the remaining two volumes were averaged, giving one response to this block.`,
+   5:`The next block presented a different sound, here a sound synthesized to match the third stage
+    of the robust network. Each natural sound was presented twice in each of three sessions, and
+    responses were averaged across presentations. The result is one number per sound for each
+    voxel, and these responses are the basis of every comparison that follows.`,
+  };
 
   // ── tiny helpers ───────────────────────────────────────────────────────────
   const NS = 'http://www.w3.org/2000/svg';
@@ -367,7 +390,7 @@
     const g = el('g', {opacity:0}, tcG), x0 = X(SAMP_T[a])-30, x1 = X(SAMP_T[b])+30;
     el('line', {class:'mean', x1:x0, y1:Y(m), x2:x1, y2:Y(m)}, g);
     el('circle', {cx:(x0+x1)/2, cy:Y(m), r:9, fill:'var(--green)', stroke:'#fff', 'stroke-width':2.5}, g);
-    txt('one number', {class:'lbl b', x:(x0+x1)/2, y:Y(m)+34, 'text-anchor':'middle'}, g);
+    txt(QUICK ? 'one number' : 'average', {class:'lbl b', x:(x0+x1)/2, y:Y(m)+34, 'text-anchor':'middle'}, g);
     return g;
   });
   const playhead = el('line', {x1:0, y1:FR_Y0-4, x2:0, y2:BASE+4, stroke:'#0f172a',
@@ -402,11 +425,11 @@
   txt("one voxel's response", {class:'lbl', x:RUN_X0, y:RUN_BASE+24}, runG);
   const runBars = design[0][0].map((b,i) => el('rect', {x:RUN_X0+i*RUN_P+7, width:14, y:BAR_Y, height:0,
       fill: b.k==='natural' ? '#555' : COND[b.k][0], opacity:.9}, runG));
-  txt('one number per block', {class:'lbl b', x:RUN_X0, y:205}, runG);
+  txt('one response per block', {class:'lbl b', x:RUN_X0, y:205}, runG);
   const runHead = el('line', {y1:205, y2:RUN_BASE+4, stroke:'#0f172a', 'stroke-width':2, opacity:0}, runG);
 
   // squares (all sessions × runs × blocks), row labels, session labels
-  const sqG = el('g');
+  const sqG = el('g', QUICK ? {display:'none'} : {});   // the run strip and grids: not in quick mode
   const SQ = [], ROWLBL = [];
   for(let s=0;s<SESS;s++) for(let r=0;r<RUNS;r++){
     ROWLBL.push({s, r, e: txt(`Run ${r+1}`, {class:'lbl b', 'text-anchor':'end'}, sqG)});
@@ -441,11 +464,11 @@
     return g;
   });
   const flyR = SPAN.map(() => el('rect', {fill:COND.natural[1], stroke:'#000', 'stroke-width':2.5}, repG));
-  const perSess = txt('one number per session', {class:'lbl b', x:CX[1], y:REP_BASE+76, 'text-anchor':'middle', opacity:0}, repG);
+  const perSess = txt('one response per session', {class:'lbl b', x:CX[1], y:REP_BASE+76, 'text-anchor':'middle', opacity:0}, repG);
   const repMean = el('line', {class:'mean', x1:CX[0]-50, x2:AVG_X+SW+10, y1:REP_BASE-MEANR*REP_H, y2:REP_BASE-MEANR*REP_H, opacity:0}, repG);
   const avgBar = el('rect', {x:AVG_X, width:SW, fill:'var(--green)'}, repG);
   const avgTxt = txt('average', {class:'lbl b', x:AVG_X+SW/2, y:REP_BASE+46, 'text-anchor':'middle'}, repG);
-  const avgOne = txt('one number', {class:'blk', x:AVG_X+SW, y:REP_BASE-MEANR*REP_H-18, 'text-anchor':'end'}, repG);
+  const avgOne = txt('one response', {class:'blk', x:AVG_X+SW, y:REP_BASE-MEANR*REP_H-18, 'text-anchor':'end'}, repG);
 
   const GLOW = [...document.querySelectorAll('#brain .glow')];
   const pinHalo = document.getElementById('pinHalo');
@@ -541,10 +564,10 @@
       const G = gz(cb === 1 ? 1 : cf === 1 ? 1 : cb), sx = i => G.x + i*G.p;
       wedge1.setAttribute('points', `${X(0)+3},${FR_Y1} ${X(BLK)-3},${FR_Y1} ${sx(Z1)+G.z},${G.y-5} ${sx(Z1)},${G.y-5}`);
       wedge2.setAttribute('points', `${X(BLK)+3},${FR_Y1} ${X(2*BLK)-3},${FR_Y1} ${sx(Z2)+G.z},${G.y-5} ${sx(Z2)},${G.y-5}`);
-      wedgeG.setAttribute('opacity', fade(1, 1, g) * .9);
+      wedgeG.setAttribute('opacity', QUICK ? 0 : fade(1, 1, g) * .9);
     }
     blockG.setAttribute('opacity', fade(1, 4, g));
-    annG.setAttribute('opacity', fade(1, 1, g));
+    annG.setAttribute('opacity', QUICK ? 0 : fade(1, 1, g));
     tcG.setAttribute('opacity', fade(2, 4, g));
 
     // ── the playhead: cb 2 sweeps block 1, cb 4 sweeps block 2 ──
@@ -568,13 +591,13 @@
 
     // block 1's verdict (cb 3+), block 2's (end of cb 4)
     const v1 = fade(3, 4, g);
-    drops[0].setAttribute('opacity', v1); means[0].setAttribute('opacity', v1);
-    dropA[0].setAttribute('opacity', .10*v1); winA[0].setAttribute('opacity', .17*v1);
+    drops[0].setAttribute('opacity', QUICK ? 0 : v1); means[0].setAttribute('opacity', v1);
+    dropA[0].setAttribute('opacity', QUICK ? 0 : .10*v1); winA[0].setAttribute('opacity', .17*v1);
     let v2 = cb === 4 ? 1 : 0;
     if(cb === 4 && cf === 3){ const f = BLK/PLAY_SPEED*1000/BEATS[5].ms; v2 = ease(clamp01((t - f)/(1 - f))); }
     if(cf === 4 && cb !== 4) v2 = 1 - g;
-    drops[1].setAttribute('opacity', v2); means[1].setAttribute('opacity', v2);
-    dropA[1].setAttribute('opacity', .10*v2); winA[1].setAttribute('opacity', .17*v2);
+    drops[1].setAttribute('opacity', QUICK ? 0 : v2); means[1].setAttribute('opacity', v2);
+    dropA[1].setAttribute('opacity', QUICK ? 0 : .10*v2); winA[1].setAttribute('opacity', .17*v2);
 
     // ── run view (cb 5): sweep the whole run, one bar per finished block ──
     runG.setAttribute('opacity', fade(5, 5, g));
@@ -638,9 +661,9 @@
   let capTimer = null;
   function render(){
     [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', i <= beat - LO));
-    notesEl.innerHTML = SCRIPT[beat];
+    notesEl.innerHTML = QUICK ? (QSCRIPT[beat] || '') : SCRIPT[beat];
     capEl.classList.add('swap'); clearTimeout(capTimer);
-    capTimer = setTimeout(() => { capEl.textContent = BEATS[beat].cap; capEl.classList.remove('swap'); }, 150);
+    capTimer = setTimeout(() => { capEl.textContent = QUICK ? (QCAP[beat] || '') : BEATS[beat].cap; capEl.classList.remove('swap'); }, 150);
   }
   // forward plays the beat's motion; back and jumps land settled (no replay)
   function advance(){ if(beat < HI){ from = beat; beat++; tStart = performance.now(); render(); } }

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prior evidence for the regions</title>
+<!-- the anchor brain's box, shared by every Ch. 1 experiment scene (owned by ch1-experiment) -->
+<link rel="stylesheet" href="shared/anchor.css">
+<style>
+  /* Calibri comes from scenes/shared/deck-font.css, which the engine injects. All text black
+     (deck-wide, 2026-10-07); colour only in the figures. */
+  :root{ --ink:#0f172a; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:#fff; color:var(--ink); overflow:hidden; cursor:pointer;
+        user-select:none; -webkit-user-select:none; }
+  h1{ position:absolute; left:var(--anchor-left); top:3.6vh; font-weight:300; color:var(--ink);
+      font-size:clamp(1.8rem,3.5vw,3rem); line-height:1.05; }
+  #brain{ position:absolute; inset:0; width:100%; height:100%; display:block; overflow:visible; }
+  .numeral text{ font-weight:700; fill:#fff; stroke:#000; stroke-width:9; paint-order:stroke;
+                 text-anchor:middle; dominant-baseline:central; }
+  /* Norman-Haignere & McDermott (2018) Fig. 3, cropped from the paper, never recoloured */
+  .nh{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+       justify-content:center; gap:1.2vh; opacity:0; transition:opacity .55s ease; pointer-events:none; }
+  .nh.on{ opacity:1; }
+  .nh img{ max-width:100%; max-height:88%; object-fit:contain; display:block; }
+  .nh .src{ font-size:1rem; color:var(--ink); }   /* citations: 1rem, ink (deck-wide) */
+  #dots{ position:absolute; right:2rem; bottom:5vh; display:flex; gap:.42rem; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:fixed; inset:auto 0 0 0; max-height:52vh; overflow:auto; background:#0f172a;
+          color:#e2e8f0; padding:1.5rem 3vw 2rem; font-size:15px; line-height:1.6; display:none; }
+  #notes.on{ display:block; }
+</style>
+</head>
+<body>
+  <h1>A gradient from primary to non-primary auditory cortex</h1>
+  <div class="anchor-brain">
+    <!-- the anchor brain, built exactly as in region-definition.html so the cuts are continuous -->
+    <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
+      <defs><clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath></defs>
+      <g id="bw"><image href="../assets/final/ch1-regions/outline/anchor/whole-regions.png?v=3" width="1947" height="1580"/></g>
+      <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
+      <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
+      <g class="numeral" font-size="96">
+        <text x="771" y="2029">1</text><text x="1373" y="2364">2</text><text x="629" y="2401">3</text>
+      </g>
+    </svg>
+  </div>
+  <div class="anchor-content">
+    <div class="nh" id="nh0"><img src="../assets/final/ch1-regions/outline/nh2018-fig3c-group.png?v=3" alt="Group map of the NSE between responses to natural and spectrotemporal model-matched sounds, N = 12">
+      <span class="src">Norman-Haignere &amp; McDermott (2018), Fig. 3C. White outline: primary auditory cortex.</span></div>
+    <div class="nh" id="nh1"><img src="../assets/final/ch1-regions/outline/nh2018-fig3d-annular.png?v=3" alt="NSE as a function of distance to the centre of primary auditory cortex">
+      <span class="src">Norman-Haignere &amp; McDermott (2018), Fig. 3D</span></div>
+  </div>
+  <div id="dots"></div>
+<div id="notes"></div>
+
+<script>
+// ═══ WHAT THIS SCENE SHOWS ═══════════════════════════════════════════════════
+// Part ch1-regions, slide 1 of 2: the result the regions rest on. Norman-Haignere &
+// McDermott (2018), PLOS Biol (CC BY), Fig. 3C (group row + colour bar) and Fig. 3D, cropped
+// with PIL from ~/Downloads/journal.pbio.2005127.pdf, page 8, at whitespace.
+//   0 the 2018 group NSE map · 1 NSE vs distance to the centre of primary auditory cortex
+// The anchor brain stays as ch1-nse leaves it. Slide 2 is region-definition.html.
+// Fer, 2026-10-08: keep this recall even though ch1-mms-logic shows the same crops first.
+// No captions (deck-wide round 4): what is said is in the part's notes and in SCRIPT.
+//
+// Deck hook: window.regionPrior = {advance, back, atStart, atEnd, reset, resetToEnd, getBeat}
+const SLIDE_NAME = 'regionPrior';
+const N = 2;
+const SCRIPT = [
+  `Our regions of interest are based on the result I showed earlier. Norman-Haignere and
+   McDermott (2018) measured responses to natural sounds and to sounds matched to them in a
+   spectrotemporal model, in 12 participants. This is their group map of the normalized squared error between
+   the two sets of responses. Within primary auditory cortex, outlined in white, the NSE is
+   close to zero, so the model-matched sounds drive these voxels about as strongly as the
+   natural sounds do. Outside primary auditory cortex, the NSE is substantially higher.`,
+  `When voxels are binned by their distance from the centre of primary auditory cortex, the
+   NSE increases with distance, in both hemispheres. The spectrotemporal model therefore
+   accounts well for responses in primary auditory cortex and less well for responses in
+   non-primary regions.`,
+];
+
+let beat = 0;
+function render(){
+  for(let i=0; i<N; i++) document.getElementById('nh'+i).classList.toggle('on', i === beat);
+  document.getElementById('dots').innerHTML =
+    SCRIPT.map((_,i) => `<span class="dot ${i<=beat?'on':''}"></span>`).join('');
+  document.getElementById('notes').innerHTML = SCRIPT[beat];
+}
+window[SLIDE_NAME] = {
+  advance(){ if(beat<N-1){ beat++; render(); } },
+  back(){ if(beat>0){ beat--; render(); } },
+  atStart(){ return beat<=0; }, atEnd(){ return beat>=N-1; },
+  reset(){ beat=0; render(); }, resetToEnd(){ beat=N-1; render(); },
+  getBeat(){ return beat; }, count(){ return N; },
+  setBeat(b){ beat=Math.max(0,Math.min(N-1,b)); render(); },
+};
+// clicks land in the iframe, so the scene owns them; keys are the deck's when embedded
+addEventListener('click', e => { if(!e.target.closest('#notes')) window[SLIDE_NAME].advance(); });
+if(window.parent === window){
+  addEventListener('keydown', e => {
+    if(['ArrowRight',' ','Enter'].includes(e.key)) window[SLIDE_NAME].advance();
+    else if(e.key === 'ArrowLeft') window[SLIDE_NAME].back();
+    else if(e.key === 'n') document.getElementById('notes').classList.toggle('on');
+  });
+}
+render();
+</script>
+</body>
+</html>

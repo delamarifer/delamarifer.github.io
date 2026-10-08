@@ -50,10 +50,6 @@
   #pan1 .strip{ background:var(--pine); } #pan2 .strip{ background:var(--ochre); margin-left:8%; }
   .pan img{ display:block; width:100%; height:auto; }
 
-  #cap{ position:absolute; left:var(--anchor-left); bottom:4.6vh; max-width:70vw;
-    font-size:clamp(15px,1.6vw,23px); font-weight:500; color:var(--ink); line-height:1.3;
-    min-height:1.3em; transition:opacity .3s ease; pointer-events:none; }
-  #cap.swap{ opacity:0; }
 
   #dots{ position:absolute; right:2rem; bottom:5vh; display:flex; gap:.42rem; }
   .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1;
@@ -63,7 +59,6 @@
           color:#e2e8f0; padding:1.5rem 3vw 2rem; font-size:15px; line-height:1.6; display:none;
           pointer-events:none; }
   #notes.on{ display:block; }
-  #notes b{ color:#fff; }
 </style>
 </head>
 <body>
@@ -77,13 +72,13 @@
       <defs>
         <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
       </defs>
-      <g id="bw"><image href="../assets/final/ch1-example-voxels/outline/anchor/whole-regions.png?v=3" width="1947" height="1580"/></g>
+      <g id="bw"><image href="../assets/final/ch1-example-voxels/outline/anchor/whole-regions.png?v=4" width="1947" height="1580"/></g>
       <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
       <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
       <!-- zoom-regions.png pixels from here on -->
       <g id="zf" transform="translate(0 1640) scale(1.947)">
-        <image class="fade" id="wash1"  href="../assets/final/ch1-example-voxels/outline/ev-wash-r1.png?v=3"  width="1000" height="686"/>
-        <image class="fade" id="wash13" href="../assets/final/ch1-example-voxels/outline/ev-wash-r13.png?v=3" width="1000" height="686"/>
+        <image class="fade" id="wash1"  href="../assets/final/ch1-example-voxels/outline/ev-wash-r1.png?v=4"  width="1000" height="686"/>
+        <image class="fade" id="wash13" href="../assets/final/ch1-example-voxels/outline/ev-wash-r13.png?v=4" width="1000" height="686"/>
       </g>
       <g class="numeral" font-size="96">
         <text x="771" y="2029">1</text><text x="1373" y="2364">2</text><text x="629" y="2401">3</text>
@@ -97,11 +92,10 @@
   <div class="anchor-content" id="acontent"></div>
 
   <div id="panels">
-    <div class="pan" id="pan1"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-pbelt.png?v=3" alt="Region 1 voxel scatter"></div>
-    <div class="pan" id="pan2"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-a5.png?v=3" alt="Region 3 voxel scatter"></div>
+    <div class="pan" id="pan1"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-pbelt.png?v=4" alt="Region 1 voxel scatter"></div>
+    <div class="pan" id="pan2"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-a5.png?v=4" alt="Region 3 voxel scatter"></div>
   </div>
 
-  <p id="cap"></p>
   <div id="dots"></div>
   <div id="notes"></div>
 
@@ -117,6 +111,9 @@
 //   3 pin A5 · 4 its scatter
 //
 // Words are black; colour is only on marks (pins, the scatters' key strips, the data).
+// On-screen text is only what the animation needs (deck-wide round 4, 2026-10-08): the
+// title, the two pin labels, and the scatters' own titles. What each scatter shows (similar,
+// NSE 0.34; diverge, NSE 0.70) is said aloud and lives in the speaker notes.
 // The washes come from the region masks (tools/build_example_voxel_overlays.py).
 //
 // PIN POSITIONS ARE INTERIM: a point deep inside Region 1 / Region 3, on the posterior
@@ -136,31 +133,35 @@ const PINS = [
 ];
 
 const BEATS = [
-  { cap:'Two example voxels', pins:[0,0], pans:[0,0], wash:null },
-  { cap:'A Region 1 voxel, in parcel PBelt', pins:[1,0], pans:[0,0], wash:'1', live:1 },
-  { cap:'Region 1 voxel: natural and matched responses similar (NSE 0.34)', pins:[1,0], pans:[1,0], wash:'1', grow:1 },
-  { cap:'A Region 3 voxel, in parcel A5', pins:[1,1], pans:[1,0], wash:'13', live:2 },
-  { cap:'Region 3 voxel: they diverge (NSE 0.70)', pins:[1,1], pans:[1,1], wash:'13', grow:2 },
+  { pins:[0,0], pans:[0,0], wash:null },
+  { pins:[1,0], pans:[0,0], wash:'1', live:1 },
+  { pins:[1,0], pans:[1,0], wash:'1', grow:1 },
+  { pins:[1,1], pans:[1,0], wash:'13', live:2 },
+  { pins:[1,1], pans:[1,1], wash:'13', grow:2 },
 ];
 const N = BEATS.length;
+// Presenter transcript, one passage per click (deck-wide round 4): full spoken sentences.
+// Not spoken: the pins mark a location inside the region on the anchor image; the data are
+// the paper's example voxels from those parcels (see the interim-pin note above).
 const SCRIPT = [
-  `<b>Two example voxels.</b> The same three regions. Before pooling over a region, here is
-   what the comparison looks like for single voxels.`,
-  `<b>A voxel in Region 1.</b> One voxel in parcel PBelt, in Region 1. (The pin marks where in
-   the region; the data are the paper’s example voxel from that parcel.)`,
-  `<b>Similar.</b> Each point is one natural sound: across, the voxel’s response to the natural
-   sound; up, its response to the sound’s spectrotemporal model-matched version. Points near
-   the diagonal mean the voxel responds to the two about equally. For this Region 1 voxel they
-   do: NSE 0.34.`,
-  `<b>A voxel in Region 3.</b> And one in parcel A5, in Region 3, the most non-primary region.`,
-  `<b>Diverge.</b> Many natural sounds drive this voxel much more than their matched versions
-   do, so the points fall below the diagonal: NSE 0.70. The spectrotemporal model misses what
-   this voxel responds to.`,
+  `Before pooling across voxels, it helps to look at the measurements for single voxels. These
+   are the same three regions as on the previous slide.`,
+  `First, a voxel in Region 1, in parcel PBelt.`,
+  `Each point is one natural sound. The horizontal axis is this voxel’s response to the natural
+   sound, and the vertical axis is its response to the spectrotemporal model-matched version of
+   that sound. If the two sounds produced the same response, the point would fall on the
+   diagonal. For this voxel the responses are similar, and the normalized squared error is 0.34.`,
+  `Second, a voxel in Region 3, in parcel A5.`,
+  `For this voxel, many natural sounds produced larger responses than their model-matched
+   versions, so the points fall below the diagonal, and the normalized squared error is higher,
+   0.70. In this voxel, the spectrotemporal model-matched sounds do not reproduce the responses
+   to the natural sounds. The results that follow summarize this comparison across all of the
+   voxels in each region.`,
 ];
 
 // ── DOM ──────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const capEl = $('cap'), dotsEl = $('dots'), notesEl = $('notes'), panelsEl = $('panels');
+const dotsEl = $('dots'), notesEl = $('notes'), panelsEl = $('panels');
 const PIN = [$('pin1'), $('pin2')], PAN = [$('pan1'), $('pan2')];
 const WASH = {'1':$('wash1'), '13':$('wash13')};
 
@@ -204,11 +205,9 @@ function grow(i){
     {duration:900, easing:'cubic-bezier(.3,.7,.25,1)'});
 }
 
-let phase = 0, capTimer = null;
+let phase = 0;
 function sync(animate){
   const b = BEATS[phase];
-  capEl.classList.add('swap'); clearTimeout(capTimer);
-  capTimer = setTimeout(() => { capEl.textContent = b.cap; capEl.classList.remove('swap'); }, 150);
   [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', i <= phase));
   for(let i=0; i<2; i++){
     PIN[i].classList.toggle('on', !!b.pins[i]);
