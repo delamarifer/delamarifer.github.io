@@ -73,7 +73,7 @@
     <h1 class="t" id="title"></h1>
     <svg id="fig" viewBox="0 0 1200 430" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
-  <div class="cite c1">De La Torre, Feather &amp; McDermott, Fig. 5A; Yamins et al. (2014); Kell et al. (2018); Schrimpf et al. (2018); Tuckute et al. (2023); Kriegeskorte et al. (2008)</div>
+  <div class="cite c1">Yamins et al. (2014); Kell et al. (2018); Schrimpf et al. (2018); Tuckute et al. (2023); Kriegeskorte et al. (2008)</div>
   <div class="cite c2">Naselaris et al. (2011); Tuckute et al. (2023); Conwell et al. (2024); Schrimpf et al. (2018); Feather et al. (2023), Fig. 7b; Norman-Haignere &amp; McDermott (2018)</div>
   <footer><div id="dots"></div></footer>
   <div id="notes"></div>
@@ -253,7 +253,7 @@
   const gBs = el('g', {class:'panel', id:'bs'});
   const BS_H = 372, BS_W = BS_H*1293/1188;
   on(el('text', {x:806, y:22, class:'ph'}, gBs, 'Brain-Score benchmarks (vision, IT)'), 7);
-  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=5', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 7, .2);
+  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=6', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 7, .2);
 
   // everything drawn so far is the schematic; it waits under panel A until beat 1
   const gMain = el('g', {id:'main'});
@@ -266,7 +266,7 @@
   // that matrix lands on the schematic matrix (x MX…MX+NU·CW, centred on the rows).
   const PA = {w:3640, h:1300, m:[676, 950, 1142, 1226]};
   const pk = 1200/PA.w, PAH = PA.h*pk;
-  const pa = el('image', {id:'panelA', href:'../assets/final/ch1-current-methods/outline/fig5a-regression.png?v=5', x:0, y:(430 - PAH)/2, width:1200, height:PAH});
+  const pa = el('image', {id:'panelA', href:'../assets/final/ch1-current-methods/outline/fig5a-regression.png?v=6', x:0, y:(430 - PAH)/2, width:1200, height:PAH});
   const mx0 = PA.m[0]*pk, my0 = (430 - PAH)/2 + PA.m[1]*pk, mw = (PA.m[2] - PA.m[0])*pk, mh = (PA.m[3] - PA.m[1])*pk;
   const zs = NU*CW/mw, ztx = MX - zs*mx0, zty = (Y0 + NR*RH/2) - zs*(my0 + mh/2);
   const ZOOM = `translate(${ztx.toFixed(1)}px, ${zty.toFixed(1)}px) scale(${zs.toFixed(3)})`;
