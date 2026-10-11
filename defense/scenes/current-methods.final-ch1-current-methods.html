@@ -55,6 +55,9 @@
   body.panelA #main{ opacity:0; transition-delay:0s; }
   #panelA{ transform-box:view-box; transform-origin:0 0; transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .4s ease .8s; }
   body.panelA #panelA{ transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease; }
+  .pacov{ transition:opacity .45s ease; }
+  .cite{ transition:opacity .45s ease; }
+  body.titleonly .cite{ opacity:0; }
   body.settling *{ transition:none !important; }
 
   footer{ position:absolute; right:2rem; bottom:1.1rem; }
@@ -84,16 +87,19 @@
 // rewrites scene queries to ?v=N, so the push played every beat on both slides.
 // Round 4 (2026-10-08): no bullets; everything said is in SCRIPT, one passage per beat.
 //
-// ACT 0 — PANEL A     (0):   the paper's Fig. 5A (regression-based predictions), whole.
-// ACT 1 — REGRESSION  (1-3): zoom into its activation matrix, which becomes the schematic
-//                            one (natural sounds as rows); stage activations fill row by row; weights fit for one
-//                            voxel give a predicted column; measured column + scatter.
-// ACT 2 — RSA         (4):   sound × sound dissimilarity for model and region, compared.
-// ACT 3 — THE GAP     (5-6): natural sounds co-vary; weights ignore some features.
-//                            The title switches at 5.
-// ACT 4 — BENCHMARKS  (7-8): Feather et al. 2023 Fig. 7b (Brain-Score IT, a vision
-//                            result; real data, cropped, never redrawn); hand-off to
-//                            model-matched stimuli (the next part, ch1-mms-logic).
+// ACT 0 — TITLE       (0):     the title alone (deck rule, round 6).
+// ACT 1 — PANEL A     (1-6):   the paper's Fig. 5A, one component per click: voxel → v;
+//                              activations to natural sounds; ridge regression; weights w;
+//                              held-out activations × w → predicted; measured, NSE / R².
+// ACT 2 — REGRESSION  (7-9):   zoom into panel A's matrix; its top-left 8 × 10 cells become the
+//                              schematic (same colours, same place), labelled by sound; weights,
+//                              predicted, measured + scatter. (Schematic beat = overall beat − 6.)
+// ACT 3 — RSA         (10):    sound × sound dissimilarity for model and region, compared.
+// ACT 4 — THE GAP     (11-12): natural sounds co-vary; weights ignore some features.
+//                              The title switches at 11.
+// ACT 5 — BENCHMARKS  (13-14): Feather et al. 2023 Fig. 7b (Brain-Score IT, a vision
+//                              result; real data, cropped, never redrawn); hand-off to
+//                              model-matched stimuli (the next part, ch1-mms-logic).
 //
 // COLOUR: matrices and voxel columns are viridis, styled after the paper's Fig. 3A
 // (assets/outline/image14.png: viridis activations, bracketed voxel vectors, the
@@ -111,7 +117,12 @@
   const rnd = () => (seed = (seed*1103515245 + 12345) % 2147483648) / 2147483648;
   const SOUNDS = ['speech','dog bark','piano','rain','siren','laughter','guitar','footsteps'];
   const NR = SOUNDS.length, NU = 10;
-  const A = SOUNDS.map(() => [...Array(NU)].map(() => rnd()));
+  // The activation block IS the top-left 8 × 10 cells of panel A's matrix (Fer, 2026-10-08:
+  // one continuous object through the zoom). Colours are the exact pixels at each cell centre of
+  // fig5a-regression-voxel.png (cell runs found with PIL); values are their nearest viridis t,
+  // used only for the toy regression below.
+  const A_COL = [["#414186", "#1f968b", "#25ab81", "#472676", "#3f4788", "#bfdf24", "#46317e", "#414286", "#cde01d", "#2ab07e"], ["#23a883", "#2e6c8e", "#2d6e8e", "#453681", "#3d4c89", "#472575", "#8bd546", "#218e8c", "#414186", "#55c666"], ["#345e8d", "#2a778e", "#462f7c", "#9dd93a", "#2eb27c", "#3e4989", "#1f968b", "#45347f", "#27ad80", "#365b8c"], ["#1e998a", "#33618d", "#dfe318", "#443982", "#2c708e", "#1ea087", "#472676", "#3e4888", "#74d054", "#6dce58"], ["#e7e419", "#1e9d88", "#423e85", "#24848d", "#39558b", "#4bc26c", "#1e9e88", "#30688d", "#33608d", "#9dd93a"], ["#1f968b", "#228a8d", "#d7e219", "#3d4b89", "#1f938b", "#3e4989", "#c7e01f", "#1f938b", "#2c728e", "#3d4b89"], ["#277d8e", "#2d6e8e", "#277d8e", "#472c7b", "#1fa187", "#2ab07e", "#5bc862", "#d2e11b", "#2a778e", "#35b778"], ["#2f698d", "#287b8e", "#4bc26c", "#70ce56", "#28ae7f", "#3c4e8a", "#3c4e8a", "#60c960", "#47c06e", "#addc30"]];
+  const A = [[0.195, 0.525, 0.603, 0.105, 0.212, 0.905, 0.142, 0.198, 0.927, 0.625], [0.59, 0.352, 0.36, 0.158, 0.23, 0.102, 0.823, 0.495, 0.195, 0.73], [0.297, 0.398, 0.135, 0.853, 0.64, 0.22, 0.525, 0.15, 0.613, 0.285], [0.537, 0.31, 0.955, 0.168, 0.37, 0.56, 0.105, 0.215, 0.787, 0.777], [0.968, 0.552, 0.185, 0.455, 0.263, 0.71, 0.555, 0.335, 0.305, 0.853], [0.525, 0.477, 0.943, 0.228, 0.515, 0.22, 0.917, 0.515, 0.378, 0.228], [0.425, 0.36, 0.425, 0.125, 0.565, 0.625, 0.743, 0.935, 0.398, 0.667], [0.34, 0.415, 0.71, 0.782, 0.618, 0.237, 0.237, 0.75, 0.703, 0.877]];
   // weights: units 2, 5, 8 come out near zero — the features regression ignores (beat 7)
   const IGN = [2, 5, 8];
   const W = [...Array(NU)].map((_, j) => IGN.includes(j) ? .04 : .35 + .65*rnd());
@@ -121,7 +132,7 @@
     return 'rgb(' + VIR[i].map((c, k) => Math.round(c + f*(VIR[i+1][k] - c))).join(',') + ')'; };
   const norm = v => { const lo = Math.min(...v), hi = Math.max(...v); return v.map(x => (x-lo)/(hi-lo)); };
   const PRED = norm(A.map(r => r.reduce((s, a, j) => s + a*W[j], 0)));
-  const MEAS = norm(PRED.map(p => p + 1.3*(rnd() - .5)));
+  const MEAS = norm(PRED.map(p => p + .6*(rnd() - .5)));   // r ≈ .85 with panel A’s values
   const corr = (x, y) => { const n=x.length, mx=x.reduce((a,b)=>a+b)/n, my=y.reduce((a,b)=>a+b)/n;
     let sxy=0, sx=0, sy=0; for(let i=0;i<n;i++){ sxy+=(x[i]-mx)*(y[i]-my); sx+=(x[i]-mx)**2; sy+=(y[i]-my)**2; }
     return sxy/Math.sqrt(sx*sy); };
@@ -135,11 +146,11 @@
   const FY = norm(FX.map(x => x + .18*(rnd() - .5)));
 
   // ── geometry (viewBox units) ───────────────────────────────────────────────
-  const Y0 = 64, RH = 34;                 // first row top, row height
-  const MX = 160, CW = 26;                // activation matrix x, column width
-  const PX = 466, MXX = 560, VW = 34;     // predicted / measured columns
+  const Y0 = 64, RH = 30;                 // first row top, row height (square cells: RH = CW)
+  const MX = 160, CW = 30;                // activation matrix x, column width
+  const PX = 510, MXX = 600, VW = 34;     // predicted / measured columns
   const WY = Y0 + NR*RH + 14;             // weights row
-  const SC = {x:648, y:96, w:120, h:120}; // regression scatter
+  const SC = {x:662, y:96, w:110, h:110}; // regression scatter
   const RX = [806, 1022], RC = 18, RY = 88;  // RDMs: x of each, cell, top
   const CV = {x:850, y:84, w:300, h:220}; // beat-6 covariation scatter
 
@@ -154,24 +165,21 @@
   el('text', {x:0, y:22, class:'ph'}, gReg, 'Regression');
   el('text', {x:146, y:Y0 - 10, 'text-anchor':'end', class:'hd snd'}, gReg, 'natural sounds');
   SOUNDS.forEach((s, i) => {
-    el('text', {x:146, y:Y0 + i*RH + 22, 'text-anchor':'end', class:'lab snd'}, gReg, s);
+    el('text', {x:146, y:Y0 + i*RH + 20, 'text-anchor':'end', class:'lab snd'}, gReg, s);
     // a pine outline around each sound's label, for the last beat
     const hi = el('rect', {x:30, y:Y0 + i*RH + 2, width:122, height:RH - 4, rx:5, class:'rowhi'}, gReg);
     hi.dataset.on = 8; hi.style.setProperty('--d', (i*.06) + 's');
   });
-  // the network, as in the paper: slabs shrinking left to right, one stage in red
+  // the network is panel A's own drawing: fig5a-network.png, its waveforms → network with the
+  // red stage, cropped (bounds detected) from fig5a-regression-voxel.png at (13, 994), 565 × 190
   const gNet = on(el('g', {}, gReg), 1);
-  [44, 40, 40, 36, 36, 32, 28, 24].forEach((h, k) => {
-    const x = MX + k*13, y = Y0 - 12 - h, red = k === 4;
-    el('path', {d:`M${x},${y} l5,-5 h8 l-5,5 z M${x+8},${y} l5,-5 v${h} l-5,5 z`, fill:'#f1f5f9', stroke:red ? '#dc2626' : '#94a3b8', 'stroke-width':1.3}, gNet);
-    el('rect', {x, y, width:8, height:h, fill:'#fff', stroke:red ? '#dc2626' : '#94a3b8', 'stroke-width':red ? 2 : 1.3}, gNet);
-  });
-  el('text', {x:MX + 116, y:Y0 - 22, class:'hd'}, gNet, 'one stage · units →');
+  el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-network.png?v=11', x:MX, y:0, width:40*565/190, height:40}, gNet);
+  el('text', {x:MX, y:Y0 - 10, class:'hd'}, gNet, 'units →');
   // activations: one <g> per unit column, so a whole column can be marked "ignored"
   const cols = [...Array(NU)].map((_, j) => el('g', {class:'act'}, gReg));
   A.forEach((row, i) => row.forEach((v, j) => {
     const c = el('rect', {x:MX + j*CW, y:Y0 + i*RH, width:CW - 1, height:RH - 1, class:'cell'}, cols[j]);
-    c.setAttribute('fill', viridis(v)); c.dataset.on = 1; c.dataset.v = 1; c.style.setProperty('--d', (i*.12 + j*.015) + 's');
+    c.setAttribute('fill', A_COL[i][j]); c.dataset.on = 1; c.dataset.v = 1;   // no stagger: they sit under the zoomed pixels
   }));
   // weights, aligned under the columns they multiply
   on(el('text', {x:146, y:WY + 18, 'text-anchor':'end', class:'lab'}, gReg, 'weights'), 2);
@@ -184,12 +192,11 @@
   // predicted (outlined) and measured (filled) voxel columns
   on(el('text', {x:PX + VW/2, y:Y0 - 10, 'text-anchor':'middle', class:'hd'}, gReg, 'predicted'), 2);
   on(el('text', {x:MXX + VW/2, y:Y0 - 10, 'text-anchor':'middle', class:'hd'}, gReg, 'measured'), 3);
-  const xw = (MX + NU*CW + PX)/2 - 4, yw = Y0 + NR*RH/2;
+  const xw = (MX + NU*CW + PX)/2 - 3, yw = Y0 + NR*RH/2;
   const gXw = on(el('g', {}, gReg), 2, .25);
-  el('circle', {cx:xw, cy:yw, r:17, fill:'#fff', stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
-  el('text', {x:xw, y:yw + 6, 'text-anchor':'middle', style:'font-size:16px; fill:var(--ink)'}, gXw, '× w');
-  el('path', {d:`M${xw + 19},${yw} H${PX - 10}`, stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
-  el('path', {d:`M${PX - 4},${yw} l-8,-5 v10 z`, fill:'var(--ink)'}, gXw);
+  el('circle', {cx:xw, cy:yw, r:15, fill:'#fff', stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
+  el('text', {x:xw, y:yw + 6, 'text-anchor':'middle', style:'font-size:14px; fill:var(--ink)'}, gXw, '× w');
+  el('path', {d:`M${PX - 3},${yw} l-8,-5 v10 z`, fill:'var(--ink)'}, gXw);
   const bracket = (x, g) => { const y0 = Y0 - 4, y1 = Y0 + NR*RH + 3;
     el('path', {d:`M${x - 3},${y0} h-6 V${y1} h6 M${x + VW + 3},${y0} h6 V${y1} h-6`, fill:'none', stroke:'var(--ink)', 'stroke-width':1.5}, g); };
   const gP = on(el('g', {}, gReg), 2, .5), gM = on(el('g', {}, gReg), 3);
@@ -253,23 +260,42 @@
   const gBs = el('g', {class:'panel', id:'bs'});
   const BS_H = 372, BS_W = BS_H*1293/1188;
   on(el('text', {x:806, y:22, class:'ph'}, gBs, 'Brain-Score benchmarks (vision, IT)'), 7);
-  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=6', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 7, .2);
+  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=11', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 7, .2);
 
   // everything drawn so far is the schematic; it waits under panel A until beat 1
   const gMain = el('g', {id:'main'});
   [...svg.childNodes].filter(n => n !== gMain).forEach(n => gMain.appendChild(n));
 
-  // ── panel A (beat 0) ───────────────────────────────────────────────────────
+  // ── panel A (beats 0–5), then the zoom (beat 6) ────────────────────────────
   // assets/outline/fig5a-regression.png: Fig. 5A cropped at 600 dpi from Fer's exported
-  // Figure5.pdf (results v17, 2026-10-05), panel letter removed; 3640×1300. Its activation
-  // matrix, detected by colour: (676, 950)–(1142, 1226) px. At beat 1 the panel scales so
-  // that matrix lands on the schematic matrix (x MX…MX+NU·CW, centred on the rows).
-  const PA = {w:3640, h:1300, m:[676, 950, 1142, 1226]};
-  const pk = 1200/PA.w, PAH = PA.h*pk;
-  const pa = el('image', {id:'panelA', href:'../assets/final/ch1-current-methods/outline/fig5a-regression.png?v=6', x:0, y:(430 - PAH)/2, width:1200, height:PAH});
-  const mx0 = PA.m[0]*pk, my0 = (430 - PAH)/2 + PA.m[1]*pk, mw = (PA.m[2] - PA.m[0])*pk, mh = (PA.m[3] - PA.m[1])*pk;
-  const zs = NU*CW/mw, ztx = MX - zs*mx0, zty = (Y0 + NR*RH/2) - zs*(my0 + mh/2);
-  const ZOOM = `translate(${ztx.toFixed(1)}px, ${zty.toFixed(1)}px) scale(${zs.toFixed(3)})`;
+  // Figure5.pdf (results v17, 2026-10-05), panel letter removed; 3640×1300.
+  // fig5a-regression-voxel.png (Fer, 2026-10-08): the same panel with its region-map thumbnail
+  // replaced by the voxel brain that the mms-logic slide uses (voxel-brain.png: Figure1.pdf at
+  // 600 dpi, top "fMRI voxel response" brain with its voxel square, bounds detected), and the red
+  // line + arrowhead redrawn from that voxel to v. Same size as the original.
+  // Beats 0–5 build the panel component by component: white covers (image px, checked with PIL so
+  // no edge cuts a glyph) fade away one group per click.
+  const PA = {w:3640, h:1300};
+  const PA_COVERS = [   // [x0, y0, x1, y1] px, gone from beat k on
+    {k:2, r:[[0, 850, 1170, 1300]]},                                    // activations to natural sounds
+    {k:3, r:[[1180, 540, 2080, 1130], [1150, 1060, 1180, 1110]]},       // → ridge regression
+    {k:4, r:[[2080, 680, 2562, 910], [2220, 160, 3640, 290]]},          // weights w, × w; "Evaluation"
+    {k:5, r:[[1170, 1140, 2240, 1250], [2240, 910, 2800, 1300], [2562, 690, 2800, 910]]},  // held-out → predicted
+    {k:6, r:[[2800, 690, 3640, 1080]]},                                 // measured, NSE / R²
+  ];
+  const PA_BEATS = 6;   // beat 0 = title alone (round 6); 1..6 build panel A; schematic beat b = overall b + 6
+  const pk = 1200/PA.w, PAH = PA.h*pk, PAY = (430 - PAH)/2;
+  const pa = el('g', {id:'panelA'});
+  el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-regression-voxel.png?v=11', x:0, y:PAY, width:1200, height:PAH}, pa);
+  const paCovers = PA_COVERS.flatMap(c => c.r.map(([x0, y0, x1, y1]) => {
+    const e = el('rect', {x:x0*pk, y:PAY + y0*pk, width:(x1 - x0)*pk, height:(y1 - y0)*pk, fill:'#fff', class:'pacov'}, pa);
+    e.dataset.k = c.k; return e; }));
+  // Zoom: panel A's matrix cell grid (pixel runs found with PIL: origin (673.9, 946.0) px, pitch
+  // 8.53 px; the first row sits partly under the grey frame) is scaled so its cell (i, j) lands
+  // exactly on schematic cell (i, j) at (MX + j·CW, Y0 + i·RH). Same pixels, same place.
+  const CELL = {x:673.9, y:946.0, p:8.53};
+  const zs = CW/(CELL.p*pk), ztx = MX - zs*CELL.x*pk, zty = Y0 - zs*(PAY + CELL.y*pk);
+  const ZOOM = `translate(${ztx.toFixed(2)}px, ${zty.toFixed(2)}px) scale(${zs.toFixed(4)})`;
 
   // ── beats ──────────────────────────────────────────────────────────────────
   // Each beat is data; render() reads BEATS[beat] only, so any jump lands settled.
@@ -286,7 +312,7 @@
     { panel:'bs',  dimReg:true, ignored:true },
     { panel:'bs',  dimRsa:true, ignored:true, natural:true },
   ];
-  const N = BEATS.length;
+  const N = PA_BEATS + BEATS.length;   // 15 beats: title 0, panel A 1–6, schematic 7–14
   const QS = new URLSearchParams(location.search);
   const LO = Math.max(0, Math.min(N-1, +(QS.get('from') || 0)));
   const HI = Math.max(LO, Math.min(N-1, QS.get('to') != null ? +QS.get('to') : N-1));
@@ -295,14 +321,20 @@
 
   // Speaker notes: everything on the slide gets said; the prose lives here.
   const SCRIPT = [
-    `There are many ways to compare a model with brain responses, including encoding models fit with regression, representational similarity analysis, and decoding. One common approach is regression-based prediction, shown here as we used it in this chapter. In training, a model stage’s activations to a set of natural sounds, with one row per sound, are used to predict an example voxel’s responses to the same sounds with ridge regression, which yields a set of weights. In evaluation, the activations to held-out sounds are multiplied by those weights to give a predicted response, which is compared with the measured response using the normalized squared error or the noise-corrected R².`,
-    `Let’s zoom in on the model activations. Each natural sound, such as speech, a dog barking, piano or rain, is passed through the network, and the time-averaged activations of one model stage are recorded. This gives a matrix with one row per natural sound and one column per model unit.`,
-    `In regression, a set of weights is fit separately for each voxel, so that a weighted sum of the unit activations predicts that voxel’s response to each sound.`,
-    `The predictions are then compared with the measured responses to held-out sounds. By this measure, task-optimized networks predict auditory cortical responses better than earlier models (Kell et al. 2018; Tuckute et al. 2023).`,
-    `A second common approach is representational similarity analysis. For each pair of sounds, it computes how dissimilar the model’s activations are and how dissimilar the region’s responses are, and then correlates the two dissimilarity matrices (Kriegeskorte et al. 2008).`,
-    `These comparisons leave open whether the networks have learned representations like those of auditory cortex. Natural sounds vary in many properties at once. Networks trained on behaviorally relevant tasks learn features that are correlated with behaviorally relevant properties of natural sounds, so, as in this schematic, a model feature can covary with a property the region responds to. Model features can therefore predict a region’s responses without being what the region computes (Naselaris et al. 2011).`,
+    `To answer this question, we need a way to compare a model with brain responses. How is this usually done?`,
+    `There are many ways to compare a model with brain responses. One common approach is regression, shown here as we used it in this chapter. It starts from one voxel: its measured responses to a set of natural sounds form a vector, v.`,
+    `The same natural sounds are passed through the network, and the time-averaged activations of one model stage are recorded, giving a matrix with one row per sound and one column per model unit.`,
+    `Ridge regression is fit to predict the voxel’s responses, v, from the model activations.`,
+    `This yields a set of weights, w: one weight per model unit.`,
+    `To evaluate the fit, the model activations to held-out sounds are multiplied by the weights, which gives a predicted response for the voxel.`,
+    `The prediction is compared with the voxel’s measured response to the same held-out sounds, using the normalized squared error or the noise-corrected R².`,
+    `Zooming in on the model activations: each row is one natural sound, such as speech, a dog barking, piano or rain, and each column is one unit of the model stage.`,
+    `The fitted weights combine these units into a prediction of the voxel’s response to each sound.`,
+    `By this measure, task-optimized networks predict auditory cortical responses better than earlier models (Kell et al. 2018; Tuckute et al. 2023).`,
+    `A second common approach, representational similarity analysis, compares how dissimilar pairs of sounds are for the model and for the region (Kriegeskorte et al. 2008).`,
+    `These comparisons leave open whether the networks have learned representations like those of auditory cortex. Natural sounds vary in many properties at once, and networks trained on behaviorally relevant tasks learn features that are correlated with behaviorally relevant properties. A model feature can therefore covary with a property the region responds to, and predict the region’s responses without being what the region computes (Naselaris et al. 2011).`,
     `In addition, the fitted weights can ignore features that do not aid prediction. Here, the weights for these units are near zero, so whatever the model represents with them does not affect the prediction. Models that represent sound differently can therefore receive similar scores (Tuckute et al. 2023; Conwell et al. 2024).`,
-    `Benchmarks built on these comparisons show a related limitation. This panel, from Feather et al. (2023), is a vision result. Each point is a network; the x-axis is its average score on the Brain-Score IT benchmarks, and the y-axis is human recognition of metamers generated from the network’s committed stage. Despite their adversarial susceptibility, standard-trained networks score well on these benchmarks, and benchmark scores were not significantly related to metamer recognizability (ρ = 0.45, P = 0.08).`,
+    `Benchmarks built on these comparisons show a related limitation. In this vision result from Feather et al. (2023), each point is a network. Standard-trained networks score well on brain benchmarks despite their adversarial vulnerability, and benchmark scores were not significantly related to how recognizable each network’s metamers were to humans.`,
     `In each of these comparisons, the stimuli are natural sounds, so the evaluations are confounded by correlations among the properties of natural stimuli. Model-matched stimuli address this by isolating model representations (Norman-Haignere &amp; McDermott 2018). They ask whether what a model discards at a given stage is also irrelevant to a region’s responses.`,
   ];
 
@@ -312,20 +344,23 @@
   let beat = LO;
 
   function render(){
-    const cur = BEATS[beat];
-    document.body.classList.toggle('panelA', beat === 0);
-    pa.style.transform = beat === 0 ? 'none' : ZOOM;
-    pa.style.opacity = beat === 0 ? 1 : 0;
+    const sb = Math.max(0, beat - PA_BEATS);   // the schematic's own beat
+    const cur = BEATS[sb], onPanel = beat <= PA_BEATS;
+    document.body.classList.toggle('panelA', onPanel);
+    pa.style.transform = onPanel ? 'none' : ZOOM;
+    pa.style.opacity = onPanel && beat > 0 ? 1 : 0;
+    document.body.classList.toggle('titleonly', beat === 0);
+    paCovers.forEach(c => c.style.opacity = beat >= +c.dataset.k ? 0 : 1);
     document.querySelectorAll('[data-beat]').forEach(e => e.classList.toggle('shown', beat >= +e.dataset.beat));
     svg.querySelectorAll('[data-on]').forEach(e => {
-      const shown = beat >= +e.dataset.on && !(e.dataset.off != null && beat >= +e.dataset.off);
+      const shown = sb >= +e.dataset.on && !(e.dataset.off != null && sb >= +e.dataset.off);
       e.classList.toggle('shown', shown);
       if(e.dataset.v) e.style.opacity = shown ? e.dataset.v : 0;   // cells carry their own value
     });
     document.getElementById('reg').classList.toggle('dim', !!cur.dimReg);
     ['rsa', 'cov', 'bs'].forEach(id => { const g = document.getElementById(id);
       g.style.display = cur.panel === id ? '' : 'none'; g.classList.toggle('dim', !!cur.dimRsa); });
-    const half2 = beat >= 5;
+    const half2 = sb >= 5;
     document.body.classList.toggle('half2', half2);
     titleEl.innerHTML = TITLES[half2 ? 1 : 0];
     IGN.forEach(j => { cols[j].classList.toggle('ignored', !!cur.ignored); wcols[j].classList.toggle('ignored', !!cur.ignored); });

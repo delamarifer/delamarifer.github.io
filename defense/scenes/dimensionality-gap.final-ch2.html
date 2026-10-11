@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The dimensionality gap</title>
+<link rel="stylesheet" href="../vendor/fraunces.css">
+<style>
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b;
+    --border:#e2e8f0; --slate:#38506e;
+    /* the chapter's own figure colors (Figure 1 v3): never restyle */
+    --sim:#9467BD; --real:#D55E00; --unused:#d9dde3;
+    --serif:'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--body); font-family:var(--sans);
+        display:flex; flex-direction:column; overflow:hidden;
+        cursor:pointer; user-select:none; -webkit-user-select:none; }
+  /* deck-wide 2026-10-07: titles Calibri Light, clamp(1.8rem,3.5vw,3rem), no colored words */
+  h1{ font-family:var(--sans); font-weight:300; color:var(--ink);
+      font-size:clamp(1.8rem, 3.5vw, 3rem); line-height:1.1; letter-spacing:0;
+      padding:5vh 6vw 0; }
+  h1 em{ font-style:normal; color:var(--ink); }
+  #stage{ flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center;
+          padding:1vh 3vw 0; }
+  svg{ width:min(100%,1240px); height:100%; max-height:78vh; overflow:visible; }
+  text{ font-family:var(--sans); }
+  .ttl{ font-size:23px; font-weight:700; }
+  .lab{ font-size:21px; font-weight:700; }
+  .sub{ font-size:17px; }
+  .box{ font-size:15px; font-weight:700; }
+  .tick{ font-size:17px; fill:var(--ink); }
+  .axlab{ font-size:17px; fill:var(--ink); }
+  .big{ font-size:26px; font-weight:700; }
+
+  .cell{ fill:var(--unused); transition:fill .35s ease; }
+  .cell.real{ fill:var(--real); }
+  .cell.sim{ fill:var(--sim); }
+  [data-beat], .dimmable{ transition:opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+
+  /* left padding clears the deck's slide.click counter (#hud, fixed bottom-left, ~95px wide) */
+  footer{ flex:0 0 auto; padding:.4rem 4vw 1rem max(4vw, 112px); display:flex;
+          justify-content:space-between; align-items:flex-end; gap:2rem; }
+  #cap{ font-size:clamp(14px,1.5vw,22px); font-weight:500; color:var(--ink);
+        line-height:1.3; max-width:70vw; transition:opacity .3s ease, transform .3s ease; }
+  #cap.swap{ opacity:0; transform:translateY(6px); }
+  #dots{ display:flex; gap:.42rem; flex:0 0 auto; padding-bottom:.35em; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:#fff;
+        border:1.5px solid #cbd5e1; transition:background .2s, border-color .2s; }
+  .dot.on{ background:var(--ink); border-color:var(--ink); }
+  #notes{ position:fixed; inset:auto 0 0 0; max-height:52vh; overflow:auto;
+          background:#0f172a; color:#e2e8f0; padding:1.5rem 4vw 2rem;
+          font-size:15px; line-height:1.6; display:none; cursor:default; }
+  #notes.on{ display:block; }
+  #notes b{ color:#fff; }
+</style>
+</head>
+<body>
+<h1>The <em>dimensionality gap</em></h1>
+<div id="stage"><svg id="fig" viewBox="0 0 1220 600" role="img"
+  aria-label="Two texture judgments: odd-one-out similarity and realistic synthesis. Similarity is predicted from 4 to 8 dimensions of a texture representation, realism needs about 1,024 statistics; on a log axis they sit far apart"></svg></div>
+<footer><p id="cap"></p><div id="dots"></div></footer>
+<div id="notes"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Outline slide 35, "The dimensionality gap": the animated version of
+// Chapter 2 Figure 1 v3 (~/Downloads/chapter_figures/figure1_framing_thesis),
+// panels B (the two tasks) and A (one representation, two readouts) together.
+//
+// Each task comes first, then its readout in a shared representation where
+// one cell = one dimension: 8 purple cells for similarity, a 64 × 16 = 1,024
+// block for realism. Then both counts drop onto one log ruler.
+//
+// Color (inherited from the chapter figure, one meaning each):
+//   purple #9467BD = similarity · vermillion #D55E00 = realism
+//   light gray = dimensions not recruited · slate = the gap itself
+// Waveforms are schematic (seeded noise), as in the chapter figure. No audio
+// on this slide (Fer, 2026-10-07).
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SLIDE_NAME = 'dimensionalityGap';
+
+// The numbers on the slide, from the chapter (Hicks 2025; Feather 2023; Fig 1 v3)
+const SIM_LO = 4, SIM_HI = 8, REAL_N = 1024;
+
+// ── geometry (viewBox 1220 × 600) ───────────────────────────────────────────
+const TASK_Y = 56, BOX_H = 76;                             // task boxes
+const SIM_BX = [45, 205, 365], SIM_BW = 140;               // triplet boxes
+const ODD = {cx:435, cy:TASK_Y + BOX_H/2, rx:96, ry:56};   // ellipse round the 3rd
+const ORIG_X = 630, STAT_X = 838, SYN_X = 1046, RB_W = 164; // realism pipeline
+const COLS = 64, ROWS = 24, PITCH = 7, CELL = 5.6;         // 1,536 dimensions drawn
+const GW = COLS*PITCH - (PITCH-CELL), GX = 610 - GW/2, GY = 256;
+const REAL_ROWS = 16;                                      // 64 × 16 = 1,024
+const RH = REAL_ROWS*PITCH - (PITCH-CELL), GH = ROWS*PITCH - (PITCH-CELL);
+const AX_Y = 522, AX_X0 = 200, AX_X1 = 1020, DECADES = 4;  // 1 → 10,000
+const lx = n => AX_X0 + Math.log10(n) / DECADES * (AX_X1 - AX_X0);
+const GHOST_TO = 110;                                      // where the realism "?" slides to
+
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('fig');
+const mk = (t, a={}, txt) => { const e = document.createElementNS(NS, t);
+  for(const k in a) e.setAttribute(k, a[k]); if(txt != null) e.textContent = txt; return e; };
+// a group that appears on beat `beat` (forward stagger `delay` ms)
+const grp = (beat, delay=0, extra={}) => { const g = mk('g', extra);
+  g.dataset.beat = beat; g.dataset.delay = delay; svg.append(g); return g; };
+
+// ── schematic waveforms (seeded, so they are identical every run) ───────────
+function rng(seed){ return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+function wave(x0, x1, cy, amp, kind, seed){
+  const r = rng(seed), n = Math.round((x1 - x0) / 2.2); let d = '';
+  const hits = kind === 'tap' ? [.08,.36,.66,.9] : kind === 'tapfast' ? [.06,.24,.42,.6,.78,.94] : [];
+  for(let i=0; i<n; i++){
+    const t = i/(n-1); let a;
+    if(hits.length){
+      a = .06 + hits.reduce((s,h) => s + (t >= h ? Math.exp(-(t-h)*42) : 0), 0);
+    } else if(kind === 'noise'){
+      a = .5 + .5*r();                                   // flat random noise
+    } else {
+      a = .35 + .4*Math.abs(Math.sin(t*9 + seed)) + (r() < .07 ? .5 : 0); // rain-like texture
+    }
+    const h = Math.min(1, a) * amp * (.35 + .65*r()), x = (x0 + t*(x1-x0)).toFixed(1);
+    d += `M${x},${(cy-h).toFixed(1)}V${(cy+h).toFixed(1)}`;
+  }
+  return d;
+}
+const wpath = (d, color) => mk('path', {d, stroke:color, 'stroke-width':1.3, fill:'none'});
+
+// ── panel B, top left: similarity task ──────────────────────────────────────
+const gSimTask = grp(0, 0, {class:'dimmable'});
+const simTitle = mk('text', {x:305, y:24, class:'ttl', 'text-anchor':'middle', fill:'#0f172a'});
+simTitle.innerHTML = 'Similarity: odd-one-out triplets';
+gSimTask.append(simTitle);
+['tap', 'tapfast', 'rain'].forEach((kind, i) => {
+  const b = mk('g', {}); b.dataset.beat = 0; b.dataset.delay = 150 + i*250; gSimTask.append(b);
+  b.append(mk('rect', {x:SIM_BX[i], y:TASK_Y, width:SIM_BW, height:BOX_H, rx:6,
+                       fill:'#fff', stroke:'var(--sim)', 'stroke-width':2.4}));
+  b.append(wpath(wave(SIM_BX[i]+12, SIM_BX[i]+SIM_BW-12, TASK_Y+BOX_H/2, 28, kind, 11+i*7), 'var(--sim)'));
+});
+const gSimQ = mk('text', {x:305, y:182, class:'sub', 'font-style':'italic', fill:'#0f172a', 'text-anchor':'middle'},
+                 '“Which sound is least similar to the other two?”');
+gSimQ.dataset.beat = 0; gSimQ.dataset.delay = 900; gSimTask.append(gSimQ);
+
+const gOdd = grp(1, 0, {class:'dimmable'});
+gOdd.append(mk('ellipse', {cx:ODD.cx, cy:ODD.cy, rx:ODD.rx, ry:ODD.ry, fill:'none',
+                           stroke:'var(--sim)', 'stroke-width':3}));
+gOdd.append(mk('text', {x:538, y:ODD.cy-4, class:'box', fill:'#0f172a'}, 'odd'));
+gOdd.append(mk('text', {x:538, y:ODD.cy+16, class:'box', fill:'#0f172a'}, 'one out'));
+
+// ── panel B, top right: realism task ────────────────────────────────────────
+const gRealTask = grp(4, 0, {class:'dimmable'});
+const realTitle = mk('text', {x:920, y:24, class:'ttl', 'text-anchor':'middle', fill:'#0f172a'});
+realTitle.innerHTML = 'Realism: statistics-matched synthesis';
+gRealTask.append(realTitle);
+const sub = (beat, delay) => { const g = mk('g'); g.dataset.beat = beat; g.dataset.delay = delay;
+                               gRealTask.append(g); return g; };
+const rbox = (g, x, label, color='#0f172a') => {
+  g.append(mk('rect', {x, y:TASK_Y, width:RB_W, height:BOX_H, rx:6, fill:'#fff', stroke:'var(--real)', 'stroke-width':2.4}));
+  if(label) g.append(mk('text', {x:x+RB_W/2, y:TASK_Y+20, class:'box', fill:color, 'text-anchor':'middle'}, label));
+};
+const arrow = (g, x0, x1, y) => {
+  g.append(mk('path', {d:`M${x0},${y} L${x1-8},${y}`, stroke:'var(--real)', 'stroke-width':2.6}));
+  g.append(mk('path', {d:`M${x1},${y} l-10,-6 v12 z`, fill:'var(--real)'}));
+};
+const WY = TASK_Y + 50;                                    // waveform midline inside a box
+const gOrig = sub(4, 150);  rbox(gOrig, ORIG_X, 'original sound');
+gOrig.append(wpath(wave(ORIG_X+12, ORIG_X+RB_W-12, WY, 18, 'rain', 5), 'var(--real)'));
+const gA1 = sub(4, 450);    arrow(gA1, ORIG_X+RB_W+4, STAT_X-4, TASK_Y+BOX_H/2);
+const gStat = sub(4, 650);  rbox(gStat, STAT_X, 'measured statistics');
+for(let c=0; c<16; c++) for(let r=0; r<4; r++)               // a little block of statistics
+  gStat.append(mk('rect', {x:STAT_X+26+c*7, y:TASK_Y+34+r*7, width:CELL, height:CELL, rx:1, fill:'var(--real)'}));
+const gA2 = sub(4, 950);    arrow(gA2, STAT_X+RB_W+4, SYN_X-4, TASK_Y+BOX_H/2);
+const gSynBox = sub(4, 1150); rbox(gSynBox, SYN_X, null);
+// the synthesis starts as random noise, then (after the loop appears) matches the statistics
+const gNoise = mk('g', {}); gSynBox.append(gNoise);
+gNoise.append(mk('text', {x:SYN_X+RB_W/2, y:TASK_Y+20, class:'box', fill:'#0f172a', 'text-anchor':'middle'}, 'random noise'));
+gNoise.append(wpath(wave(SYN_X+12, SYN_X+RB_W-12, WY, 18, 'noise', 3), '#94a3b8'));
+const gSyn = sub(4, 2300);
+gSyn.append(mk('rect', {x:SYN_X+2, y:TASK_Y+2, width:RB_W-4, height:BOX_H-4, rx:5, fill:'#fff'}));
+gSyn.append(mk('text', {x:SYN_X+RB_W/2, y:TASK_Y+20, class:'box', fill:'#0f172a', 'text-anchor':'middle'}, 'synthesized sound'));
+gSyn.append(wpath(wave(SYN_X+12, SYN_X+RB_W-12, WY, 18, 'rain', 9), 'var(--real)'));
+const gLoop = sub(4, 1600);
+const LX0 = SYN_X + RB_W/2, LX1 = STAT_X + RB_W/2, LY = TASK_Y + BOX_H + 6;
+gLoop.append(mk('path', {d:`M${LX0},${LY} Q${(LX0+LX1)/2},${LY+50} ${LX1+10},${LY+6}`, fill:'none',
+                         stroke:'var(--real)', 'stroke-width':2.2, 'stroke-dasharray':'7 5'}));
+gLoop.append(mk('path', {d:`M${LX1},${LY} l12,2 l-7,9 z`, fill:'var(--real)'}));
+gLoop.append(mk('text', {x:(LX0+LX1)/2, y:LY+58, class:'sub', fill:'#0f172a', 'text-anchor':'middle'},
+                'iterate until the statistics match'));
+
+// ── panel A: one representation, one cell = one dimension ───────────────────
+const gGrid = grp(2, 0, {class:'dimmable'});
+const cells = [];
+for(let c=0; c<COLS; c++) for(let r=0; r<ROWS; r++){
+  const e = mk('rect', {x:GX + c*PITCH, y:GY + r*PITCH, width:CELL, height:CELL, rx:1, class:'cell'});
+  e.dataset.c = c; e.dataset.r = r; gGrid.append(e); cells.push(e);
+}
+const isSim  = e => +e.dataset.r === 0 && +e.dataset.c < SIM_HI;
+const isReal = e => +e.dataset.r < REAL_ROWS;
+gGrid.append(mk('text', {x:610, y:GY-12, class:'lab', fill:'#0f172a', 'text-anchor':'middle'},
+                'texture representation'));
+const gCellLab = grp(2, 300);
+gCellLab.append(mk('text', {x:GX + GW, y:GY + GH + 20, class:'sub', fill:'#0f172a', 'text-anchor':'end'},
+                   'one cell = one dimension'));
+
+// similarity readout, left of row 0, tied to the triplet above
+const gSimLab = grp(3, 0, {class:'dimmable'});
+gSimLab.append(mk('text', {x:GX - 18, y:GY + 6, class:'lab', fill:'#0f172a', 'text-anchor':'end'}, '4 to 8 dimensions'));
+gSimLab.append(mk('text', {x:GX - 18, y:GY + 28, class:'sub', fill:'#0f172a', 'text-anchor':'end'}, 'predict the judgment'));
+gSimLab.append(mk('path', {d:`M${GX-12},${GY+CELL/2} L${GX-3},${GY+CELL/2}`, stroke:'var(--sim)', 'stroke-width':2.4}));
+gSimLab.append(mk('path', {d:`M300,194 L300,${GY-18}`, stroke:'var(--sim)', 'stroke-width':1.8,
+                           'stroke-dasharray':'4 5', opacity:.75}));
+
+// realism readout, braced on the right of the 1,024 block, tied to the loop above
+const gRealLab = grp(5, 0, {class:'dimmable'});
+const BX = GX + GW + 10;
+gRealLab.append(mk('path', {d:`M${BX},${GY} L${BX+8},${GY} L${BX+8},${GY+RH} L${BX},${GY+RH}`,
+                            fill:'none', stroke:'var(--real)', 'stroke-width':2.4}));
+gRealLab.append(mk('text', {x:BX + 22, y:GY + RH/2 - 4, class:'lab', fill:'#0f172a'}, 'about 1,000'));
+gRealLab.append(mk('text', {x:BX + 22, y:GY + RH/2 + 20, class:'sub', fill:'#0f172a'}, 'statistics needed'));
+gRealLab.append(mk('path', {d:`M${LX1+90},${LY+66} L${LX1+90},${GY + RH/2 - 26}`, stroke:'var(--real)',
+                            'stroke-width':1.8, 'stroke-dasharray':'4 5', opacity:.75}));
+
+// ── the ruler ───────────────────────────────────────────────────────────────
+const gAxis = grp(6, 0);
+gAxis.append(mk('line', {x1:AX_X0, y1:AX_Y, x2:AX_X1, y2:AX_Y, stroke:'#94a3b8', 'stroke-width':2.5}));
+[1, 10, 100, 1000, 10000].forEach(n => {
+  gAxis.append(mk('line', {x1:lx(n), y1:AX_Y, x2:lx(n), y2:AX_Y+9, stroke:'#94a3b8', 'stroke-width':2}));
+  gAxis.append(mk('text', {x:lx(n), y:AX_Y+30, class:'tick', 'text-anchor':'middle'}, n.toLocaleString('en-US')));
+});
+for(let d=0; d<DECADES; d++) for(let k=2; k<10; k++){
+  const x = lx(k * 10**d);
+  gAxis.append(mk('line', {x1:x, y1:AX_Y, x2:x, y2:AX_Y+5, stroke:'#cbd5e1', 'stroke-width':1.2}));
+}
+gAxis.append(mk('text', {x:(AX_X0+AX_X1)/2, y:AX_Y+58, class:'axlab', 'text-anchor':'middle'},
+                'number of dimensions (log scale)'));
+
+// guides from the readout labels down to the ruler (only on the ruler beat)
+const gGuides = grp(6, 200); gGuides.dataset.until = 6;
+gGuides.append(mk('path', {d:`M${GX-90},${GY+40} C${GX-90},${AX_Y-90} ${lx(6)},${AX_Y-100} ${lx(6)},${AX_Y-52}`,
+                           fill:'none', stroke:'var(--sim)', 'stroke-width':1.8, 'stroke-dasharray':'4 5', opacity:.75}));
+gGuides.append(mk('path', {d:`M${BX+60},${GY+RH/2+30} C${BX+60},${AX_Y-80} ${lx(REAL_N)},${AX_Y-100} ${lx(REAL_N)},${AX_Y-56}`,
+                           fill:'none', stroke:'var(--real)', 'stroke-width':1.8, 'stroke-dasharray':'4 5', opacity:.75}));
+
+// markers on the ruler
+const gSimMk = grp(6, 300);
+gSimMk.append(mk('rect', {x:lx(SIM_LO), y:AX_Y-14, width:lx(SIM_HI)-lx(SIM_LO), height:14, fill:'var(--sim)', rx:2}));
+gSimMk.append(mk('text', {x:lx(Math.sqrt(SIM_LO*SIM_HI)), y:AX_Y-22, class:'big', fill:'#0f172a', 'text-anchor':'middle'}, '4–8'));
+const gRealMk = grp(6, 500);
+gRealMk.append(mk('rect', {x:lx(REAL_N)-3, y:AX_Y-18, width:6, height:18, fill:'var(--real)', rx:1}));
+gRealMk.append(mk('text', {x:lx(REAL_N), y:AX_Y-26, class:'big', fill:'#0f172a', 'text-anchor':'middle'}, '1,024'));
+
+// the gap: no number on the slide (Fer, 2026-10-07); the size is said aloud
+const gGap = grp(7, 0);
+gGap.append(mk('rect', {x:lx(SIM_HI)+4, y:AX_Y-52, width:lx(REAL_N)-lx(SIM_HI)-12, height:52,
+                        fill:'#38506e', opacity:.08, rx:4}));
+const gy = AX_Y - 64;
+gGap.append(mk('path', {d:`M${lx(SIM_HI)+4},${gy+10} L${lx(SIM_HI)+4},${gy} L${lx(REAL_N)-8},${gy} L${lx(REAL_N)-8},${gy+10}`,
+                        fill:'none', stroke:'#38506e', 'stroke-width':2.4}));
+gGap.append(mk('text', {x:(lx(SIM_HI)+lx(REAL_N))/2, y:gy-10, class:'big', fill:'#0f172a', 'text-anchor':'middle'},
+               'the gap'));
+
+// the question: could a better-aligned model reach realism with fewer dimensions?
+const ghost = grp(8, 350);
+ghost.append(mk('rect', {x:lx(REAL_N)-3, y:AX_Y-18, width:6, height:18, fill:'none',
+                         stroke:'var(--real)', 'stroke-width':2, 'stroke-dasharray':'3 2', rx:1}));
+ghost.append(mk('text', {x:lx(REAL_N), y:AX_Y-26, class:'big', fill:'#0f172a', 'text-anchor':'middle'}, '?'));
+const GHOST_DX = lx(GHOST_TO) - lx(REAL_N);
+
+// ── beats ───────────────────────────────────────────────────────────────────
+// ACT 1 — SIMILARITY (0-1): the triplet task; the odd one out
+// ACT 2 — ONE REPRESENTATION (2-3): many dimensions; similarity reads out 4 to 8
+// ACT 3 — REALISM    (4-5): statistics-matched synthesis; it needs about 1,000
+// ACT 4 — ONE RULER  (6-7): both counts on a log axis; the distance is the gap
+// ACT 5 — THE QUESTION (8): could a better-aligned model need fewer for realism?
+// On-screen captions (deck-wide round 4, 2026-10-08): the in-figure labels carry each beat,
+// so only the closing question is shown; every beat's explanation is in SCRIPT (press n).
+const BEATS = [
+  '',                                   // title only
+  '', '', '', '', '', '', '', '',
+  'Could a better-aligned model need fewer dimensions for realism?',
+];
+const N = BEATS.length;
+// which groups sit back (dimmed) on which beats, so the active idea leads
+const DIM = [
+  [gSimTask, gOdd, b => b >= 4],
+  [gRealTask,      b => b >= 6],
+  [gGrid,          b => b >= 6],
+  [gSimLab, gRealLab, b => b >= 7],
+];
+
+const SCRIPT = [
+  `Two kinds of texture judgments have been used to estimate how many
+   dimensions of a representation perception relies on, and the two estimates disagree.`,
+  `The first judgment is similarity. On each trial, listeners hear three texture
+   excerpts and report which one is least similar to the other two.`,
+  `In this example, two excerpts are tapping sounds and the third is rain-like,
+   so the third is chosen as the odd one out. Aggregated over tens of thousands of such triplets, these
+   choices measure the perceived similarity between textures.`,
+  `A model represents each texture as a set of dimensions, shown here as one
+   cell per dimension. Only a sample is drawn; the network stages we analyze have thousands.`,
+  `Prior work found that these triplet judgments can be predicted from four to
+   eight dimensions of a model representation (Hicks 2025).`,
+  `The second judgment is realism. Statistics are measured from an original texture, and a
+   signal that starts as random noise is adjusted until its statistics match. Only the measured
+   statistics are constrained; everything else is left to chance. If listeners judge the synthetic texture
+   to be realistic, the measured statistics capture what they hear.`,
+  `Syntheses that listeners judge realistic require matching on the order of a
+   thousand statistics (McDermott and Simoncelli 2011; Feather 2023). Similarity judgments are thus
+   predicted by a small subset of dimensions, whereas realism requires most of the representation.`,
+  `On a common logarithmic axis, the similarity estimate lies at four to eight dimensions
+   and the realism estimate at about one thousand.`,
+  `The two estimates differ by about two orders of magnitude. We refer to this difference
+   as the dimensionality gap.`,
+  `The gap could reflect the judgments themselves, or it could reflect models that are
+   poorly aligned with human perception. If the latter, a better-aligned model, such as the adversarially
+   trained network, might support realistic synthesis with fewer dimensions, and the gap would narrow.`,
+];
+
+// ── render ──────────────────────────────────────────────────────────────────
+const capEl = document.getElementById('cap'), dotsEl = document.getElementById('dots');
+const notesEl = document.getElementById('notes');
+for(let i=0; i<N; i++){
+  const d = document.createElement('div'); d.className = 'dot';
+  d.addEventListener('click', e => { e.stopPropagation(); jump(i); });
+  dotsEl.appendChild(d);
+}
+const staged = [...svg.querySelectorAll('[data-beat]')];
+
+// Deck-wide round 6 (2026-10-08): beat 0 shows the title alone; content beats are beat - 1.
+let beat = 0, prevBeat = 0, capTimer = null;
+function render(instant){
+  const phase = beat - 1, prev = prevBeat - 1;   // content beat; -1 = title only
+  const forward = phase > prev && !instant;
+  // build-ins: visible from data-beat (until data-until); staggered only on the beat that introduces them
+  staged.forEach(g => {
+    const from = +g.dataset.beat, until = g.dataset.until != null ? +g.dataset.until : Infinity;
+    const on = phase >= from && phase <= until, entering = forward && from === phase && prev < from;
+    g.style.transitionDelay = entering ? (+g.dataset.delay || 0) + 'ms' : '0ms';
+    g.style.opacity = on ? 1 : 0;
+    g.style.transform = on ? 'none' : 'translateY(6px)';
+  });
+  // the noise in the synthesis box hands over to the matched synthesis
+  gNoise.style.transition = 'opacity .5s ease';
+  gNoise.style.transitionDelay = forward && phase === 4 ? '2300ms' : '0ms';
+  gNoise.style.opacity = phase >= 4 ? 0 : 1;
+  // dims on outer groups (their own opacity is the build-in; dim via a filter-free wrapper property)
+  DIM.forEach(row => { const test = row[row.length-1];
+    row.slice(0, -1).forEach(g => { if(+g.dataset.beat <= phase) g.style.opacity = test(phase) ? .35 : 1; }); });
+  // cells
+  cells.forEach(e => {
+    const sim = phase >= 3 && isSim(e), real = phase >= 5 && isReal(e) && !sim;
+    let delay = 0;
+    if(forward && phase === 3 && sim) delay = +e.dataset.c * 70;
+    if(forward && phase === 5 && real) delay = +e.dataset.r * 55 + +e.dataset.c * 2;
+    e.style.transitionDelay = delay + 'ms';
+    e.classList.toggle('sim', sim); e.classList.toggle('real', real);
+  });
+  gCellLab.style.opacity = phase >= 2 && phase < 6 ? 1 : 0;
+  // the realism marker's ghost slides left into the gap
+  ghost.style.transitionDuration = '.5s, 1.6s';
+  ghost.style.transform = phase >= 8 ? `translateX(${GHOST_DX}px)` : 'none';
+
+  notesEl.innerHTML = SCRIPT[beat];
+  [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', i <= beat));
+  capEl.classList.add('swap');
+  clearTimeout(capTimer);
+  capTimer = setTimeout(() => { capEl.textContent = BEATS[beat]; capEl.classList.remove('swap'); }, 140);
+  prevBeat = beat;
+}
+
+function advance(){ if(beat >= N-1) return; beat++; render(); }
+function goBack(){ if(beat <= 0) return; beat--; render(); }
+function jump(p){ beat = Math.max(0, Math.min(N-1, p)); render(true); }
+
+addEventListener('click', e => { if(e.target.closest('#dots, #notes')) return; advance(); });
+addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); advance(); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); goBack(); }
+  else if(e.key === 'n' || e.key === 'N'){ notesEl.classList.toggle('on'); }
+  else if(e.key === 'r' || e.key === 'R'){ jump(0); }
+  else if(e.key >= '1' && e.key <= '9'){ jump(+e.key - 1); }
+});
+
+window[SLIDE_NAME] = {
+  advance, back: goBack,
+  atStart: () => beat === 0,
+  atEnd:   () => beat === N-1,
+  reset:      () => jump(0),
+  resetToEnd: () => jump(N-1),
+  getBeat: () => beat,
+  count:   () => N,
+  setBeat: jump,
+};
+
+render(true);
+</script>
+</body>
+</html>

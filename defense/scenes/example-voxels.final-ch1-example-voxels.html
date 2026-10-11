@@ -72,13 +72,13 @@
       <defs>
         <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
       </defs>
-      <g id="bw"><image href="../assets/final/ch1-example-voxels/outline/anchor/whole-regions.png?v=4" width="1947" height="1580"/></g>
+      <g id="bw"><image href="../assets/final/ch1-example-voxels/outline/anchor/whole-regions.png?v=5" width="1947" height="1580"/></g>
       <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
       <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
       <!-- zoom-regions.png pixels from here on -->
       <g id="zf" transform="translate(0 1640) scale(1.947)">
-        <image class="fade" id="wash1"  href="../assets/final/ch1-example-voxels/outline/ev-wash-r1.png?v=4"  width="1000" height="686"/>
-        <image class="fade" id="wash13" href="../assets/final/ch1-example-voxels/outline/ev-wash-r13.png?v=4" width="1000" height="686"/>
+        <image class="fade" id="wash1"  href="../assets/final/ch1-example-voxels/outline/ev-wash-r1.png?v=5"  width="1000" height="686"/>
+        <image class="fade" id="wash13" href="../assets/final/ch1-example-voxels/outline/ev-wash-r13.png?v=5" width="1000" height="686"/>
       </g>
       <g class="numeral" font-size="96">
         <text x="771" y="2029">1</text><text x="1373" y="2364">2</text><text x="629" y="2401">3</text>
@@ -92,8 +92,8 @@
   <div class="anchor-content" id="acontent"></div>
 
   <div id="panels">
-    <div class="pan" id="pan1"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-pbelt.png?v=4" alt="Region 1 voxel scatter"></div>
-    <div class="pan" id="pan2"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-a5.png?v=4" alt="Region 3 voxel scatter"></div>
+    <div class="pan" id="pan1"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-pbelt.png?v=5" alt="Region 1 voxel scatter"></div>
+    <div class="pan" id="pan2"><div class="strip"></div><img src="../assets/final/ch1-example-voxels/outline/image7-a5.png?v=5" alt="Region 3 voxel scatter"></div>
   </div>
 
   <div id="dots"></div>
@@ -144,19 +144,20 @@ const N = BEATS.length;
 // Not spoken: the pins mark a location inside the region on the anchor image; the data are
 // the paper's example voxels from those parcels (see the interim-pin note above).
 const SCRIPT = [
-  `Before pooling across voxels, it helps to look at the measurements for single voxels. These
-   are the same three regions as on the previous slide.`,
+  `Before pooling across voxels, here are the measurements for two single voxels, one in
+   Region 1 and one in Region 3.`,
   `First, a voxel in Region 1, in parcel PBelt.`,
   `Each point is one natural sound. The horizontal axis is this voxel’s response to the natural
    sound, and the vertical axis is its response to the spectrotemporal model-matched version of
    that sound. If the two sounds produced the same response, the point would fall on the
-   diagonal. For this voxel the responses are similar, and the normalized squared error is 0.34.`,
+   diagonal. For this voxel the responses are similar, and the noise-corrected NSE is 0.34.`,
   `Second, a voxel in Region 3, in parcel A5.`,
   `For this voxel, many natural sounds produced larger responses than their model-matched
-   versions, so the points fall below the diagonal, and the normalized squared error is higher,
-   0.70. In this voxel, the spectrotemporal model-matched sounds do not reproduce the responses
-   to the natural sounds. The results that follow summarize this comparison across all of the
-   voxels in each region.`,
+   versions, so the points fall below the diagonal, and the noise-corrected NSE is higher, 0.70.
+   Yet the correlation between the two sets of responses is higher here than in the first voxel,
+   0.54 against 0.43: the NSE captures the difference in the size of the responses, which a
+   correlation misses. The results that follow summarize this comparison across all voxels in
+   each region.`,
 ];
 
 // ── DOM ──────────────────────────────────────────────────────────────────────

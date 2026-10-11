@@ -68,11 +68,11 @@
         <clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath>
       </defs>
       <g id="bw">
-        <image href="../assets/final/ch1-regions/outline/anchor/whole-regions.png?v=3" width="1947" height="1580"/>
+        <image href="../assets/final/ch1-regions/outline/anchor/whole-regions.png?v=5" width="1947" height="1580"/>
         <!-- the region being named gets a thin outline (from its mask); the image is never recoloured -->
-        <image class="rout" data-r="1" href="../assets/final/ch1-regions/outline/rg-outline-r1.png?v=3" width="1947" height="1580" opacity="0"/>
-        <image class="rout" data-r="2" href="../assets/final/ch1-regions/outline/rg-outline-r2.png?v=3" width="1947" height="1580" opacity="0"/>
-        <image class="rout" data-r="3" href="../assets/final/ch1-regions/outline/rg-outline-r3.png?v=3" width="1947" height="1580" opacity="0"/>
+        <image class="rout" data-r="1" href="../assets/final/ch1-regions/outline/rg-outline-r1.png?v=5" width="1947" height="1580" opacity="0"/>
+        <image class="rout" data-r="2" href="../assets/final/ch1-regions/outline/rg-outline-r2.png?v=5" width="1947" height="1580" opacity="0"/>
+        <image class="rout" data-r="3" href="../assets/final/ch1-regions/outline/rg-outline-r3.png?v=5" width="1947" height="1580" opacity="0"/>
       </g>
       <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
       <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
@@ -98,8 +98,10 @@
 // named is outlined. No captions (deck-wide round 4): only the labels the figure needs; what
 // is said is in the part's notes and in SCRIPT, one passage per click.
 //
-// 0 axes · 1 nine parcels, ranked (a staircase, left to right) · 2 three groups of three ·
-// 3-5 Region 1, 2, 3 outlined in turn · 6 region sizes · 7 reliable voxels per participant.
+// 0 title only (deck-wide round 6) · 1 axes, then the nine parcels ranked (a staircase, left
+// to right) · 2 three groups of three ·
+// 3-5 Region 1, 2, 3 outlined in turn · 6 reliable voxels per participant (overnight review
+// 2026-10-09: the region-size beat and the minimum counts were cut).
 // The brain is never greyed or recoloured (Fer, 2026-10-07).
 // The last frame has all three regions lit, which is how ch1-example-voxels opens.
 //
@@ -122,14 +124,9 @@ const PARCELS = [
   ['MBelt', 0.250, 2], ['A4',    0.318, 2], ['TA2',   0.494, 2],
   ['A5',    0.560, 3], ['STSda', 0.774, 3], ['STSdp', 0.826, 3],
 ];
-// per region: vertices in the parcels (both hemispheres), in the group maps
-// (group-averaged test-retest NSE < 0.4), and per participant (own test-retest NSE < 0.4),
-// median (range) across the 10 participants
-const COUNTS = [
-  {all:'2,993', group:'2,856', pp:'787 (244–1,718)'},
-  {all:'3,693', group:'3,312', pp:'798 (166–1,916)'},
-  {all:'5,251', group:'3,364', pp:'1,043 (15–1,985)'},
-];
+// per region: reliable vertices per participant (own test-retest NSE < 0.4), median across the
+// 10 participants (Supplementary Table S4, v14_6)
+const COUNTS = [{pp:'787'}, {pp:'798'}, {pp:'1,043'}];
 const RCOL  = ['#b7cfe8', '#5d8fc7', '#1f3f7a'];     // anchor.json region blues
 const BAND  = ['#dee9f4', '#ceddee', '#bbc5d6'];     // S4 panel A band tints
 
@@ -142,7 +139,7 @@ const NY = PY0 + 34;                                 // parcel names
 const BY = NY + 26;                                  // count brackets
 
 // beats: chart/bands = chart state · lit = regions whose strip is up ·
-// on = the region outlined on the brain · cnt = count lines shown (1 = sizes, 2 = + per participant)
+// on = the region outlined on the brain · cnt = the per-participant voxel counts
 const BEATS = [
   { chart:0, bands:0, lit:0, cnt:0 },
   { chart:1, bands:0, lit:0, cnt:0 },
@@ -151,31 +148,16 @@ const BEATS = [
   { chart:1, bands:1, lit:2, cnt:0, on:2 },
   { chart:1, bands:1, lit:3, cnt:0, on:3 },
   { chart:1, bands:1, lit:3, cnt:1 },
-  { chart:1, bands:1, lit:3, cnt:2 },
 ];
 const MAX = BEATS.length - 1;
 const SCRIPT = [
   `We used this independent dataset to define our regions of interest.`,
-  `We took the nine parcels of the Glasser et al. (2016) parcellation that cover auditory
-   cortex and ranked them by their NSE in the 2018 group map. Vertices entered if their
-   test-retest NSE in that dataset was below 0.15, and parcels entered if at least 100 vertices
-   passed. A1 and the lateral belt have the lowest NSE, and the two parcels in the dorsal bank
-   of the superior temporal sulcus the highest. Because the ranking uses only the 2018 data,
-   the regions are independent of the measurements reported here.`,
-  `We divided the ranking into three regions of three parcels each, in rank order. The
-   division follows the rank order rather than the largest gaps between parcels, which fall
-   within Regions 2 and 3.`,
+  `We took the nine parcels of the Glasser et al. (2016) parcellation that cover auditory cortex, and ranked them by their NSE in this 2018 group map. Because the ranking uses only the 2018 data, the regions are independent of the measurements reported here.`,
+  `We divided the ranking into three regions of three parcels each.`,
   `Region 1 comprises A1, LBelt and PBelt, and corresponds to primary auditory cortex.`,
   `Region 2 comprises MBelt, A4 and TA2.`,
   `Region 3 comprises A5, STSda and STSdp, the most non-primary cortex we measured.`,
-  `Across both hemispheres, the three regions contain 2,993, 3,693 and 5,251 surface
-   vertices. Of these, 2,856, 3,312 and 3,364 are shown in the group maps, where the
-   test-retest NSE of the group-averaged responses is below 0.4.`,
-  `Within each region, each participant’s analysis includes only the voxels whose responses
-   to the natural sounds were reliable, defined as a test-retest NSE below 0.4, the range in
-   which the noise correction is well behaved. This leaves a median of 787, 798 and 1,043
-   vertices per participant, or 26, 22 and 20 percent of each region, and all 10 participants
-   contribute to every region; the smallest counts are 244, 166 and 15.`,
+  `Within each region, each participant’s analysis includes only the voxels whose responses to the natural sounds were reliable, with a test-retest NSE below 0.4. This leaves a median of 787 to 1,043 voxels per participant and region, and all 10 participants contribute to every region.`,
 ];
 
 // ── build the chart ──────────────────────────────────────────────────────────
@@ -188,10 +170,7 @@ let s = '';
   s += `<text class="rlab" data-r="${r+1}" x="${mid}" y="${BT+38}" fill="#0f172a" opacity="0">Region ${r+1}</text>`;
   s += `<g class="fade cnt1" data-r="${r+1}">
     <path d="M${x+8} ${BY} v8 H${x+w-8} v-8" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>
-    <text class="cnt" x="${mid}" y="${BY+34}">${c.all} vertices</text></g>`;
-  s += `<g class="fade cnt2" data-r="${r+1}">
-    <text class="cnt pp" x="${mid}" y="${BY+64}">${c.pp.split(' ')[0]} per participant</text>
-    <text class="cnt" x="${mid}" y="${BY+90}">${c.pp.slice(c.pp.indexOf('('))}</text></g>`;
+    <text class="cnt pp" x="${mid}" y="${BY+34}">${c.pp} per participant</text></g>`;
 });
 s += `<g class="fade" id="axis">
   <line x1="${CX0}" y1="${PY0}" x2="${CX0}" y2="${PY1-8}" stroke="#1a1a1a" stroke-width="2"/>
@@ -202,8 +181,7 @@ s += `<g class="fade" id="axis">
 s += `<text class="ax" transform="translate(${CX0-90},${(PY0+PY1)/2}) rotate(-90)">
     <tspan x="0" dy="-.3em">NSE, natural vs spectrotemporal model-matched</tspan>
     <tspan x="0" dy="1.25em">(Norman-Haignere &amp; McDermott 2018 group map)</tspan></text></g>`;
-s += `<text class="foot fade cnt1" x="${CX0+CW*4.5}" y="${BY+128}">Surface vertices, both hemispheres</text>
-  <text class="foot fade cnt2" x="${CX0+CW*4.5}" y="${BY+150}">Per participant: vertices with test-retest NSE &lt; 0.4, median (range), n = 10</text>`;
+s += `<text class="foot fade cnt1" x="${CX0+CW*4.5}" y="${BY+70}">Vertices with test-retest NSE &lt; 0.4, median across the 10 participants</text>`;
 PARCELS.forEach(([name, v], rank) => s += `
   <g class="col" data-p="${name}">
     <text class="pn" x="${CX(rank)}" y="${NY}">${name}</text>
@@ -231,8 +209,7 @@ function render(){
   fig.querySelectorAll('.band, .rlab').forEach(el => el.setAttribute('opacity', b.bands ? 1 : 0));
   fig.querySelectorAll('.swatch').forEach(el => el.setAttribute('opacity', b.bands && +el.dataset.r <= b.lit ? 1 : 0));
   fig.querySelectorAll('.cnt1').forEach(el => el.classList.toggle('on', b.cnt >= 1));
-  fig.querySelectorAll('.cnt2').forEach(el => el.classList.toggle('on', b.cnt >= 2));
-  // dots, notes
+    // dots, notes
   document.getElementById('dots').innerHTML =
     BEATS.map((_,i) => `<span class="dot ${i<=beat?'on':''}"></span>`).join('');
   document.getElementById('notes').innerHTML = SCRIPT[beat];

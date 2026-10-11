@@ -387,3 +387,7 @@ function vidSync(v, play){
     document.querySelectorAll('.slide.active video[data-vid]').forEach(v => { if(v.dataset.vkey && v.dataset.vkey !== 'idle') vidReplay(v); });
   });
 })();
+
+/* presenter (chat 23): p = presenter window, n = beat-level side notes; see outline/presenter.js.
+   Written during parsing so its key handler runs before the deck's. */
+if(document.readyState === 'loading') document.write(`<script src="outline/presenter.js?v=${Date.now()}"><\/script>`);

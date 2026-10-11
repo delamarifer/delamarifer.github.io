@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sparse-scanning</title>
+<title>Sparse scanning</title>
 <link rel="stylesheet" href="../vendor/fraunces.css">
 <link rel="stylesheet" href="shared/anchor.css">
 <style>
@@ -106,7 +106,7 @@
       </svg>
     </div>
     <div class="anchor-content"><svg id="fig" viewBox="0 0 1100 800" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <h1 id="title">Sparse-scanning</h1>
+    <h1 id="title">Sparse scanning</h1>
     <p id="cap"></p>
     <div id="notes"></div>
   </div>
@@ -142,7 +142,7 @@
   'use strict';
   const SLIDE_NAME = 'scanningRun';
   // ?quick=1 (Fer, 2026-10-08, after Josh's review): sparse scanning "in passing". The deck shows
-  // only beats 2-5 (one block of Spanish speech, then piano, with the response and the brain),
+  // beats 1-5 (beat 1 = title and anchor brain only, round 6), then one block of Spanish speech and one of piano, with the response and the brain,
   // with no strip, drop marks or run/session detail on screen, and QSCRIPT as the presenter
   // transcript. Without it, the scene is the full three-slide version (kept as a backup).
   const QUICK = new URLSearchParams(location.search).has('quick');
@@ -234,6 +234,8 @@
 
   const QCAP = {5:'One number per sound, per voxel.'};
   const QSCRIPT = {
+   1:`To compare these responses across sounds, we first need one measurement per sound for each
+    voxel. This is how that measurement was made.`,
    2:`Sounds were presented in silent gaps between scans, a standard approach called sparse
     scanning, because the noise of the scanner would otherwise mask the sounds. Each block
     contained three 3-second excerpts of one sound, and each excerpt was followed by the

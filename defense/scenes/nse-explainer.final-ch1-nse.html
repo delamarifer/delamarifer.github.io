@@ -23,8 +23,10 @@
   body{ background:#fff; color:var(--body); font-family:var(--sans); overflow:hidden;
         cursor:pointer; user-select:none; -webkit-user-select:none; }
 
-  #title{ position:absolute; top:3.4vh; left:3.2vw; font-family:var(--serif); color:var(--muted);
-    font-size:clamp(13px,1.15vw,16px); font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
+  /* matches the neighbouring anchor scenes (scanning-run.html): Calibri Light, ink */
+  #title{ position:absolute; top:3.4vh; left:3.2vw; color:var(--ink);
+    font-family:'Deck Calibri', Calibri, sans-serif; font-size:clamp(14px,1.25vw,18px); font-weight:300;
+    letter-spacing:.09em; text-transform:uppercase; }
 
   /* ── the anchor brain: Fig. 4A locator + enlargement, in whole-regions.png pixels ── */
   #brain{ width:100%; height:100%; display:block; }
@@ -37,8 +39,8 @@
   /* ── the NSE figure, in .anchor-content ── */
   #fig{ width:100%; height:100%; display:block; overflow:visible; }
   #fig text{ font-family:var(--sans); }
-  .lbl{ font-size:21px; fill:var(--muted); }
-  .lbl.b{ font-weight:700; fill:var(--body); }
+  .lbl{ font-size:21px; fill:var(--ink); }
+  .lbl.b{ font-weight:700; fill:var(--ink); }
   .eq{ font-family:var(--serif) !important; fill:var(--ink); }
   .axis{ stroke:var(--faint); stroke-width:1.6; }
   .diag{ stroke:var(--faint); stroke-width:1.6; stroke-dasharray:7 6; }
@@ -47,7 +49,6 @@
     font-size:clamp(15px,1.7vw,25px); font-weight:500; color:var(--ink); letter-spacing:-.01em;
     line-height:1.28; transition:opacity .32s ease, transform .32s ease; }
   #cap.swap{ opacity:0; transform:translateY(7px); }
-  #cap .err{ color:var(--err); } #cap .cor{ color:var(--cor); }
 
   #dots{ position:absolute; right:2rem; bottom:1.1rem; display:flex; gap:.45rem; }
   .dot{ width:8px; height:8px; border-radius:50%; background:#fff; border:1.5px solid #cbd5e1;
@@ -72,7 +73,7 @@
         <radialGradient id="pinGlow"><stop offset="0" stop-color="#b45309" stop-opacity=".6"/><stop offset="1" stop-color="#b45309" stop-opacity="0"/></radialGradient>
       </defs>
       <g id="bw">
-        <image href="../assets/final/ch1-nse/outline/anchor/whole-regions.png?v=2" width="1947" height="1580"/>
+        <image href="../assets/final/ch1-nse/outline/anchor/whole-regions.png?v=3" width="1947" height="1580"/>
         <g id="pin" transform="translate(780 1080)">
           <circle id="pinHalo" r="60" fill="url(#pinGlow)"/>
           <circle r="17" fill="#b45309" stroke="#fff" stroke-width="7"/>
@@ -89,7 +90,6 @@
   <div class="anchor-content">
     <svg id="fig" viewBox="0 0 1100 800" preserveAspectRatio="xMidYMid meet">
       <g id="dyn"></g>
-      <g id="card" opacity="0"></g>
     </svg>
   </div>
 
@@ -101,17 +101,19 @@
 // ═══ WHAT THIS SCENE SHOWS ═══════════════════════════════════════════════════
 // Part ch1-nse: how the normalized squared error compares one voxel's responses to
 // natural sounds (x) and to their model-matched versions (y). Fer chose (2026-10-07):
-// compact, bars first, keep the real-values card, plot on top / equation below.
+// compact, bars first, plot on top / equation below. 2026-10-09 overnight review: the
+// real-values card became the noise-correction beat.
 //
-// ACT 1 — THE DATA   (0-1): one voxel; its natural responses, then its matched responses.
-// ACT 2 — THE NSE    (2-4): square each gap and average → compare with unrelated pairs
+// ACT 0 — TITLE      (0):   the title alone (deck-wide round 6); the anchor brain stays.
+// ACT 1 — THE DATA   (1-2): one voxel; its natural responses, then its matched responses.
+// ACT 2 — THE NSE    (3-5): square each gap and average → compare with unrelated pairs
 //                           → the scale: unrelated ≈ 1, identical 0, this voxel between.
-// ACT 3 — WHY NOT r  (5-6): the same data as a scatter; a shift keeps r = 1 but raises NSE.
-// ACT 4 — REAL       (7):   the two example voxels' real r and NSE.
+// ACT 3 — WHY NOT r  (6-7): the same data as a scatter; a shift keeps r = 1 but raises NSE.
+// ACT 4 — NOISE      (8):   back to this voxel's responses; the noise-corrected NSE (spoken).
 //
-// ALL RESPONSE VALUES ARE SCHEMATIC (labelled on screen) except the card on beat 7,
-// which holds the paper's example-voxel numbers (Region 1: r 0.43, NSE 0.34;
-// Region 3: r 0.54, NSE 0.70). Every number shown on beats 2-6 is computed live from
+// ALL RESPONSE VALUES ARE SCHEMATIC (labelled on screen). The real example voxels (and the
+// r 0.54 vs 0.43 point) are in ch1-example-voxels (2026-10-09 overnight review).
+// Every number shown on beats 3-8 is computed live from
 // what is drawn: NSE = ⟨(x−y)²⟩ / (⟨x²⟩ + ⟨y²⟩ − 2⟨x⟩⟨y⟩).
 //
 // The brain is the anchor (outline/contracts/anchor-brain.md); the pin is ch1-scanning's
@@ -143,7 +145,7 @@ const MMAX = 1.2;                          // meter range 0 … 1.2 (tick at 1)
 const S0 = {
   nat:0, mm:0, mpos:[0,1,2,3,4,5,6,7], mval:YM.slice(),
   gap:0, sq:0, num:0, live:1, den:0, denLive:0, formula:0,
-  meter:0, ticks:0, morph:0, err:0, rmeter:0, plot:1, card:0,
+  meter:0, ticks:0, morph:0, err:0, rmeter:0, plot:1,
 };
 const K_ = s => ({...S0, ...s});
 // beats: a list of keyframes, each {dur, ...state}. Jumping lands on the last one.
@@ -152,50 +154,53 @@ const B1 = {...B0, mm:1};
 const B2 = {...B1, gap:1, sq:1, num:1};
 const B4 = {...B2, den:1, formula:1, meter:1, ticks:1};
 const B5 = {...B4, morph:1, err:1, gap:0, sq:0};
+// Beat 0 is the title alone (deck-wide round 6); the anchor brain stays, as it continues
+// from the previous slides. Captions: no colour, wording kept plain and precise (rounds 2-4).
 const BEATS = [
-  { cap:'One voxel: its response to each natural sound', keys:[[0, B0]] },
-  { cap:'…and to each sound’s <i>model-matched</i> version', keys:[[700, B1]] },
-  { cap:'Square each difference, then average', keys:[[600, {...B1, gap:1}], [800, B2]] },
-  { cap:'Compare with pairs that don’t belong together', keys:[
+  { cap:'', keys:[[0, {}]] },
+  { cap:'One voxel’s response to each natural sound', keys:[[900, B0]] },
+  { cap:'Its response to each sound’s model-matched version', keys:[[700, B1]] },
+  { cap:'Squared differences, averaged across sounds', keys:[[600, {...B1, gap:1}], [800, B2]] },
+  { cap:'Normalized by the value expected for unrelated responses', keys:[
       [1300, {...B2, live:0, mpos:SHUF_SLOT}],
       [900,  {...B2, live:0, mpos:SHUF_SLOT, den:1, denLive:1}]] },
-  { cap:'NSE: <span class="err">0 identical</span> · <span class="err">≈1 unrelated</span>', keys:[
+  { cap:'NSE: 0 for identical responses, about 1 for unrelated responses', keys:[
       [500,  {...B4, mpos:SHUF_SLOT, ticks:0}],
       [1100, {...B4, ticks:0, mval:X.slice()}],
       [900,  B4]] },
-  { cap:'The same voxel as a scatter: distance from the diagonal', keys:[[1300, B5]] },
-  { cap:'Shift every response: <span class="cor">r stays 1</span>, <span class="err">NSE rises</span>', keys:[
+  { cap:'The same responses as a scatter plot: the error is the distance from the diagonal', keys:[[1300, B5]] },
+  { cap:'A constant offset leaves the correlation at 1 but increases the NSE', keys:[
       [400,  {...B5, rmeter:1}],
       [1000, {...B5, rmeter:1, mval:X.slice()}],
       [1100, {...B5, rmeter:1, mval:X.map(v => v - SHIFT)}]] },
-  { cap:'Real example voxels: higher <span class="cor">r</span>, yet <span class="err">less similar</span>', keys:[
-      [700, {...B5, rmeter:1, mval:X.map(v => v - SHIFT), plot:.12, card:1}]] },
+  { cap:'Noise-corrected NSE: 0 means the responses differ by no more than noise', keys:[
+      [900, B5]] },
 ].map(b => ({...b, keys: b.keys.map(([d, s]) => [d, K_(s)])}));
 const N = BEATS.length;
 
 const SCRIPT = [
-  `<b>One voxel.</b> This is the voxel we measured, in Region 1. Each dark bar is its response to one
-   natural sound. These values are schematic, to show how the measure works.`,
-  `<b>Matched sounds.</b> Next to each, its response to that sound’s model-matched version. If the
-   model captured everything this voxel responds to, each pair would be the same height.`,
-  `<b>Squared error.</b> Take the difference in each pair, square it, and average over sounds. That
-   average is the top of the fraction.`,
-  `<b>Compared with unrelated.</b> To put that on a scale, compare it with pairs that don’t belong
-   together: shuffle which matched sound goes with which natural sound, and the squares grow. The
-   average for unrelated pairs is the bottom of the fraction (the formula computes it directly:
-   ⟨x²⟩ + ⟨y²⟩ − 2⟨x⟩⟨y⟩). Norman-Haignere and McDermott, 2018.`,
-  `<b>The scale.</b> Unrelated pairs give an NSE of about 1. Identical responses give 0. This voxel
-   sits in between, near 0.3.`,
-  `<b>As a scatter.</b> The same pairs as points: across, the natural sound; up, its matched version.
-   The diagonal is where the two responses are identical, and each point’s error is its distance
-   from it. This is how the next slide shows real voxels.`,
-  `<b>Why not a correlation?</b> Start from identical responses, then lower every matched response by
-   the same amount. The points stay on a line, so the correlation stays at 1. But the responses are
-   no longer the same, and the NSE rises. The NSE is sensitive to differences in mean and scale; a
-   correlation is not.`,
-  `<b>Real voxels.</b> The two example voxels on the next slide. The Region 3 voxel has the higher
-   correlation, 0.54 against 0.43, but its responses to natural and matched sounds are less
-   similar: NSE 0.70 against 0.34.`,
+  `To compare a voxel’s responses to natural and model-matched sounds, we used the normalized
+   squared error, or NSE (Norman-Haignere and McDermott 2018).`,
+  `Consider one voxel. Each dark bar is its response to one natural sound. These values are
+   schematic, to show how the measure works.`,
+  `Next to each bar is the voxel’s response to that sound’s model-matched version. If the model
+   stage captured everything this voxel responds to, each pair would have the same height.`,
+  `The difference in each pair is squared and averaged over sounds. This average is the numerator.`,
+  `To put this on a scale, it is compared with the error expected for pairs that do not correspond,
+   for example after shuffling which matched sound goes with which natural sound. This average is
+   the denominator.`,
+  `An NSE of 0 means identical responses, and an NSE of about 1 means no correspondence. This
+   voxel’s NSE is about 0.3.`,
+  `The same pairs can be plotted as points: the response to the natural sound on the horizontal
+   axis, and the response to its model-matched version on the vertical axis. Points on the diagonal
+   have identical responses, and each point’s error is its distance from the diagonal.`,
+  `Why not use a correlation? Suppose every matched response is lowered by the same amount. The
+   points stay on a line, so the correlation stays at 1, but the responses are no longer the same,
+   and the NSE rises. The NSE is sensitive to differences in mean and scale; a correlation is not.`,
+  `Because fMRI responses are noisy, two measurements of the same responses do not give an NSE of
+   zero. We estimate this error from the two presentations of each natural sound, and correct the
+   NSE for it. After noise correction, an NSE of zero means that the responses differ by no more
+   than noise would explain. This is the noise floor in the plots that follow.`,
 ];
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -312,7 +317,7 @@ function draw(s){
       <line x1="${MX0+one}" y1="${y-4}" x2="${MX0+one}" y2="${y+20}" stroke="var(--faint)" stroke-width="2"/>
       <text class="lbl" x="${MX0}" y="${y+40}" font-size="16">0</text>
       <text class="lbl" x="${MX0+one}" y="${y+40}" font-size="16" text-anchor="middle">1</text>
-      <text x="${MX0+MW+14}" y="${y+16}" font-size="30" font-weight="700" fill="${col}">${fmt(v)}</text>`;
+      <text x="${MX0+MW+14}" y="${y+16}" font-size="30" font-weight="700" fill="var(--ink)">${fmt(v)}</text>`;
     if(ticks > 0) t += `<g opacity="${ticks}"><text class="lbl" x="${MX0}" y="${y+60}" font-size="15">identical</text>
       <text class="lbl" x="${MX0+one}" y="${y+60}" font-size="15" text-anchor="middle">unrelated</text></g>`;
     return t + `</g>`;
@@ -323,19 +328,7 @@ function draw(s){
   g.push(`</g>`);
   $('dyn').innerHTML = g.join('');
   $('dyn').setAttribute('opacity', 1);
-  $('card').setAttribute('opacity', s.card);
 }
-
-// ── beat 7: the real values ─────────────────────────────────────────────────
-$('card').innerHTML = `
-  <rect x="120" y="120" width="900" height="460" rx="18" fill="#fff" stroke="var(--border)" stroke-width="2"/>
-  <text class="lbl" x="570" y="180" text-anchor="middle">the two example voxels (real data, next slide)</text>
-  ${[['Region 1 voxel', '0.43', '0.34', 345], ['Region 3 voxel', '0.54', '0.70', 795]].map(([n, r, e, x]) => `
-    <text x="${x}" y="265" text-anchor="middle" font-size="34" font-weight="700" fill="var(--ink)">${n}</text>
-    <text x="${x}" y="350" text-anchor="middle" font-size="40" fill="var(--cor)">r = ${r}</text>
-    <text x="${x}" y="430" text-anchor="middle" font-size="40" font-weight="700" fill="var(--err)">NSE = ${e}</text>`).join('')}
-  <line x1="570" y1="230" x2="570" y2="460" stroke="var(--border)" stroke-width="2"/>
-  <text x="570" y="530" text-anchor="middle" font-size="26" fill="var(--body)">higher correlation, yet less similar responses</text>`;
 
 // ── timeline ────────────────────────────────────────────────────────────────
 function mix(a, b, t){
@@ -365,7 +358,7 @@ function sync(animate){
   notesEl.innerHTML = SCRIPT[phase];
   if(animate) play(b.keys);
   else { cancelAnimationFrame(raf); cur = endState(phase); draw(cur); }
-  if(phase === 0) pulse();
+  if(phase === 1 && animate) pulse();          // "one voxel": the pin pulses as the bars come in
 }
 function pulse(){ const h = $('pinHalo'); h.classList.remove('go'); void h.getBBox(); h.classList.add('go'); }
 
@@ -389,6 +382,7 @@ addEventListener('keydown', e => {
 window[SLIDE_NAME] = {
   advance, back: goBack,
   atStart: () => phase <= 0, atEnd: () => phase >= N-1,
+  getBeat: () => phase, count: () => N, setBeat: jump,   // for the deck's slide.click number
   reset: () => jump(0), resetToEnd: () => jump(N-1),
 };
 sync(false);

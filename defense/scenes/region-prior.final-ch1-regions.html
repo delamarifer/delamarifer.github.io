@@ -39,7 +39,7 @@
     <!-- the anchor brain, built exactly as in region-definition.html so the cuts are continuous -->
     <svg id="brain" viewBox="0 0 1947 2976" preserveAspectRatio="xMidYMid meet">
       <defs><clipPath id="zc"><rect x="282" y="876" width="1000" height="686"/></clipPath></defs>
-      <g id="bw"><image href="../assets/final/ch1-regions/outline/anchor/whole-regions.png?v=3" width="1947" height="1580"/></g>
+      <g id="bw"><image href="../assets/final/ch1-regions/outline/anchor/whole-regions.png?v=5" width="1947" height="1580"/></g>
       <rect x="282" y="876" width="1000" height="686" fill="none" stroke="#000" stroke-width="6"/>
       <g transform="translate(0 1640) scale(1.947) translate(-282 -876)" clip-path="url(#zc)"><use href="#bw"/></g>
       <g class="numeral" font-size="96">
@@ -48,9 +48,9 @@
     </svg>
   </div>
   <div class="anchor-content">
-    <div class="nh" id="nh0"><img src="../assets/final/ch1-regions/outline/nh2018-fig3c-group.png?v=3" alt="Group map of the NSE between responses to natural and spectrotemporal model-matched sounds, N = 12">
+    <div class="nh" id="nh0"><img src="../assets/final/ch1-regions/outline/nh2018-fig3c-group.png?v=5" alt="Group map of the NSE between responses to natural and spectrotemporal model-matched sounds, N = 12">
       <span class="src">Norman-Haignere &amp; McDermott (2018), Fig. 3C. White outline: primary auditory cortex.</span></div>
-    <div class="nh" id="nh1"><img src="../assets/final/ch1-regions/outline/nh2018-fig3d-annular.png?v=3" alt="NSE as a function of distance to the centre of primary auditory cortex">
+    <div class="nh" id="nh1"><img src="../assets/final/ch1-regions/outline/nh2018-fig3d-annular.png?v=5" alt="NSE as a function of distance to the centre of primary auditory cortex">
       <span class="src">Norman-Haignere &amp; McDermott (2018), Fig. 3D</span></div>
   </div>
   <div id="dots"></div>
@@ -61,30 +61,24 @@
 // Part ch1-regions, slide 1 of 2: the result the regions rest on. Norman-Haignere &
 // McDermott (2018), PLOS Biol (CC BY), Fig. 3C (group row + colour bar) and Fig. 3D, cropped
 // with PIL from ~/Downloads/journal.pbio.2005127.pdf, page 8, at whitespace.
-//   0 the 2018 group NSE map · 1 NSE vs distance to the centre of primary auditory cortex
+//   0 title only (deck-wide round 6) · 1 the 2018 group NSE map · 2 NSE vs distance to the
+//   centre of primary auditory cortex
 // The anchor brain stays as ch1-nse leaves it. Slide 2 is region-definition.html.
 // Fer, 2026-10-08: keep this recall even though ch1-mms-logic shows the same crops first.
 // No captions (deck-wide round 4): what is said is in the part's notes and in SCRIPT.
 //
 // Deck hook: window.regionPrior = {advance, back, atStart, atEnd, reset, resetToEnd, getBeat}
 const SLIDE_NAME = 'regionPrior';
-const N = 2;
+const N = 3;
 const SCRIPT = [
-  `Our regions of interest are based on the result I showed earlier. Norman-Haignere and
-   McDermott (2018) measured responses to natural sounds and to sounds matched to them in a
-   spectrotemporal model, in 12 participants. This is their group map of the normalized squared error between
-   the two sets of responses. Within primary auditory cortex, outlined in white, the NSE is
-   close to zero, so the model-matched sounds drive these voxels about as strongly as the
-   natural sounds do. Outside primary auditory cortex, the NSE is substantially higher.`,
-  `When voxels are binned by their distance from the centre of primary auditory cortex, the
-   NSE increases with distance, in both hemispheres. The spectrotemporal model therefore
-   accounts well for responses in primary auditory cortex and less well for responses in
-   non-primary regions.`,
+  `Our regions of interest are based on the 2018 result I showed earlier.`,
+  `This is the 2018 group map of the NSE for spectrotemporal model-matched sounds, in 12 participants. Within primary auditory cortex, outlined in white, the NSE is close to zero: model-matched sounds evoke responses similar to those to natural sounds. Outside it, the NSE is substantially higher.`,
+  `The NSE increases with distance from the centre of primary auditory cortex, in both hemispheres.`,
 ];
 
 let beat = 0;
 function render(){
-  for(let i=0; i<N; i++) document.getElementById('nh'+i).classList.toggle('on', i === beat);
+  for(let i=0; i<2; i++) document.getElementById('nh'+i).classList.toggle('on', i === beat-1);
   document.getElementById('dots').innerHTML =
     SCRIPT.map((_,i) => `<span class="dot ${i<=beat?'on':''}"></span>`).join('');
   document.getElementById('notes').innerHTML = SCRIPT[beat];

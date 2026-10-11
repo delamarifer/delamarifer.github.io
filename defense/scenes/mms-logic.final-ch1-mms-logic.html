@@ -67,7 +67,7 @@
 // colours (viridis responses, red labels) are never restyled.
 
 const SLIDE_NAME = 'mmsLogic';
-const IMG_SRC = '../assets/final/ch1-mms-logic/outline/mms-logic.png?v=4';
+const IMG_SRC = '../assets/final/ch1-mms-logic/outline/mms-logic.png?v=7';
 const IMG_W = 1740, IMG_H = 600;
 
 // ── anchors: pixels in mms-logic.png, detected with PIL (whitespace / ink /
@@ -128,8 +128,8 @@ const SCRIPT = [   // presenter transcript, one passage per click (deck-wide rou
   'Both sounds are passed through a model, and we choose one stage of that model: the matched stage.',
   'At that stage the model’s response varies over time: 2048 channels, 7 frequency bins and 19 time bins. Over time, the responses to the two sounds are different.',
   'We then average each channel’s response over time, which leaves 2048 channels by 7 frequency bins. We use time-averaged responses because the fMRI signal reflects neural activity averaged over several seconds.',
-  'After time averaging, the responses to the two sounds are matched. This is how the model-matched sound is generated: it is synthesized so that its time-averaged response at the matched stage equals that of the natural sound. I will describe the synthesis in a moment.',
-  'We then set the model aside and measure responses in auditory cortex with fMRI. Listeners in the scanner hear the sounds themselves.',
+  'After time averaging, the responses to the two sounds are matched. This is how the model-matched sound is generated: it is synthesized so that its time-averaged response at the matched stage equals that of the natural sound. It is therefore a model metamer for the time-averaged responses of one stage. I will describe the synthesis in a moment.',
+  'We then set the model aside. Instead of asking listeners whether they recognize the sound, we measure responses in auditory cortex with fMRI while listeners hear the two sounds.',
   'We present the natural sound and measure the response of a voxel.',
   'We then present the model-matched sound and measure the response of the same voxel.',
   'The question is whether the voxel responds similarly to the two sounds.',

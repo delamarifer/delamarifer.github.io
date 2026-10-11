@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same video, two events</title>
+<style>
+  /* Colors (data marks only; all words are black, per deck-wide feedback):
+       blue   = first hypothesis (slides / rolls), as in Fer's ambiguity figure
+       orange = second hypothesis (falls / bounces)
+     Cochleagrams are drawn in gray, dark = energy, like the figure's panels C and F. */
+  :root{
+    --bg:#ffffff; --ink:#0f172a; --body:#334155; --muted:#64748b; --border:#e2e8f0; --panel:#f8fafc;
+    --h1:#1f6fb2; --h2:#d55e00;
+    --sans:'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  }
+  *{margin:0; padding:0; box-sizing:border-box;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans); overflow:hidden;
+    cursor:pointer; user-select:none; -webkit-user-select:none;
+    display:flex; flex-direction:column; padding:7vh 6vw 9vh;}
+  h1{font-weight:300; font-size:clamp(1.8rem,3.5vw,3rem); line-height:1.08; margin-bottom:2.2vh;}
+  #q{font-size:clamp(1.1rem,1.8vw,1.6rem); font-weight:700; margin-bottom:1.6vh;}
+  #top{flex:1 1 auto; min-height:0; display:grid; grid-template-columns:1fr 1.15fr; gap:3vw; align-items:center;}
+  #vbox{position:relative; height:100%; display:flex; align-items:center; justify-content:center; min-height:0;}
+  video{max-width:100%; max-height:100%; border-radius:12px; display:block; background:var(--panel);}
+  #schem{width:100%; height:100%; min-height:0;}
+  #strips{display:grid; grid-template-columns:auto 1fr; gap:1.2vh 1.4vw; margin-top:2.6vh; align-items:center;}
+  .lab{font-size:clamp(.95rem,1.35vw,1.2rem); white-space:nowrap; display:flex; align-items:center; gap:.5em;
+    opacity:0; transition:opacity .45s;}
+  .sw{width:.85em; height:.85em; border-radius:2px; display:inline-block;}
+  .strip{position:relative; height:clamp(46px,8.5vh,90px); opacity:0; transition:opacity .45s;
+    border-left:1px solid var(--muted); border-bottom:1px solid var(--muted);}
+  .strip img{position:absolute; left:0; top:0; height:100%; image-rendering:auto;}
+  .strip .cover{position:absolute; top:0; bottom:0; right:0; background:var(--bg);}
+  .strip .ph{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--ink);}
+  #q, #top, #axis-wrap, .cite{transition:opacity .5s ease, transform .5s ease;}
+  body.pre #q, body.pre #top, body.pre .cite{opacity:0; transform:translateY(12px);}
+  .on{opacity:1 !important;} .dim{opacity:.34 !important;}
+  #axis{grid-column:2; display:flex; justify-content:space-between; font-size:.8rem; color:var(--ink); margin-top:-.6vh;}
+  /* schematic */
+  #schem text{font-size:15px; fill:var(--ink);}
+  .ray{stroke:#94a3b8; stroke-width:1.2; stroke-dasharray:4 4;}
+  .hyp{opacity:0; transition:opacity .45s;}
+  footer{position:fixed; right:18px; bottom:14px; display:flex; gap:6px; align-items:center;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--border);} .dot.on2{background:var(--ink);}
+  #snd{font-size:13px; margin-right:6px; display:none;} body.sound #snd{display:inline;}
+  .cite{position:fixed; left:6vw; bottom:3.6vh; font-size:1rem; color:var(--ink);}
+  #notes{position:fixed; left:0; right:0; bottom:0; background:rgba(15,23,42,.94); color:#e2e8f0;
+    padding:18px 26px; font-size:16px; line-height:1.5; display:none; cursor:auto;}
+  #notes.on{display:block;}
+</style>
+</head>
+<body>
+  <h1>Vision can leave an object’s path underdetermined</h1>
+  <div id="q"></div>
+  <div id="top">
+    <div id="vbox"><video id="vid" muted playsinline preload="auto"></video></div>
+    <svg id="schem" viewBox="0 0 600 340" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+  <div id="strips">
+    <div class="lab" id="lab1"><span class="sw" style="background:var(--h1)"></span><span></span></div>
+    <div class="strip" id="st1"><img alt=""><div class="cover"></div><div class="ph"></div></div>
+    <div class="lab" id="lab2"><span class="sw" style="background:var(--h2)"></span><span></span></div>
+    <div class="strip" id="st2"><img alt=""><div class="cover"></div><div class="ph"></div></div>
+    <div id="axis" class="lab"><span>0</span><span id="axend"></span></div>
+  </div>
+  <div class="cite">Agarwal et al. (2021); Traer et al. (2019)</div>
+  <audio id="au1" preload="auto"></audio><audio id="au2" preload="auto"></audio>
+  <footer><span id="snd">🔊 sound on</span><div id="dots" style="display:flex;gap:6px"></div></footer>
+  <div id="notes"></div>
+<script>
+// ═══ SAME VIDEO, TWO EVENTS (Ch. 4) ═══
+// Fer, 2026-10-08: avoid playing sound in the defense. The video plays muted; each
+// hypothesis shows its soundtrack as a cochleagram that paints in under the video, in
+// sync, while a schematic shows where the object would be under that hypothesis.
+// Press s to toggle sound (plays the latest hypothesis's soundtrack in sync).
+//
+// ACT 1 — SLIDE OR FALL (0–2): 0 cube video + lines of sight; 1 slides (friction noise);
+//                              2 falls (one impact). Both paths share every line of sight.
+// ACT 2 — ROLL OR BOUNCE (3–5): 3 ball video (top view); 4 rolls (rolling noise);
+//                               5 bounces (impacts). Same lines of sight again.
+//
+// Data: cochleagrams from the clips' own soundtracks (ERB filterbank from
+// ~/Developer/fig2-rebuild/cochleagram.py, 64 bands, 50 Hz–10 kHz, ^0.3, shared gray scale
+// per pair). Cube image height per frame measured from the video (magenta centroid);
+// ball wall hits are the impact onsets of the bounce soundtrack (min gap 0.4 s).
+// The ball clips are a 6 s window (4.4–10.4 s) of the 16.7 s Firefly clips.
+(function(){
+  const SLIDE_NAME = 'ch4Ambiguity';
+  const NS = 'http://www.w3.org/2000/svg';
+  const EX = {
+    cube: {
+      q: 'Slide or fall?',
+      video: '../assets/final/ch4/outline/ch4-cube-slides.mp4?v=5',
+      au: ['../assets/final/ch4/outline/ch4-cube-slides.mp4?v=5', '../assets/final/ch4/outline/ch4-cube-falls.mp4?v=5'],
+      coch: ['../assets/final/ch4/outline/ch4-cube-slides-coch.png?v=5', '../assets/final/ch4/outline/ch4-cube-falls-coch.png?v=5'],
+      cdur: [1.997, 2.347], D: 2.35,
+      lab: ['Slides down the slanted floor: friction noise', 'Falls through the air: one impact'],
+    },
+    ball: {
+      q: 'Roll or bounce?',
+      video: '../assets/final/ch4/outline/ch4-ball-rolls-6s.mp4?v=5',
+      au: ['../assets/final/ch4/outline/ch4-ball-rolls-6s.mp4?v=5', '../assets/final/ch4/outline/ch4-ball-bounces-6s.mp4?v=5'],
+      coch: ['../assets/final/ch4/outline/ch4-ball-rolls-6s-coch.png?v=5', '../assets/final/ch4/outline/ch4-ball-bounces-6s-coch.png?v=5'],
+      cdur: [6.014, 6.014], D: 6.02,
+      lab: ['Rolls around the back wall: rolling noise', 'Bounces from wall to wall: impacts'],
+    },
+  };
+  // cube: normalized image height of the cube, one value per frame (29.97 fps) until it stops
+  const CUBE_FPS = 29.97;
+  const CUBE_Y = [0.1135,0.1154,0.1172,0.1187,0.1239,0.1277,0.1318,0.1383,0.1442,0.15,0.1574,0.1634,0.171,0.1808,0.1896,0.1979,0.2081,0.2196,0.2295,0.2399,0.2509,0.2618,0.272,0.282,0.2928,0.3009,0.3122,0.3198,0.3289,0.3373,0.3448,0.3525];
+  // ball: impact onsets (s) in the bounce soundtrack = wall hits, alternating walls
+  const BALL_HITS = [0.18,0.935,1.44,2.23,2.735,3.295,3.815,4.36,4.81,5.225,5.68];
+
+  // beat → example and how many hypotheses are shown
+  // Two slides, one file: ch4-ambiguity.html is the cube, ch4-ambiguity-ball.html (a symlink
+  // to this file) is the ball. The page comes from the file name because publish.py drops
+  // query strings; frozen copies keep the name (ch4-ambiguity-ball.final-ch4.html).
+  const PAGE = /ambiguity-ball/.test(location.pathname) ? 'ball' : 'cube';
+  const ALL = [ {ex:'cube',h:-1}, {ex:'cube',h:0}, {ex:'cube',h:1}, {ex:'cube',h:2}, {ex:'ball',h:-1}, {ex:'ball',h:0}, {ex:'ball',h:1}, {ex:'ball',h:2} ];
+  const BEATS = ALL.filter(b => b.ex === PAGE);
+  const N = BEATS.length;
+  const SCRIPT_ALL = [
+    `Vision can leave an object’s path through space underdetermined, because depth cues often fail to specify it (Bradshaw & Rogers 1996). Sound can distinguish the alternatives.`,
+    `This video shows a cube moving down the image. From the image alone, its path in three dimensions is ambiguous: each frame fixes only the line of sight to the cube, shown here from the side.`,
+    `If the cube slides along the slanted floor toward the observer, it produces friction noise for as long as it moves. This is that sound's cochleagram, drawn in time with the video.`,
+    `The same frames are also consistent with the cube dropping through the air and landing. Then the scene would make no sound until a single impact at the landing. The video is identical under both hypotheses; only the sound distinguishes them.`,
+    `A second example uses a ball in a glass bowl.`,
+    `The same holds for this ball, seen here from above in the schematic. The image fixes only the direction to the ball.`,
+    `If the ball rolls around the back wall of the bowl, it produces continuous rolling noise.`,
+    `If it instead travels straight across and bounces from wall to wall, it produces discrete impacts, one at each wall. Again the video is the same, and the sound tells the events apart. Physically based sound synthesis lets us vary the scene, the sound, and the physics independently (Agarwal et al. 2021; Traer et al. 2019).`,
+  ];
+  const SCRIPT = SCRIPT_ALL.slice(PAGE === 'cube' ? 0 : 4, PAGE === 'cube' ? 4 : 8);
+
+  const $ = id => document.getElementById(id);
+  const vid = $('vid'), svg = $('schem'), au = [$('au1'), $('au2')];
+  const el = (tag, attrs, parent=svg, text) => { const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]); if(text != null) e.textContent = text; parent.appendChild(e); return e; };
+  const lerp = (a, b, s) => a + (b - a) * s, clamp01 = x => Math.max(0, Math.min(1, x));
+  const H1 = getComputedStyle(document.documentElement).getPropertyValue('--h1').trim();
+  const H2 = getComputedStyle(document.documentElement).getPropertyValue('--h2').trim();
+
+  /* ---------- schematics ---------- */
+  let G = {};           // live elements of the current schematic
+  function drawCube(){
+    svg.innerHTML = '';
+    const E = [40, 80], IX = 92;                          // eye, image plane x
+    const floor = x => 292 - (x - 190) * 0.22;            // slanted floor, rises away from the observer
+    const F1x = 560, F5x = 330;                           // slide path: far end → near end
+    const s1 = (floor(F1x) - E[1]) / (F1x - E[0]), s5 = (floor(F5x) - E[1]) / (F5x - E[0]);
+    el('path', {d:`M190 ${floor(190)} L590 ${floor(590)} L590 330 L190 330 Z`, fill:'#eef0f8'});
+    el('line', {x1:190, y1:floor(190), x2:590, y2:floor(590), stroke:'#0f172a', 'stroke-width':2.5});
+    el('text', {x:240, y:318}, svg, 'slanted floor');
+    el('line', {x1:IX, y1:58, x2:IX, y2:132, stroke:'#0f172a', 'stroke-width':2});
+    el('text', {x:IX - 18, y:154}, svg, 'image');
+    el('circle', {cx:E[0], cy:E[1], r:7, fill:'none', stroke:'#0f172a', 'stroke-width':2});
+    el('circle', {cx:E[0] + 2, cy:E[1], r:2.6, fill:'#0f172a'});
+    el('text', {x:16, y:60}, svg, 'observer');
+    G.ray = el('line', {class:'ray'});
+    G.dot = el('circle', {r:3.5, fill:'#0f172a'});
+    const h1 = el('g', {class:'hyp', id:'hy1'}), h2 = el('g', {class:'hyp', id:'hy2'});
+    el('path', {d:`M${F1x} ${floor(F1x) - 16} L${F5x + 18} ${floor(F5x + 18) - 16}`, stroke:H1, 'stroke-width':3, fill:'none', 'marker-end':'url(#a1)'}, h1);
+    el('text', {x:430, y:floor(430) - 44}, h1, 'slides down the floor');
+    const topY = E[1] + s1 * (F5x - E[0]);
+    el('path', {d:`M${F5x - 22} ${topY} L${F5x - 22} ${floor(F5x) - 18}`, stroke:H2, 'stroke-width':3, fill:'none', 'marker-end':'url(#a2)'}, h2);
+    el('text', {x:F5x - 150, y:topY + 30}, h2, 'falls through the air');
+    const defs = el('defs', {});
+    [['a1', H1], ['a2', H2]].forEach(([id, c]) => { const m = el('marker', {id, viewBox:'0 0 10 10', refX:8, refY:5, markerWidth:6, markerHeight:6, orient:'auto'}, defs);
+      el('path', {d:'M0 0 L10 5 L0 10 Z', fill:c}, m); });
+    G.m1 = el('rect', {width:16, height:16, fill:H1}, h1);
+    G.m2 = el('rect', {width:16, height:16, fill:H2}, h2);
+    G.h = [h1, h2];
+    G.update = t => {
+      const i = Math.min(CUBE_Y.length - 1, t * CUBE_FPS), k = Math.floor(i), f = i - k;
+      const y = lerp(CUBE_Y[k], CUBE_Y[Math.min(k + 1, CUBE_Y.length - 1)], f);
+      const s = clamp01((y - CUBE_Y[0]) / (CUBE_Y[CUBE_Y.length - 1] - CUBE_Y[0]));
+      const sl = lerp(s1, s5, s);
+      // slide: ray ∩ floor ; fall: ray ∩ vertical through the landing point
+      const xs = (292 + 190 * 0.22 - E[1] + sl * E[0]) / (sl + 0.22), ys = floor(xs);
+      const xf = F5x, yf = Math.min(E[1] + sl * (xf - E[0]), floor(xf));
+      G.ray.setAttribute('x1', E[0]); G.ray.setAttribute('y1', E[1]);
+      G.ray.setAttribute('x2', xs + 30); G.ray.setAttribute('y2', E[1] + sl * (xs + 30 - E[0]));
+      G.dot.setAttribute('cx', IX); G.dot.setAttribute('cy', E[1] + sl * (IX - E[0]));
+      G.m1.setAttribute('x', xs - 8); G.m1.setAttribute('y', ys - 16);
+      G.m2.setAttribute('x', xf - 8); G.m2.setAttribute('y', yf - 16);
+    };
+  }
+  function drawBall(){
+    svg.innerHTML = '';
+    const C = [300, 120], R = 100, O = [300, 318], IY = 268;
+    el('circle', {cx:C[0], cy:C[1], r:R, fill:'#eef2f6', stroke:'#94a3b8', 'stroke-width':2});
+    el('text', {x:C[0] + R + 10, y:C[1] + 70}, svg, 'glass bowl (top view)');
+    el('line', {x1:240, y1:IY, x2:360, y2:IY, stroke:'#0f172a', 'stroke-width':2});
+    el('text', {x:368, y:IY + 5}, svg, 'image');
+    el('circle', {cx:O[0], cy:O[1], r:7, fill:'none', stroke:'#0f172a', 'stroke-width':2});
+    el('circle', {cx:O[0], cy:O[1] - 2, r:2.6, fill:'#0f172a'});
+    el('text', {x:O[0] + 14, y:O[1] + 5}, svg, 'observer');
+    G.ray = el('line', {class:'ray'});
+    G.dot = el('circle', {r:3.5, fill:'#0f172a'});
+    const h1 = el('g', {class:'hyp', id:'hy1'}), h2 = el('g', {class:'hyp', id:'hy2'});
+    const a0 = Math.PI * 1.04, a1 = Math.PI * 1.96;   // back arc, left wall → right wall
+    el('path', {d:`M${C[0] + R * Math.cos(a0)} ${C[1] + R * Math.sin(a0)} A${R} ${R} 0 0 1 ${C[0] + R * Math.cos(a1)} ${C[1] + R * Math.sin(a1)}`,
+      stroke:H1, 'stroke-width':3, fill:'none'}, h1);
+    el('text', {x:C[0] - 255, y:C[1] - 70}, h1, 'rolls around the back wall');
+    el('line', {x1:C[0] - R, y1:C[1], x2:C[0] + R, y2:C[1], stroke:H2, 'stroke-width':3}, h2);
+    el('text', {x:C[0] - 235, y:C[1] + 5}, h2, 'bounces wall to wall');
+    G.flash = [el('circle', {cx:C[0] - R, cy:C[1], r:12, fill:'none', stroke:H2, 'stroke-width':3, opacity:0}, h2),
+               el('circle', {cx:C[0] + R, cy:C[1], r:12, fill:'none', stroke:H2, 'stroke-width':3, opacity:0}, h2)];
+    G.m1 = el('circle', {r:9, fill:H1}, h1);
+    G.m2 = el('circle', {r:9, fill:H2}, h2);
+    G.h = [h1, h2];
+    G.update = t => {
+      // bounce: wall to wall between impacts (first impact on the left wall)
+      let x = -1, wall = -1;
+      if(t >= BALL_HITS[0]){
+        let k = 0; while(k + 1 < BALL_HITS.length && t >= BALL_HITS[k + 1]) k++;
+        const from = k % 2 ? 1 : -1;
+        if(k + 1 < BALL_HITS.length){ const f = (t - BALL_HITS[k]) / (BALL_HITS[k + 1] - BALL_HITS[k]); x = lerp(from, -from, f); }
+        else x = from;
+        wall = (t - BALL_HITS[k] < 0.14) ? (from < 0 ? 0 : 1) : -1;
+      }
+      const bx = C[0] + x * R * 0.999, by = C[1];
+      // same line of sight, intersected with the back wall
+      const dx = bx - O[0], dy = by - O[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      const ox = O[0] - C[0], oy = O[1] - C[1], b = ox * ux + oy * uy, c = ox * ox + oy * oy - R * R;
+      const tf = -b + Math.sqrt(Math.max(0, b * b - c));
+      const rx = O[0] + ux * tf, ry = O[1] + uy * tf;
+      G.ray.setAttribute('x1', O[0]); G.ray.setAttribute('y1', O[1]); G.ray.setAttribute('x2', rx); G.ray.setAttribute('y2', ry);
+      const ti = (IY - O[1]) / uy; G.dot.setAttribute('cx', O[0] + ux * ti); G.dot.setAttribute('cy', IY);
+      G.m1.setAttribute('cx', rx); G.m1.setAttribute('cy', ry);
+      G.m2.setAttribute('cx', bx); G.m2.setAttribute('cy', by);
+      G.flash.forEach((f, j) => f.setAttribute('opacity', j === wall ? 1 : 0));
+    };
+  }
+
+  /* ---------- playback ---------- */
+  let beat = 0, curEx = null, sound = false, holdTimer = null;
+  function setEx(name){
+    if(curEx === name) return;
+    curEx = name; const X = EX[name];
+    $('q').textContent = X.q;
+    vid.src = X.video;
+    au.forEach((a, j) => a.src = X.au[j]);
+    [1, 2].forEach(j => {
+      $('st' + j).querySelector('img').src = X.coch[j - 1];
+      $('st' + j).querySelector('img').style.width = (X.cdur[j - 1] / X.D * 100) + '%';
+      $('lab' + j).lastElementChild.textContent = X.lab[j - 1];
+    });
+    $('axend').textContent = X.D.toFixed(1) + ' s';
+    (name === 'cube' ? drawCube : drawBall)();
+  }
+  function activeAudio(){ const h = BEATS[beat].h; return h > 0 ? au[h - 1] : null; }
+  function stopAudio(){ au.forEach(a => a.pause()); }
+  function restart(){
+    clearTimeout(holdTimer); stillT = null;
+    try{ vid.currentTime = 0; }catch(e){}
+    stopAudio();
+    vid.play().catch(() => {});
+    const a = activeAudio(); if(sound && a){ try{ a.currentTime = 0; }catch(e){} a.play().catch(() => {}); }
+  }
+  vid.addEventListener('ended', () => { stopAudio(); holdTimer = setTimeout(restart, 1200); });
+
+  function draw(t){
+    const X = curEx && EX[curEx];
+    if(X && G.update){
+      G.update(t);
+      [1, 2].forEach(j => {
+        const p = Math.min(1, t / X.D) * 100;
+        const s = $('st' + j);
+        s.querySelector('.cover').style.left = p + '%';
+        s.querySelector('.ph').style.left = `calc(${p}% - 1px)`;
+      });
+    }
+  }
+  let stillT = null;   // set by _seek (checking stills); cleared on every beat
+  function frame(){ draw(stillT != null ? stillT : (vid.currentTime || 0)); requestAnimationFrame(frame); }
+
+  const notesEl = $('notes'), dotsEl = $('dots');
+  for(let b = 0; b < N; b++){ const d = document.createElement('div'); d.className = 'dot'; dotsEl.appendChild(d); }
+  function render(){
+    const B = BEATS[beat];
+    setEx(B.ex);
+    document.body.classList.toggle('pre', B.h < 0);
+    [1, 2].forEach(j => {
+      const on = B.h >= j, cls = !on ? '' : (B.h > j ? 'dim' : 'on');
+      [$('lab' + j), $('st' + j), G.h[j - 1]].forEach(e => { e.classList.remove('on', 'dim'); if(cls) e.classList.add(cls); });
+      // the established hypothesis stays, dimmed; the new one is full strength
+    });
+    $('axis').classList.toggle('on', B.h > 0);
+    [...dotsEl.children].forEach((d, k) => d.classList.toggle('on2', k <= beat));
+    notesEl.innerHTML = SCRIPT[beat];
+    if(B.h < 0){ clearTimeout(holdTimer); vid.pause(); stopAudio(); try{ vid.currentTime = 0; }catch(e){} }
+    else restart();
+  }
+  function advance(){ if(beat < N - 1){ beat++; render(); } }
+  function goBack(){ if(beat > 0){ beat--; render(); } }
+  function jump(b){ beat = Math.max(0, Math.min(N - 1, b)); render(); }
+
+  document.body.addEventListener('click', e => { if(!e.target.closest('#notes')) advance(); });
+  addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); advance(); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); goBack(); }
+    else if(e.key === 'n' || e.key === 'N'){ notesEl.classList.toggle('on'); }
+    else if(e.key === 's' || e.key === 'S'){
+      sound = !sound; document.body.classList.toggle('sound', sound); stopAudio();
+      const a = activeAudio(); if(sound && a){ try{ a.currentTime = vid.currentTime; }catch(e){} a.play().catch(() => {}); }
+    }
+    else if(e.key === 'r' || e.key === 'R'){ restart(); }
+  });
+  // leaving the slide (iframe hidden) pauses everything
+  document.addEventListener('visibilitychange', () => { if(document.hidden){ vid.pause(); stopAudio(); clearTimeout(holdTimer); } });
+  new IntersectionObserver(es => es.forEach(en => { if(!en.isIntersecting){ vid.pause(); stopAudio(); clearTimeout(holdTimer); } })).observe(document.body);
+
+  window[SLIDE_NAME] = {
+    advance, back: goBack,
+    atStart: () => beat === 0, atEnd: () => beat === N - 1,
+    reset: () => jump(0), resetToEnd: () => jump(N - 1),
+    getBeat: () => beat, count: () => N, setBeat: jump,
+    _seek: t => { stillT = t; vid.pause(); clearTimeout(holdTimer); try{ vid.currentTime = t; }catch(e){} draw(t); },   // for checking stills
+  };
+  jump(0);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,92 +1,102 @@
 {
  "intro": {
-  "version": 6,
-  "pushed_at": "2026-10-08T09:56:48",
+  "version": 10,
+  "pushed_at": "2026-10-09T13:58:52",
   "slides": 20
  },
  "ch1-adv-vulnerability": {
-  "version": 6,
-  "pushed_at": "2026-10-08T09:56:48",
+  "version": 7,
+  "pushed_at": "2026-10-08T10:43:48",
   "slides": 1
  },
  "ch1-adv-training": {
-  "version": 5,
-  "pushed_at": "2026-10-08T09:01:21",
+  "version": 8,
+  "pushed_at": "2026-10-09T13:48:30",
   "slides": 1
  },
  "ch1-current-methods": {
-  "version": 6,
-  "pushed_at": "2026-10-08T10:33:01",
+  "version": 11,
+  "pushed_at": "2026-10-09T00:21:51",
   "slides": 1
  },
  "ch1-mms-logic": {
-  "version": 4,
-  "pushed_at": "2026-10-08T09:04:34",
+  "version": 7,
+  "pushed_at": "2026-10-09T00:20:52",
   "slides": 3
  },
  "ch1-models": {
-  "version": 2,
-  "pushed_at": "2026-10-07T04:27:55",
+  "version": 3,
+  "pushed_at": "2026-10-09T00:21:00",
   "slides": 1
  },
  "ch1-synthesis": {
-  "version": 3,
-  "pushed_at": "2026-10-07T07:46:38",
+  "version": 5,
+  "pushed_at": "2026-10-09T13:58:52",
   "slides": 1
  },
  "ch1-sounds": {
-  "version": 2,
-  "pushed_at": "2026-10-08T09:04:34",
+  "version": 3,
+  "pushed_at": "2026-10-09T00:20:55",
   "slides": 1
  },
  "ch1-experiment": {
-  "version": 2,
-  "pushed_at": "2026-10-07T08:24:37",
+  "version": 4,
+  "pushed_at": "2026-10-09T13:58:52",
   "slides": 1
  },
  "ch1-scanning": {
-  "version": 7,
-  "pushed_at": "2026-10-08T09:04:34",
+  "version": 9,
+  "pushed_at": "2026-10-09T13:58:53",
   "slides": 4
  },
  "ch1-nse": {
-  "version": 2,
-  "pushed_at": "2026-10-07T08:14:21",
+  "version": 3,
+  "pushed_at": "2026-10-09T00:22:16",
   "slides": 1
  },
  "ch1-regions": {
-  "version": 3,
-  "pushed_at": "2026-10-08T09:04:35",
+  "version": 5,
+  "pushed_at": "2026-10-09T00:21:39",
   "slides": 2
  },
  "ch1-example-voxels": {
-  "version": 4,
-  "pushed_at": "2026-10-08T09:04:35",
+  "version": 5,
+  "pushed_at": "2026-10-09T00:21:20",
   "slides": 1
  },
  "ch1-results": {
-  "version": 4,
-  "pushed_at": "2026-10-08T09:04:35",
+  "version": 6,
+  "pushed_at": "2026-10-09T01:06:43",
   "slides": 4
  },
  "ch1-regression": {
-  "version": 4,
-  "pushed_at": "2026-10-08T09:04:35",
+  "version": 5,
+  "pushed_at": "2026-10-09T00:23:09",
   "slides": 2
  },
  "ch1-negative-space": {
-  "version": 1,
-  "pushed_at": "2026-10-08T09:04:35",
+  "version": 3,
+  "pushed_at": "2026-10-09T01:06:43",
   "slides": 1
  },
  "ch1-summary": {
-  "version": 1,
-  "pushed_at": "2026-10-08T09:04:35",
+  "version": 3,
+  "pushed_at": "2026-10-09T01:06:43",
   "slides": 1
  },
  "ch1-discussion": {
-  "version": 2,
-  "pushed_at": "2026-10-08T09:20:30",
+  "version": 4,
+  "pushed_at": "2026-10-09T00:20:59",
   "slides": 2
+ },
+ "ch2": {
+  "version": 4,
+  "pushed_at": "2026-10-09T13:58:53",
+  "slides": 6
+ },
+ "ch4": {
+  "version": 5,
+  "pushed_at": "2026-10-09T13:58:53",
+  "slides": 9
  }
 }

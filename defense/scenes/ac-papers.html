@@ -26,6 +26,7 @@
   #brain{ position:absolute; transition:opacity .6s ease; }
   #brain img{ width:100%; height:100%; display:block; }
   body.popped #brain{ opacity:.12; }
+  body.titleonly #brain, body.titleonly #links, body.titleonly #groups{ opacity:0; }
   #links{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:2; }
   #links line{ stroke-width:2; opacity:0; transition:opacity .4s ease; }
   #links line.on{ opacity:.85; transition-delay:.55s; }
@@ -134,10 +135,10 @@ const A = {                             // anchors over the brain image, [x, y] 
 // flag slots: side + vertical center (fraction of height)
 const GROUPS = [   // studies cited in the Chapter 1 paper, plus four added by Fer (2026-10-07):
                    // Humphries 2010, Santoro 2014, Overath 2015, Kell & McDermott 2019
-  { tag:'Cortical areas', col:'--muted', slot:['R', .23], start:true, anchors:['primary','visLat'],   // on from the start, never zooms
+  { tag:'Cortical areas', col:'--muted', slot:['R', .27], start:true, anchors:['primary','visLat'],   // on from the start, never zooms
     take:'A map of cortical areas: <b>auditory</b>, <b>visual</b>, sensorimotor',
     figs:[{id:'glasser2016', cite:'Glasser et al., 2016'}] },
-  { tag:'Primary cortex', col:'--ochre', slot:['R', .43], anchors:['primary','hgPost'],
+  { tag:'Primary cortex', col:'--ochre', slot:['R', .50], anchors:['primary','hgPost'],
     take:'Primary cortex: <b>frequency maps</b> and <b>general-purpose</b> spectrotemporal tuning',
     figs:[{id:'humphries2010', cite:'Humphries et al., 2010'}, {id:'santoro2014', cite:'Santoro et al., 2014'}] },
   { tag:'Pitch', col:'--ochre', slot:['L', .30], anchors:['pitch'],
@@ -150,19 +151,18 @@ const GROUPS = [   // studies cited in the Chapter 1 paper, plus four added by F
   { tag:'Speech structure', col:'--slate', slot:['L', .81], anchors:['sts'],
     take:'STS tracks <b>speech-specific structure</b> up to ~500 ms',
     figs:[{id:'overath2015', cite:'Overath et al., 2015'}] },
-  { tag:'Primary vs non-primary', col:'--pine', slot:['R', .63], anchors:['primary','nonprim'],
+  { tag:'Primary vs non-primary', col:'--pine', slot:['R', .73], anchors:['primary','nonprim'],
     take:'Non-primary cortex: <b>robust to background noise</b>, best predicted by <b>later network stages</b>',
     figs:[{id:'kell2019', cite:'Kell &amp; McDermott, 2019'}, {id:'kell2018', cite:'Kell et al., 2018'}] },
-  { tag:'Model-matched sounds', col:'--pine', slot:['R', .83], zoom:true, anchors:['primary','nonprim'],
-    take:'Sounds matched to a spectrotemporal model drive primary cortex like natural sounds, but drive <b>non-primary cortex much less</b>',
-    figs:[{id:'normanhaignere2018', cite:'Norman-Haignere &amp; McDermott, 2018'}] },
 ];
-// Less zooming (Fer, 2026-10-07): only groups with zoom:true pop up big and then shrink;
+// Less zooming (Fer, 2026-10-07): only groups with zoom:true pop up big and then shrink.
+// Norman-Haignere & McDermott 2018 removed from the intro (Fer, 2026-10-08): it is introduced in ch1-mms-logic.
+//
 // the others appear directly at their pinned size; start:true groups are there from beat 0.
 const SEQ = GROUPS.filter(g => !g.start);
 const N = SEQ.length;
 const plain = s => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
-const BEATS = ['The cortex, seen from the side',
+const BEATS = ['Title alone', 'The cortex, seen from the side',
   ...SEQ.map(g => `${plain(g.tag)}: ${g.cite ? plain(g.cite) : g.figs.map(f => plain(f.cite)).join('; ')}`),
   'Where the senses are processed'];
 // Last beat: the map grays out and one statement appears (Josh via Fer, 2026-10-08: the cited
@@ -242,15 +242,18 @@ function place(g, mode){            // mode: 'hidden' | 'big' | 'flag'
 
 let beat = 0;
 function render(){
-  const cur = beat >= 1 && beat <= N ? beat - 1 : -1;      // newest paper (index into SEQ), if any
-  GROUPS.filter(g => g.start).forEach(g => place(g, 'flag'));
-  SEQ.forEach((g, i) => place(g, i === cur ? (g.zoom ? 'big' : 'flag') : ((cur >= 0 ? i < cur : i < beat) ? 'flag' : 'hidden')));
+  // Deck-wide round 6 (Fer, 2026-10-08): beat 0 is the title alone; the map comes in on click 1.
+  const b = beat - 1;                                      // content beat (old numbering)
+  document.body.classList.toggle('titleonly', beat === 0);
+  const cur = b >= 1 && b <= N ? b - 1 : -1;               // newest paper (index into SEQ), if any
+  GROUPS.filter(g => g.start).forEach(g => place(g, b >= 0 ? 'flag' : 'hidden'));
+  SEQ.forEach((g, i) => place(g, i === cur ? (g.zoom ? 'big' : 'flag') : ((cur >= 0 ? i < cur : i < b) ? 'flag' : 'hidden')));
   document.body.classList.toggle('popped', cur >= 0 && !!SEQ[cur].zoom);
   document.body.classList.toggle('asked', beat === MAX);
   const on = new Set(), active = new Set();
-  GROUPS.filter(g => g.start).forEach(g => g.anchors.forEach(a => on.add(a)));
+  if(b >= 0) GROUPS.filter(g => g.start).forEach(g => g.anchors.forEach(a => on.add(a)));
   SEQ.forEach((g, i) => {
-    if(i < beat) g.anchors.forEach(a => on.add(a));
+    if(i < b) g.anchors.forEach(a => on.add(a));
     if(i === cur) g.anchors.forEach(a => active.add(a));
   });
   Object.keys(DOT).forEach(a => {

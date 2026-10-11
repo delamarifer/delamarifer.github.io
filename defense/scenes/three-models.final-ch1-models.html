@@ -25,16 +25,16 @@
   #popSvg{ pointer-events:none; }
 
   text{ font-family:var(--sans); fill:var(--ink); }
-  .title{ font-family:var(--serif); font-weight:900; font-size:58px; letter-spacing:-.5px; }
-  .title tspan.em{ fill:var(--blue); }
+  /* deck-wide (Fer, 10-07): Calibri Light titles at the deck's h1.t size, all words black */
+  .title{ font-weight:300; font-size:54px; fill:var(--ink); }
   .name{ font-size:28px; font-weight:600; }
-  .name tspan.sub2{ font-size:22px; font-weight:400; fill:var(--muted); }
-  .sub{ font-size:21px; fill:var(--muted); }
-  .lab{ font-size:20px; fill:var(--body); text-anchor:middle; }
-  .task{ font-size:20px; fill:var(--body); }
+  .name tspan.sub2{ font-size:22px; font-weight:400; fill:var(--ink); }
+  .sub{ font-size:21px; fill:var(--ink); }
+  .lab{ font-size:20px; fill:var(--ink); text-anchor:middle; }
+  .task{ font-size:20px; fill:var(--ink); }
   .call{ font-size:30px; fill:var(--ink); }
   .call .hl{ font-weight:700; }
-  .call.plum, .call.plum tspan{ fill:var(--purple); }
+  .call.plum, .call.plum tspan{ fill:var(--ink); }   /* the +δ symbol carries the colour, not the words */
   .call.small{ font-size:22px; }
 
   .wire{ fill:none; stroke:#334155; stroke-width:2.4; }
@@ -46,10 +46,10 @@
   .cell{ pointer-events:none; }
   .route{ fill:none; stroke:#cbd5e1; stroke-width:1.6; }
   .ftile-on{ stroke:#e6801e; stroke-width:2.2; fill:none; }
-  .chl{ font-size:17px; fill:var(--muted); text-anchor:middle; }
+  .chl{ font-size:17px; fill:var(--ink); text-anchor:middle; }
   .coch{ stroke:#0f172a; stroke-width:2; fill:none; }
   .bracket{ fill:none; stroke:var(--blue); stroke-width:3; stroke-linecap:round; }
-  .brlab{ font-size:22px; fill:var(--blue); font-weight:600; text-anchor:end; }
+  .brlab{ font-size:22px; fill:var(--ink); font-weight:600; text-anchor:end; }
 
   /* builds: everything with data-step fades in at its beat; --d staggers the
      pieces of one beat so a row comes out piece by piece, left to right */
@@ -80,8 +80,8 @@
   .blk{ fill:#fff; stroke:#475569; stroke-width:1.8; }
   .blk.conv{ fill:#eef2f7; }
   .blkt{ font-size:24px; text-anchor:middle; fill:var(--ink); }
-  .popt{ font-size:20px; font-weight:700; letter-spacing:2.5px; fill:var(--muted); }
-  .popc{ font-size:21px; fill:var(--body); text-anchor:middle; }
+  .popt{ font-size:20px; font-weight:700; letter-spacing:2.5px; fill:var(--ink); }
+  .popc{ font-size:21px; fill:var(--ink); text-anchor:middle; }
 
   #legend rect{ stroke:#475569; stroke-width:1.2; }
 
@@ -168,15 +168,15 @@ const BEATS = [
 const N = BEATS.length;
 
 const SCRIPT = [
-  `<b>The three models tested.</b>`,
-  `<b>Sound in.</b> Every model starts from the same thing: a 3 s sound, turned into a cochleagram — the sound as the ear's frequency channels see it over time.`,
-  `<b>All start from a cochleagram.</b>`,
-  `<b>Spectrotemporal model.</b> A bank of filters tuned to different rates of change in time and frequency; each responds to the sound by how well it matches. The filtered signal is squared — its power — and averaged over time.`,
-  `<b>Two deep networks.</b> CochResNet50: a stem, then four stages of blocks — 3, 4, 6 and 3 — trained to recognise words, environmental sounds and speakers. One standard-trained, one robust.`,
-  `<b>Under the hood.</b> Each block is a bottleneck — 1×1, 3×3 and 1×1 convolutions with batch norm and ReLU, plus an identity shortcut (the arch on top of every block).`,
-  `<b>Same network, same job.</b> The two share architecture, tasks and training data — only how they were trained differs.`,
-  `<b>Robust training.</b> During training, the robust network also saw adversarial perturbations: small changes to its input, constructed specifically against this model to change its answer, made again and again as it trained.`,
-  `<b>Matched stages.</b> The coloured stages are the ones we matched: the spectrotemporal model's power (x²) stage, and the last block of layers 2, 3 and 4 in each network.`,
+  `We compared three models of the auditory system.`,
+  `Each model takes as input a 3 s sound, represented as a cochleagram: a time-frequency representation that approximates the frequency decomposition of the cochlea.`,
+  `All three models start from this same cochleagram.`,
+  `The first is a spectrotemporal filter model. The cochleagram is passed through a bank of 111 filters, each tuned to a rate of temporal modulation and a scale of spectral modulation. The output of each filter is squared and averaged over time.`,
+  `The other two are deep neural networks with the same architecture, CochResNet50, a convolutional network with four layers of residual blocks. Both were trained jointly to recognize words, speakers and environmental sounds. One network was trained in the standard way, and the other was adversarially trained.`,
+  `Each residual block is a short sequence of convolutions with a shortcut connection.`,
+  `The two networks share the same architecture, tasks and training data. They differ only in how they were trained.`,
+  `The robust network was adversarially trained, as I described earlier: during training it was also shown cochleagrams with small perturbations optimized to change its classification.`,
+  `For each model we synthesized sounds matched at the stages shown in color: the output of the spectrotemporal model, and layers 2, 3 and 4 of each network, which I will call L2, L3 and L4.`,
 ];
 
 // ── SVG helpers ──────────────────────────────────────────────────────────────
@@ -242,7 +242,7 @@ function block(p, x, yc, fw, h, dx, dy, opt={}){
 }
 
 // ── title ────────────────────────────────────────────────────────────────────
-el('text', {x:60, y:66, class:'title'}).innerHTML = 'The <tspan class="em">three models</tspan> tested';
+el('text', {x:60, y:66, class:'title'}, svg, 'The three models tested');
 
 // ── input: sound → cochleagram ───────────────────────────────────────────────
 {
@@ -280,7 +280,7 @@ const nameAt = (p, y, name, sub, step) => {
 // ── spectrotemporal model ────────────────────────────────────────────────────
 // Geometry from Fer's model_spectemp.svg (centre line y = 261.2), stages as in her
 // detailed architecture figure: cochleagram input → spectro-temporal filter bank
-// (110 filters; 12 shown, the real ones, sliced from the image embedded in that SVG
+// (111 filters; 12 shown, the real ones, sliced from the image embedded in that SVG
 // into assets/outline/filters/) → filtered signal → power (x², the matched stage) →
 // temporal average. Only the filters carry activity: each lights by how strongly it
 // responds, a few strongly, most barely.
@@ -316,7 +316,7 @@ const nameAt = (p, y, name, sub, step) => {
       }));
       UNITS.push({cells:tiles, cx:SX(S.x0) + fw/2, row:k, filters:true});
       const t = build(el('text', {x:SX(S.x0) + fw/2, y:SY(S.b) + 30, class:'lab'}, g), step, S.d + .1);
-      t.innerHTML = `<tspan x="${SX(S.x0) + fw/2}">Filter bank</tspan><tspan x="${SX(S.x0) + fw/2}" dy="20" class="chl">110 filters</tspan>`;
+      t.innerHTML = `<tspan x="${SX(S.x0) + fw/2}">Filter bank</tspan><tspan x="${SX(S.x0) + fw/2}" dy="20" class="chl">111 filters</tspan>`;
     }
     if(S.lab){ const lx = SX(S.x0) + fw/2 + S.dx*KS/2;
       const t = build(el('text', {x:lx, y:SY(S.labY || S.b) + 30, class:'lab'}, g), step, S.d + .1);
@@ -388,8 +388,8 @@ el('circle', {cx:PERT_X, cy:PERT_Y, r:30, fill:UNIT_ADV}, pertBob);
 el('text', {x:PERT_X, y:PERT_Y + 10, 'text-anchor':'middle', style:'font-size:29px; font-weight:700; fill:#fff'}, pertBob, '+δ');
 {
   const t = build(el('text', {x:PERT_X + 50, y:PERT_Y - 4, class:'call plum'}), 6, .25);
-  t.innerHTML = `<tspan class="hl">+ adversarial perturbations</tspan>`
-              + `<tspan x="${PERT_X + 50}" dy="30" style="font-size:21px">added to the cochleagram, crafted against this model</tspan>`;
+  t.innerHTML = `<tspan class="hl">Adversarial perturbations</tspan>`
+              + `<tspan x="${PERT_X + 50}" dy="30" style="font-size:21px">added to the cochleagram during training, optimized against this model</tspan>`;
 }
 const pastPert = xy => xy[0] >= PERT_X - .5 && xy[1] >= PERT_Y;
 // Each cycle: this arrow draws from +δ to the cochleagram, the perturbation lands on
@@ -454,7 +454,7 @@ const pop = el('g', {id:'pop'}, popSvg);
   });
   el('path', {d:`M${startX},${y} L${startX},${y-70} L${plusX},${y-70} L${plusX},${y-20}`, fill:'none', stroke:'#475569',
               'stroke-width':2, 'stroke-dasharray':'7 6', 'marker-end':'url(#ah)'}, pop);
-  el('text', {x:(startX+plusX)/2, y:y-80, class:'popc', style:'font-style:italic'}, pop, 'identity — the arch on every block');
+  el('text', {x:(startX+plusX)/2, y:y-80, class:'popc', style:'font-style:italic'}, pop, 'identity shortcut (the arch on every block)');
   el('text', {x:P.x+P.w/2, y:P.y+P.h-34, class:'popc'}, pop, '3, 4, 6 and 3 blocks per stage · stem = 7×7 conv + max pool');
 }
 
@@ -492,7 +492,7 @@ function advance(){ if(beat < N-1){ beat++; render(false); } }
 function back(){ if(beat > 0){ beat--; render(true); } }
 function jump(i){ beat = Math.max(0, Math.min(N-1, i)); render(true, true); }
 window[SLIDE_NAME] = { advance, back, atStart:() => beat === 0, atEnd:() => beat === N-1,
-                       reset:() => jump(0), resetToEnd:() => jump(N-1) };
+                       reset:() => jump(0), resetToEnd:() => jump(N-1), getBeat:() => beat };
 addEventListener('click', advance);
 addEventListener('keydown', e => {
   if(['ArrowRight',' ','Enter'].includes(e.key)){ e.preventDefault(); advance(); }
