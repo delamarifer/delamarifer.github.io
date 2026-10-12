@@ -1,0 +1,191 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Defense talk recordings · version 2</title>
+<style>
+:root{--bg:#fafaf8;--card:#fff;--ink:#1d1d1f;--mute:#6b6b70;--line:#e4e4e0;--acc:#1f5fbf;--ok:#1d7a46;--okbg:#e6f4ec}
+@media (prefers-color-scheme:dark){:root{--bg:#141416;--card:#1d1d20;--ink:#ececee;--mute:#9a9aa2;--line:#2e2e33;--acc:#7fb0ff;--ok:#6fd39a;--okbg:#1c3327}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:900px;margin:0 auto;padding:32px 16px 64px}h1{font-size:26px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 20px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}nav a{font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--ink);text-decoration:none;background:var(--card)}
+nav a.dim{color:var(--mute)}section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+section.todo{background:transparent;border-style:dashed}header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h2{font-size:18px;margin:0}.chip{font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.chip.ok{color:var(--ok);background:var(--okbg);border-color:transparent}video{width:100%;margin-top:14px;border-radius:8px;background:#000;aspect-ratio:16/9}
+.meta{color:var(--mute);font-size:13px;margin:8px 0 0}.stamps{list-style:none;padding:0;margin:12px 0 0;border-top:1px solid var(--line)}
+.ts{font-variant-numeric:tabular-nums;color:var(--acc);min-width:44px;flex:none}
+.full{margin-top:32px}.full h2{margin-bottom:8px}.full ol{list-style:none;padding:0;margin:0}.full li{display:flex;gap:12px;padding:3px 0;font-size:14px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--mute);font-size:13px}a.ts{text-decoration:none}pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;font-size:13px}
+
+:root{--hl:#fff6d6;--edit:#b26b00;--menu:#fff;--shadow:0 8px 28px rgba(0,0,0,.18)}
+@media (prefers-color-scheme:dark){:root{--hl:#3a3320;--edit:#f0b54a;--menu:#26262a;--shadow:0 8px 28px rgba(0,0,0,.6)}}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 20px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:13px}
+.toolbar .count{color:var(--mute);margin-right:auto}.btn{font:inherit;font-size:13px;padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--acc)}.btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.hint{color:var(--mute);font-size:12px;margin:8px 0 0}
+.stamps li{display:flex;gap:12px;padding:8px 4px;border-bottom:1px solid var(--line);align-items:flex-start}
+.stamps li.has-c{background:var(--hl)}
+.stamps .ts{all:unset;cursor:pointer;color:var(--acc);font-variant-numeric:tabular-nums;min-width:44px;flex:none;padding-top:1px}
+.tx{flex:1 1 0;min-width:0;outline:none;border-radius:4px;padding:1px 4px;margin:-1px -4px}.tx:hover{background:var(--bg)}.tx:focus{background:var(--bg);box-shadow:0 0 0 2px var(--acc)}
+.tx.edited{border-left:3px solid var(--edit);padding-left:8px}.revert{all:unset;cursor:pointer;color:var(--edit);font-size:12px;flex:none}
+.comments:empty{display:none}.comments{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.cm{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-left:3px solid var(--edit);border-radius:8px;background:var(--bg);font-size:14px}
+.cm.done{opacity:.55;border-left-color:var(--ok)}.cm .ts{all:unset;cursor:pointer;color:var(--acc);font-variant-numeric:tabular-nums;flex:none}
+.cm .body{flex:1;min-width:0}.cm .who{font-weight:600;margin-right:6px}.cm .q{color:var(--mute);font-size:12px;margin-top:3px;font-style:italic}
+.cm .acts{display:flex;gap:8px;flex:none}.cm .acts button{all:unset;cursor:pointer;color:var(--mute);font-size:12px}.cm .acts button:hover{color:var(--ink)}
+#menu{position:fixed;z-index:20;display:none;background:var(--menu);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:4px;min-width:200px}
+#menu button{all:unset;display:block;width:100%;box-sizing:border-box;padding:7px 10px;border-radius:5px;cursor:pointer;font-size:14px}#menu button:hover{background:var(--bg)}
+#dlg{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);padding:16px}
+#dlg .box{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:min(520px,100%);padding:16px}
+#dlg h3{margin:0 0 4px;font-size:16px}#dlg .ctx{color:var(--mute);font-size:13px;margin:0 0 10px}
+#dlg input,#dlg textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);margin-bottom:8px}
+#dlg textarea{min-height:110px;resize:vertical}#dlg .row{display:flex;justify-content:flex-end;gap:8px}
+.banner{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--hl);font-size:14px}
+.allc ol{list-style:none;padding:0;margin:0}.allc li{padding:4px 0;font-size:14px;display:flex;gap:10px}
+</style></head><body><main>
+<h1>Defense talk recordings · version 2</h1><p class="sub">Recorded so far: 0:00. Videos play straight through from one section to the next. Right-click a video or transcript line to comment; click transcript text to edit it.</p>
+<p class="banner">Comments and transcript edits are saved only in this browser. When you are done, click <b>Export notes</b> and send the file to Fernanda.</p>
+<div class="toolbar"><span class="count" id="count">No review notes yet</span>
+<button class="btn" id="exp-md">Export notes (.md)</button><button class="btn" id="exp-json">Save backup</button>
+<button class="btn" id="imp">Load backup</button><input type="file" id="imp-file" accept=".json" hidden></div>
+<nav><a href="#s1" class="dim">Intro – background in fMRI and neural network behavior alignment</a><a href="#s2" class="dim">Intro – model–human discrepancies, adversarial training and model-matched stimuli</a><a href="#s3" class="dim">Ch. 1 – precedent (spectrotemporal model), research questions and the three models tested</a><a href="#s4" class="dim">Ch. 1 – synthesis of model-matched sounds, the stimulus set and fMRI setup</a><a href="#s5" class="dim">Ch. 1 – fMRI experiment details and the NSE dissimilarity measure</a><a href="#s6" class="dim">Ch. 1 – regions of interest (primary to non-primary) and example voxel responses</a><a href="#s7" class="dim">Ch. 1 – results: model-matched responses distinguish models (group maps and individual data)</a><a href="#s8" class="dim">Ch. 1 – regression: natural vs. model-matched sounds, and why natural sounds barely separate the models</a><a href="#s9" class="dim">Ch. 1 – native-space analysis</a><a href="#s10" class="dim">Ch. 1 – chapter summary</a><a href="#s11" class="dim">Ch. 2 · Textures</a><a href="#s12" class="dim">Ch. 4 · Audiovisual</a></nav>
+<section id="s1" class="todo"><header><h2>Intro – background in fMRI and neural network behavior alignment</h2>
+<span class="chip">To record</span></header></section>
+<section id="s2" class="todo"><header><h2>Intro – model–human discrepancies, adversarial training and model-matched stimuli</h2>
+<span class="chip">To record</span></header></section>
+<section id="s3" class="todo"><header><h2>Ch. 1 – precedent (spectrotemporal model), research questions and the three models tested</h2>
+<span class="chip">To record</span></header></section>
+<section id="s4" class="todo"><header><h2>Ch. 1 – synthesis of model-matched sounds, the stimulus set and fMRI setup</h2>
+<span class="chip">To record</span></header></section>
+<section id="s5" class="todo"><header><h2>Ch. 1 – fMRI experiment details and the NSE dissimilarity measure</h2>
+<span class="chip">To record</span></header></section>
+<section id="s6" class="todo"><header><h2>Ch. 1 – regions of interest (primary to non-primary) and example voxel responses</h2>
+<span class="chip">To record</span></header></section>
+<section id="s7" class="todo"><header><h2>Ch. 1 – results: model-matched responses distinguish models (group maps and individual data)</h2>
+<span class="chip">To record</span></header></section>
+<section id="s8" class="todo"><header><h2>Ch. 1 – regression: natural vs. model-matched sounds, and why natural sounds barely separate the models</h2>
+<span class="chip">To record</span></header></section>
+<section id="s9" class="todo"><header><h2>Ch. 1 – native-space analysis</h2>
+<span class="chip">To record</span></header></section>
+<section id="s10" class="todo"><header><h2>Ch. 1 – chapter summary</h2>
+<span class="chip">To record</span></header></section>
+<section id="s11" class="todo"><header><h2>Ch. 2 · Textures</h2>
+<span class="chip">To record</span></header></section>
+<section id="s12" class="todo"><header><h2>Ch. 4 · Audiovisual</h2>
+<span class="chip">To record</span></header></section>
+<div class="full allc" id="allc" hidden><h2>All comments</h2><ol id="allc-list"></ol></div>
+<div class="full"><h2>Sections · full talk</h2><ol></ol>
+<p class="meta">Chapter list to paste in an email:</p><pre></pre></div>
+</main><div id="menu"></div>
+<div id="dlg"><div class="box"><h3 id="dlg-title">Add comment</h3><p class="ctx" id="dlg-ctx"></p>
+<input id="dlg-who" placeholder="Your name (e.g. Josh)"><textarea id="dlg-text" placeholder="What should change? (⌘↵ to save)"></textarea>
+<div class="row"><button class="btn" id="dlg-cancel">Cancel</button><button class="btn primary" id="dlg-save">Save comment</button></div></div></div>
+<script>
+const NS='v2:';
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+          set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Could not save in this browser: '+e.message)}}};
+let edits=LS.get(NS+'dt-edits',{}), comments=LS.get(NS+'dt-comments',[]);
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mmss=t=>{t=Math.max(0,Math.round(t));const h=Math.floor(t/3600),m=Math.floor(t/60)%60,s=t%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0')};
+const secOf=el=>el.closest('section[data-sec]');
+const video=sec=>sec.querySelector('video');
+function seek(sec,t){const v=video(sec);v.currentTime=t;v.play();v.scrollIntoView({block:'center',behavior:'smooth'})}
+function blockAt(sec,t){let best=null;sec.querySelectorAll('.stamps li').forEach(li=>{if(+li.dataset.t<=t+0.5)best=li});return best}
+
+// transcript edits
+function paintEdit(tx){const k=tx.dataset.k, e=edits[k];
+  tx.classList.toggle('edited',e!==undefined);
+  let r=tx.parentElement.querySelector('.revert');
+  if(e!==undefined&&!r){r=document.createElement('button');r.className='revert';r.textContent='↺ original';r.title='Original: '+tx.dataset.orig;
+    r.onclick=()=>{delete edits[k];LS.set(NS+'dt-edits',edits);tx.textContent=tx.dataset.orig;paintEdit(tx);refresh()};tx.after(r)}
+  if(e===undefined&&r)r.remove()}
+$$('.tx').forEach(tx=>{if(edits[tx.dataset.k]!==undefined)tx.textContent=edits[tx.dataset.k];paintEdit(tx);
+  tx.addEventListener('input',()=>{const v=tx.textContent.trim();if(v===tx.dataset.orig.trim())delete edits[tx.dataset.k];else edits[tx.dataset.k]=v;
+    LS.set(NS+'dt-edits',edits);paintEdit(tx);refresh()});
+  tx.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();tx.blur()}})});
+$$('.stamps .ts').forEach(b=>b.addEventListener('click',()=>seek(secOf(b),+b.dataset.t)));
+
+// comments
+function render(){
+  $$('section[data-sec]').forEach(sec=>{const box=sec.querySelector('.comments'), key=sec.dataset.sec;
+    const mine=comments.filter(c=>c.sec===key).sort((a,b)=>a.t-b.t);
+    box.innerHTML=mine.map(c=>`<div class="cm${c.done?' done':''}" data-id="${c.id}"><button class="ts">${mmss(c.t)}</button>
+      <div class="body"><span class="who">${esc(c.who||'Comment')}</span>${esc(c.text).replace(/\n/g,'<br>')}${c.quote?`<div class="q">“${esc(c.quote)}”</div>`:''}</div>
+      <div class="acts"><button data-a="done">${c.done?'Reopen':'Resolve'}</button><button data-a="edit">Edit</button><button data-a="del">Delete</button></div></div>`).join('');
+    sec.querySelectorAll('.stamps li').forEach(li=>{const t=+li.dataset.t, nx=li.nextElementSibling?+li.nextElementSibling.dataset.t:1e9;
+      li.classList.toggle('has-c',mine.some(c=>!c.done&&c.t>=t-0.5&&c.t<nx-0.5))})});
+  const all=[...comments].sort((a,b)=>(a.off+a.t)-(b.off+b.t));
+  $('#allc').hidden=!all.length;
+  $('#allc-list').innerHTML=all.map(c=>`<li><a class="ts" href="#" data-id="${c.id}">${mmss(c.off+c.t)}</a><span>${c.done?'✓ ':''}<b>${esc(c.who||'Comment')}</b> · ${esc(c.label)}: ${esc(c.text)}</span></li>`).join('');
+  refresh()}
+function refresh(){const n=comments.filter(c=>!c.done).length, r=comments.length-n, e=Object.keys(edits).length;
+  $('#count').textContent=(n||r||e)?`${n} open comment${n==1?'':'s'}${r?`, ${r} resolved`:''} · ${e} transcript edit${e==1?'':'s'}`:'No review notes yet'}
+document.addEventListener('click',e=>{const cm=e.target.closest('.cm');
+  if(cm){const c=comments.find(x=>x.id===cm.dataset.id), sec=secOf(cm);
+    if(e.target.classList.contains('ts'))seek(sec,c.t);
+    const a=e.target.dataset.a;
+    if(a==='done'){c.done=!c.done;save()}
+    if(a==='edit')openDlg(sec,c.t,c.quote,c);
+    if(a==='del'&&confirm('Delete this comment?')){comments=comments.filter(x=>x!==c);save()}}
+  const al=e.target.closest('#allc-list a');
+  if(al){e.preventDefault();const c=comments.find(x=>x.id===al.dataset.id);const sec=$$('section[data-sec]').find(s=>s.dataset.sec===c.sec);if(sec)seek(sec,c.t)}
+  if(!e.target.closest('#menu'))$('#menu').style.display='none'});
+function save(){LS.set(NS+'dt-comments',comments);render()}
+
+// right-click menu
+document.addEventListener('contextmenu',e=>{const sec=secOf(e.target);if(!sec)return;
+  const li=e.target.closest('.stamps li'), onVideo=e.target.tagName==='VIDEO';
+  if(!li&&!onVideo)return;
+  e.preventDefault();
+  const t=onVideo?video(sec).currentTime:+li.dataset.t;
+  const sel=String(getSelection()).trim(), quote=sel||'';
+  const m=$('#menu');
+  m.innerHTML=`<button>💬 Add comment at ${mmss(t)}</button>`+(li?`<button>▶︎ Play from ${mmss(t)}</button>`:'');
+  m.children[0].onclick=()=>{m.style.display='none';openDlg(sec,t,quote)};
+  if(li)m.children[1].onclick=()=>{m.style.display='none';seek(sec,t)};
+  m.style.display='block';
+  m.style.left=Math.min(e.clientX,innerWidth-m.offsetWidth-8)+'px';m.style.top=Math.min(e.clientY,innerHeight-m.offsetHeight-8)+'px'});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#menu').style.display='none';closeDlg()}});
+
+let pending=null;
+function openDlg(sec,t,quote,existing){video(sec).pause();
+  if(!quote){const li=blockAt(sec,t);quote=''}
+  pending={sec,t,quote,existing};
+  $('#dlg-title').textContent=existing?'Edit comment':'Add comment';
+  $('#dlg-ctx').textContent=`${sec.dataset.label} · ${mmss(t)} in this section (${mmss(+sec.dataset.off+t)} in the full talk)`+(quote?` · on “${quote.slice(0,80)}${quote.length>80?'…':''}”`:'');
+  $('#dlg-who').value=existing?existing.who:LS.get(NS+'dt-who','');
+  $('#dlg-text').value=existing?existing.text:'';
+  $('#dlg').style.display='flex';$('#dlg-text').focus()}
+function closeDlg(){$('#dlg').style.display='none';pending=null}
+function saveDlg(){const text=$('#dlg-text').value.trim();if(!text||!pending)return closeDlg();
+  const who=$('#dlg-who').value.trim();LS.set(NS+'dt-who',who);
+  const {sec,t,quote,existing}=pending;
+  if(existing){existing.text=text;existing.who=who}
+  else comments.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),sec:sec.dataset.sec,label:sec.dataset.label,
+    off:+sec.dataset.off,t,who,text,quote,done:false,created:new Date().toISOString()});
+  save();closeDlg()}
+$('#dlg-save').onclick=saveDlg;$('#dlg-cancel').onclick=closeDlg;
+$('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')closeDlg()});
+$('#dlg-text').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))saveDlg()});
+
+// export / import
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const stamp=()=>new Date().toISOString().slice(0,16).replace('T',' ').replace(':','.');
+$('#exp-md').onclick=()=>{let md=`# Defense talk review notes\n\nExported ${new Date().toLocaleString()}\n`;
+  $$('section[data-sec]').forEach(sec=>{const key=sec.dataset.sec, cs=comments.filter(c=>c.sec===key).sort((a,b)=>a.t-b.t);
+    const es=[...sec.querySelectorAll('.tx')].filter(tx=>edits[tx.dataset.k]!==undefined);
+    if(!cs.length&&!es.length)return;
+    md+=`\n## ${sec.dataset.label}\n`;
+    cs.forEach(c=>{md+=`\n- **${mmss(c.t)}** (full talk ${mmss(c.off+c.t)})${c.done?' ✓ resolved':''} — ${c.who?`**${c.who}:** `:''}${c.text.replace(/\n/g,' ')}${c.quote?`\n  > ${c.quote}`:''}`});
+    if(es.length){md+=`\n\n**Transcript edits**\n`;es.forEach(tx=>{const t=+tx.closest('li').dataset.t;md+=`\n- ${mmss(t)}\n  - was: ${tx.dataset.orig}\n  - now: ${edits[tx.dataset.k]}`})}
+    md+='\n'});
+  download(`review-notes ${stamp()}.md`,md,'text/markdown')};
+$('#exp-json').onclick=()=>download(`review-backup ${stamp()}.json`,JSON.stringify({comments,edits},null,1),'application/json');
+$('#imp').onclick=()=>$('#imp-file').click();
+$('#imp-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());
+  const ids=new Set(comments.map(c=>c.id));(d.comments||[]).forEach(c=>{if(!ids.has(c.id))comments.push(c)});
+  Object.assign(edits,d.edits||{});LS.set(NS+'dt-edits',edits);save();location.reload()}catch(err){alert('That file is not a review backup.')}};
+render();
+// Play straight through: when a section's video ends, start the next one
+const vids=$$('section[data-sec] video');
+vids.forEach((v,i)=>v.addEventListener('ended',()=>{const n=vids[i+1];if(n){n.scrollIntoView({block:'center',behavior:'smooth'});n.currentTime=0;n.play()}}));
+</script></body></html>
