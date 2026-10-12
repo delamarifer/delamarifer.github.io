@@ -188,3 +188,7 @@
 #secbar span.active::before{right:0; background:rgba(15,23,42,.14);}
 #secbar span.active::after{width:calc(var(--p, 0) * 100%); background:var(--ink); transition:width .35s ease;}
 #secbar span.done::after{right:0; height:1px; background:rgba(15,23,42,.35);}
+
+/* white lead-in before each slide (Fer, 2026-10-11; engine sets body.preblank) */
+body.preblank #root .slide.active, body.preblank .scenehost iframe.shown, body.preblank #secbar,
+body.preblank #help{visibility:hidden !important;}

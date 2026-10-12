@@ -55,6 +55,12 @@
   body.panelA #main{ opacity:0; transition-delay:0s; }
   #panelA{ transform-box:view-box; transform-origin:0 0; transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .4s ease .8s; }
   body.panelA #panelA{ transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease; }
+  #panelA{ transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease; }
+  .paimg{ transition:opacity .4s ease .8s; }
+  body.panelA .paimg{ transition:opacity .3s ease; }
+  .pacrop{ transition:none; }
+  .vin{ transform:translateY(-120px); transition:opacity .5s ease, transform .8s cubic-bezier(.4,0,.2,1); }
+  .vin.shown{ transform:none; }
   .pacov{ transition:opacity .45s ease; }
   .cite{ transition:opacity .45s ease; }
   body.titleonly .cite{ opacity:0; }
@@ -91,9 +97,13 @@
 // ACT 1 — PANEL A     (1-6):   the paper's Fig. 5A, one component per click: voxel → v;
 //                              activations to natural sounds; ridge regression; weights w;
 //                              held-out activations × w → predicted; measured, NSE / R².
-// ACT 2 — REGRESSION  (7-9):   zoom into panel A's matrix; its top-left 8 × 10 cells become the
-//                              schematic (same colours, same place), labelled by sound; weights,
-//                              predicted, measured + scatter. (Schematic beat = overall beat − 6.)
+// ACT 2 — REGRESSION  (7-9):   (Fer, 2026-10-11) no redrawn stand-ins. 7: zoom; the real crop of
+//                              panel A (waveforms → network → stimuli × units) enlarges, then
+//                              sound names / "one unit" rings go on top of its real rows/column.
+//                              8: the same image moves left into the regression layout; weights
+//                              under its 55 columns, × w → predicted (ridge fit of the real v).
+//                              9: panel A's own v slides in as "measured"; scatter.
+//                              (Schematic beat = overall beat − 6.)
 // ACT 3 — RSA         (10):    sound × sound dissimilarity for model and region, compared.
 // ACT 4 — THE GAP     (11-12): natural sounds co-vary; weights ignore some features.
 //                              The title switches at 11.
@@ -116,42 +126,55 @@
   let seed = 11;
   const rnd = () => (seed = (seed*1103515245 + 12345) % 2147483648) / 2147483648;
   const SOUNDS = ['speech','dog bark','piano','rain','siren','laughter','guitar','footsteps'];
-  const NR = SOUNDS.length, NU = 10;
-  // The activation block IS the top-left 8 × 10 cells of panel A's matrix (Fer, 2026-10-08:
-  // one continuous object through the zoom). Colours are the exact pixels at each cell centre of
-  // fig5a-regression-voxel.png (cell runs found with PIL); values are their nearest viridis t,
-  // used only for the toy regression below.
-  const A_COL = [["#414186", "#1f968b", "#25ab81", "#472676", "#3f4788", "#bfdf24", "#46317e", "#414286", "#cde01d", "#2ab07e"], ["#23a883", "#2e6c8e", "#2d6e8e", "#453681", "#3d4c89", "#472575", "#8bd546", "#218e8c", "#414186", "#55c666"], ["#345e8d", "#2a778e", "#462f7c", "#9dd93a", "#2eb27c", "#3e4989", "#1f968b", "#45347f", "#27ad80", "#365b8c"], ["#1e998a", "#33618d", "#dfe318", "#443982", "#2c708e", "#1ea087", "#472676", "#3e4888", "#74d054", "#6dce58"], ["#e7e419", "#1e9d88", "#423e85", "#24848d", "#39558b", "#4bc26c", "#1e9e88", "#30688d", "#33608d", "#9dd93a"], ["#1f968b", "#228a8d", "#d7e219", "#3d4b89", "#1f938b", "#3e4989", "#c7e01f", "#1f938b", "#2c728e", "#3d4b89"], ["#277d8e", "#2d6e8e", "#277d8e", "#472c7b", "#1fa187", "#2ab07e", "#5bc862", "#d2e11b", "#2a778e", "#35b778"], ["#2f698d", "#287b8e", "#4bc26c", "#70ce56", "#28ae7f", "#3c4e8a", "#3c4e8a", "#60c960", "#47c06e", "#addc30"]];
-  const A = [[0.195, 0.525, 0.603, 0.105, 0.212, 0.905, 0.142, 0.198, 0.927, 0.625], [0.59, 0.352, 0.36, 0.158, 0.23, 0.102, 0.823, 0.495, 0.195, 0.73], [0.297, 0.398, 0.135, 0.853, 0.64, 0.22, 0.525, 0.15, 0.613, 0.285], [0.537, 0.31, 0.955, 0.168, 0.37, 0.56, 0.105, 0.215, 0.787, 0.777], [0.968, 0.552, 0.185, 0.455, 0.263, 0.71, 0.555, 0.335, 0.305, 0.853], [0.525, 0.477, 0.943, 0.228, 0.515, 0.22, 0.917, 0.515, 0.378, 0.228], [0.425, 0.36, 0.425, 0.125, 0.565, 0.625, 0.743, 0.935, 0.398, 0.667], [0.34, 0.415, 0.71, 0.782, 0.618, 0.237, 0.237, 0.75, 0.703, 0.877]];
-  // weights: units 2, 5, 8 come out near zero — the features regression ignores (beat 7)
-  const IGN = [2, 5, 8];
-  const W = [...Array(NU)].map((_, j) => IGN.includes(j) ? .04 : .35 + .65*rnd());
+  // Real data from panel A (Fer, 2026-10-11: "literally extract the image… and move the
+  // activations"). fig5a-regression-voxel.png's matrix is 33 stimuli × 55 units (cell runs found
+  // with PIL: x 675–1144, y 946–1228 px), and its v is 33 bands over the same height, so rows line
+  // up. Values are each cell's nearest viridis t. W, PRED: ridge regression of v on the 33 × 55
+  // values (λ = 20, dual form), so the prediction and the near-zero weights are an actual fit.
+  const V = [0.772,0.772,0.512,0.307,0.100,0.398,0.420,0.092,0.098,0.955,0.632,0.260,0.445,0.932,0.855,0.807,0.407,0.497,0.657,0.102,0.550,0.297,0.838,0.107,0.662,0.830,0.255,0.855,0.830,0.072,0.682,0.058,0.505];
+  const W = [-0.025,0.019,-0.027,0.010,0.012,0.010,0.008,-0.005,-0.020,0.015,-0.015,-0.002,0.023,-0.007,0.001,0.038,0.007,-0.048,0.023,0.006,0.025,-0.007,-0.033,-0.016,0.016,-0.000,-0.007,0.018,-0.000,0.008,-0.028,0.006,-0.004,0.001,0.006,-0.024,0.020,0.002,0.025,-0.005,0.011,0.002,0.011,0.007,-0.021,-0.033,0.020,-0.014,0.006,0.039,-0.011,0.017,-0.003,0.009,-0.003];
+  const PRED_RAW = [0.549,0.563,0.570,0.452,0.460,0.495,0.519,0.454,0.428,0.567,0.544,0.484,0.483,0.563,0.535,0.575,0.496,0.480,0.471,0.411,0.504,0.463,0.550,0.428,0.542,0.573,0.452,0.558,0.552,0.458,0.557,0.386,0.444];
+  const XR = [[0.537,0.310,0.955,0.168,0.370,0.560,0.105,0.215,0.787,0.777,0.640,0.880,0.748,0.343,0.650,0.383,0.743,0.425,0.215,0.860,0.690,0.738,0.568,0.772,0.477,0.575,0.135,0.565,0.802,0.703,0.792,0.522,0.865,0.177,0.855,0.412,0.163,0.620,0.485,0.465,0.835,0.200,0.620,0.450,0.545,0.525,0.200,0.537,0.843,0.230,0.092,0.138,0.490,0.950,0.117],[0.340,0.415,0.710,0.782,0.618,0.237,0.237,0.750,0.703,0.877,0.772,0.458,0.198,0.873,0.693,0.580,0.682,0.425,0.385,0.580,0.510,0.708,0.915,0.830,0.425,0.412,0.905,0.432,0.787,0.163,0.482,0.537,0.795,0.860,0.215,0.620,0.632,0.215,0.820,0.565,0.938,0.245,0.545,0.370,0.645,0.613,0.537,0.370,0.530,0.412,0.873,0.490,0.502,0.310,0.305],[0.223,0.147,0.268,0.278,0.505,0.655,0.407,0.228,0.168,0.312,0.230,0.510,0.853,0.710,0.260,0.107,0.138,0.470,0.407,0.682,0.155,0.305,0.685,0.575,0.537,0.880,0.182,0.255,0.575,0.575,0.955,0.955,0.590,0.750,0.698,0.198,0.603,0.352,0.403,0.220,0.090,0.835,0.710,0.743,0.335,0.455,0.235,0.603,0.823,0.767,0.915,0.310,0.700,0.195,0.552],[0.220,0.398,0.917,0.163,0.682,0.470,0.618,0.432,0.190,0.570,0.085,0.848,0.787,0.412,0.552,0.545,0.955,0.117,0.343,0.445,0.777,0.723,0.458,0.092,0.655,0.445,0.185,0.632,0.475,0.352,0.318,0.542,0.297,0.432,0.922,0.505,0.305,0.542,0.897,0.848,0.680,0.880,0.748,0.682,0.465,0.212,0.728,0.632,0.948,0.365,0.860,0.275,0.927,0.970,0.122],[0.802,0.312,0.395,0.580,0.290,0.323,0.247,0.312,0.823,0.785,0.182,0.390,0.720,0.843,0.570,0.723,0.290,0.772,0.807,0.445,0.290,0.107,0.632,0.632,0.083,0.537,0.917,0.105,0.200,0.130,0.470,0.425,0.853,0.138,0.260,0.917,0.095,0.310,0.432,0.083,0.330,0.603,0.618,0.613,0.655,0.618,0.107,0.660,0.585,0.275,0.458,0.290,0.853,0.328,0.223],[0.190,0.335,0.530,0.585,0.350,0.195,0.385,0.245,0.910,0.275,0.432,0.555,0.302,0.522,0.565,0.122,0.927,0.555,0.207,0.958,0.228,0.723,0.510,0.310,0.415,0.510,0.412,0.297,0.455,0.470,0.690,0.255,0.117,0.820,0.142,0.632,0.560,0.950,0.247,0.868,0.198,0.230,0.660,0.228,0.590,0.680,0.195,0.782,0.458,0.943,0.092,0.150,0.620,0.310,0.440],[0.625,0.738,0.670,0.598,0.660,0.212,0.482,0.372,0.730,0.537,0.715,0.693,0.885,0.840,0.125,0.675,0.412,0.172,0.505,0.828,0.785,0.175,0.260,0.693,0.948,0.150,0.158,0.693,0.618,0.800,0.255,0.522,0.787,0.420,0.438,0.105,0.787,0.477,0.415,0.660,0.835,0.848,0.385,0.613,0.425,0.823,0.785,0.670,0.810,0.535,0.578,0.223,0.703,0.335,0.570],[0.675,0.723,0.968,0.385,0.477,0.767,0.273,0.168,0.880,0.095,0.877,0.892,0.228,0.748,0.335,0.320,0.958,0.868,0.755,0.470,0.963,0.578,0.955,0.715,0.122,0.787,0.823,0.865,0.625,0.113,0.853,0.458,0.255,0.263,0.260,0.802,0.147,0.897,0.095,0.720,0.285,0.537,0.235,0.880,0.215,0.495,0.613,0.482,0.273,0.335,0.915,0.195,0.095,0.890,0.868]];   // 8 of the real rows (3, 7, …, 31), for the RSA sketch
+  const NR = 33, NU = 55;
+  const WMAX = Math.max(...W.map(Math.abs));
+  const IGN = W.map((w, j) => [Math.abs(w), j]).sort((a, b) => a[0] - b[0]).slice(0, 6).map(x => x[1]);
   // viridis, 0..1 (matplotlib stops), as in the paper's matrices
   const VIR = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[110,206,88],[181,222,43],[253,231,37]];
   const viridis = t => { t = Math.max(0, Math.min(1, t)) * (VIR.length - 1); const i = Math.min(VIR.length - 2, Math.floor(t)), f = t - i;
     return 'rgb(' + VIR[i].map((c, k) => Math.round(c + f*(VIR[i+1][k] - c))).join(',') + ')'; };
   const norm = v => { const lo = Math.min(...v), hi = Math.max(...v); return v.map(x => (x-lo)/(hi-lo)); };
-  const PRED = norm(A.map(r => r.reduce((s, a, j) => s + a*W[j], 0)));
-  const MEAS = norm(PRED.map(p => p + .6*(rnd() - .5)));   // r ≈ .85 with panel A’s values
+  const PRED = norm(PRED_RAW), MEAS = norm(V);
   const corr = (x, y) => { const n=x.length, mx=x.reduce((a,b)=>a+b)/n, my=y.reduce((a,b)=>a+b)/n;
     let sxy=0, sx=0, sy=0; for(let i=0;i<n;i++){ sxy+=(x[i]-mx)*(y[i]-my); sx+=(x[i]-mx)**2; sy+=(y[i]-my)**2; }
     return sxy/Math.sqrt(sx*sy); };
-  const RDM_M = SOUNDS.map((_, i) => SOUNDS.map((_, k) => i === k ? 0 : 1 - corr(A[i], A[k])));
+  const NRSA = XR.length;
+  const RDM_M = XR.map((_, i) => XR.map((_, k) => i === k ? 0 : 1 - corr(XR[i], XR[k])));
   const RDM_B = RDM_M.map((r, i) => r.map((d, k) => i === k ? 0 : d));
-  for(let i=0;i<NR;i++) for(let k=i+1;k<NR;k++){ const v = Math.max(0, RDM_M[i][k] + 1.1*(rnd()-.5)); RDM_B[i][k] = RDM_B[k][i] = v; }
+  for(let i=0;i<NRSA;i++) for(let k=i+1;k<NRSA;k++){ const v = Math.max(0, RDM_M[i][k] + .45*(rnd()-.5)); RDM_B[i][k] = RDM_B[k][i] = v; }
   const rdmMax = Math.max(...RDM_M.flat(), ...RDM_B.flat());
   // beat 6: a feature the model uses vs a property cortex tracks, across the same sounds
   // evenly spaced, in a fixed order, so the sound labels never collide
   const FX = [.05, .62, .48, .9, .33, 1, .76, .19];
-  const FY = norm(FX.map(x => x + .18*(rnd() - .5)));
+  const FY = norm(FX.map((x, i) => x + [.05, -.06, .04, -.03, .06, -.02, .03, -.05][i]));   // fixed offsets: labels never collide
 
   // ── geometry (viewBox units) ───────────────────────────────────────────────
-  const Y0 = 64, RH = 30;                 // first row top, row height (square cells: RH = CW)
-  const MX = 160, CW = 30;                // activation matrix x, column width
-  const PX = 510, MXX = 600, VW = 34;     // predicted / measured columns
-  const WY = Y0 + NR*RH + 14;             // weights row
-  const SC = {x:662, y:96, w:110, h:110}; // regression scatter
-  const RX = [806, 1022], RC = 18, RY = 88;  // RDMs: x of each, cell, top
+  // Panel A px → viewBox: panel A is drawn at scale pk; a zoom state Z = {s, tx, ty} scales that.
+  const PA = {w:3640, h:1300};
+  const pk = 1200/PA.w, PAH = PA.h*pk, PAY = (430 - PAH)/2;
+  const CROP = {x0:13, y0:935, x1:1167, y1:1300};          // waveforms → network → matrix + "units" (px)
+  const MAT = {x0:675, x1:1144, y0:946, y1:1228};           // the 33 × 55 cell grid (px)
+  const zoomTo = (left, top, width) => { const s = width/((CROP.x1 - CROP.x0)*pk);
+    return {s, tx:left - s*CROP.x0*pk, ty:top - s*(PAY + CROP.y0*pk)}; };
+  const Z1 = zoomTo(10, 40, 880);    // beat 7: the activations, large
+  const Z2 = zoomTo(0, 60, 560);     // beat 8 on: the same image, moved into the regression layout
+  const vx = (Z, X) => Z.tx + Z.s*X*pk, vy = (Z, Y) => Z.ty + Z.s*(PAY + Y*pk);
+  const rowY = (Z, i) => vy(Z, MAT.y0 + (MAT.y1 - MAT.y0)*i/NR), rowH = Z => (MAT.y1 - MAT.y0)/NR*Z.s*pk;
+  const colX = (Z, j) => vx(Z, MAT.x0 + (MAT.x1 - MAT.x0)*j/NU), colW = Z => (MAT.x1 - MAT.x0)/NU*Z.s*pk;
+  const M2 = {l:vx(Z2, MAT.x0), r:vx(Z2, MAT.x1), t:vy(Z2, MAT.y0), b:vy(Z2, MAT.y1)};
+  const XW = M2.r + 22, PX = M2.r + 44, MXX = PX + 82, VW = 24;   // × w, predicted, measured
+  const WY = vy(Z2, CROP.y1) + 6;                                  // weights row, under "units"
+  const SC = {x:PX + 4, y:M2.b + 52, w:100, h:100};                 // scatter, under the two columns
+  const RX = [806, 1022], RC = 18, RY = 88;  // RDMs: x of each, cell, top (8 sounds)
   const CV = {x:850, y:84, w:300, h:220}; // beat-6 covariation scatter
 
   const el = (tag, attrs, parent=svg, text) => { const e = document.createElementNS(NS, tag);
@@ -160,79 +183,89 @@
   const on = (e, b, delay=0, off) => { e.classList.add('on'); e.dataset.on = b; if(off != null) e.dataset.off = off;
     if(delay) e.style.setProperty('--d', delay + 's'); return e; };
 
-  // ── regression panel ───────────────────────────────────────────────────────
+  // ── regression panel: overlays on the real crop (which lives in #panelA) ─────
   const gReg = el('g', {class:'panel', id:'reg'});
-  el('text', {x:0, y:22, class:'ph'}, gReg, 'Regression');
-  el('text', {x:146, y:Y0 - 10, 'text-anchor':'end', class:'hd snd'}, gReg, 'natural sounds');
-  SOUNDS.forEach((s, i) => {
-    el('text', {x:146, y:Y0 + i*RH + 20, 'text-anchor':'end', class:'lab snd'}, gReg, s);
-    // a pine outline around each sound's label, for the last beat
-    const hi = el('rect', {x:30, y:Y0 + i*RH + 2, width:122, height:RH - 4, rx:5, class:'rowhi'}, gReg);
-    hi.dataset.on = 8; hi.style.setProperty('--d', (i*.06) + 's');
+  on(el('text', {x:0, y:22, class:'ph'}, gReg, 'Regression'), 2);
+  // beat 7 (schematic 1): details on top of the enlarged crop, after the zoom lands
+  const LAB = [[3, 'speech'], [9, 'dog bark'], [16, 'piano'], [22, 'rain'], [29, 'siren']];
+  const M1 = {l:vx(Z1, MAT.x0), r:vx(Z1, MAT.x1), t:vy(Z1, MAT.y0), b:vy(Z1, MAT.y1)};
+  const gZ1 = on(el('g', {}, gReg), 1, 1.0, 2);
+  el('text', {x:M1.r + 18, y:M1.t - 8, class:'hd'}, gZ1, 'natural sounds (rows)');
+  LAB.forEach(([i, name]) => {
+    const y = rowY(Z1, i), h = rowH(Z1);
+    el('rect', {x:M1.l - 1, y:y - .5, width:M1.r - M1.l + 2, height:h + 1, fill:'none', stroke:'var(--ink)', 'stroke-width':1.6}, gZ1);
+    el('path', {d:`M${M1.r + 2},${y + h/2} H${M1.r + 14}`, stroke:'var(--ink)', 'stroke-width':1.2}, gZ1);
+    el('text', {x:M1.r + 18, y:y + h/2 + 5, class:'lab'}, gZ1, name);
   });
-  // the network is panel A's own drawing: fig5a-network.png, its waveforms → network with the
-  // red stage, cropped (bounds detected) from fig5a-regression-voxel.png at (13, 994), 565 × 190
-  const gNet = on(el('g', {}, gReg), 1);
-  el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-network.png?v=11', x:MX, y:0, width:40*565/190, height:40}, gNet);
-  el('text', {x:MX, y:Y0 - 10, class:'hd'}, gNet, 'units →');
-  // activations: one <g> per unit column, so a whole column can be marked "ignored"
-  const cols = [...Array(NU)].map((_, j) => el('g', {class:'act'}, gReg));
-  A.forEach((row, i) => row.forEach((v, j) => {
-    const c = el('rect', {x:MX + j*CW, y:Y0 + i*RH, width:CW - 1, height:RH - 1, class:'cell'}, cols[j]);
-    c.setAttribute('fill', A_COL[i][j]); c.dataset.on = 1; c.dataset.v = 1;   // no stagger: they sit under the zoomed pixels
-  }));
-  // weights, aligned under the columns they multiply
-  on(el('text', {x:146, y:WY + 18, 'text-anchor':'end', class:'lab'}, gReg, 'weights'), 2);
+  const UC = 27;   // one unit, ringed
+  el('rect', {x:colX(Z1, UC) - .5, y:M1.t - 1, width:colW(Z1) + 1, height:M1.b - M1.t + 2, fill:'none', stroke:'var(--ink)', 'stroke-width':1.6}, gZ1);
+  el('text', {x:colX(Z1, UC) + colW(Z1)/2, y:M1.t - 6, 'text-anchor':'middle', class:'hd'}, gZ1, 'one unit');
+
+  // beat 8 on (schematic 2+): the crop has moved to Z2; weights under its 55 columns
+  on(el('text', {x:M2.l - 6, y:WY + 9, 'text-anchor':'end', class:'lab'}, gReg, 'weights'), 2, .6);
   const wcols = W.map((w, j) => { const g = el('g', {class:'w'}, gReg);
-    const c = el('rect', {x:MX + j*CW, y:WY, width:CW - 2, height:24, rx:2, class:'cell'}, g);
-    c.dataset.on = 2; c.dataset.v = (.15 + .8*w).toFixed(2); c.style.setProperty('--d', (j*.04) + 's'); return g; });
-  on(el('text', {x:MX, y:WY + 46, class:'ax'}, gReg, 'fit for one voxel'), 2);
-  const ign = on(el('text', {x:MX, y:WY + 46, class:'ax', style:'fill:var(--ink); font-weight:700'}, gReg,
+    const c = el('rect', {x:colX(Z2, j), y:WY, width:colW(Z2) - .4, height:10, class:'cell'}, g);
+    c.dataset.on = 2; c.dataset.v = (.1 + .85*Math.abs(w)/WMAX).toFixed(2); c.style.setProperty('--d', (.6 + j*.01) + 's'); return g; });
+  on(el('text', {x:M2.r, y:WY + 30, 'text-anchor':'end', class:'ax'}, gReg, 'fit for one voxel'), 2, .8);
+  on(el('text', {x:M2.r, y:WY + 30, 'text-anchor':'end', class:'ax', style:'font-weight:700'}, gReg,
     'weights near 0: these features do not affect the prediction'), 6);
-  // predicted (outlined) and measured (filled) voxel columns
-  on(el('text', {x:PX + VW/2, y:Y0 - 10, 'text-anchor':'middle', class:'hd'}, gReg, 'predicted'), 2);
-  on(el('text', {x:MXX + VW/2, y:Y0 - 10, 'text-anchor':'middle', class:'hd'}, gReg, 'measured'), 3);
-  const xw = (MX + NU*CW + PX)/2 - 3, yw = Y0 + NR*RH/2;
-  const gXw = on(el('g', {}, gReg), 2, .25);
-  el('circle', {cx:xw, cy:yw, r:15, fill:'#fff', stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
-  el('text', {x:xw, y:yw + 6, 'text-anchor':'middle', style:'font-size:14px; fill:var(--ink)'}, gXw, '× w');
-  el('path', {d:`M${PX - 3},${yw} l-8,-5 v10 z`, fill:'var(--ink)'}, gXw);
-  const bracket = (x, g) => { const y0 = Y0 - 4, y1 = Y0 + NR*RH + 3;
-    el('path', {d:`M${x - 3},${y0} h-6 V${y1} h6 M${x + VW + 3},${y0} h6 V${y1} h-6`, fill:'none', stroke:'var(--ink)', 'stroke-width':1.5}, g); };
-  const gP = on(el('g', {}, gReg), 2, .5), gM = on(el('g', {}, gReg), 3);
-  bracket(PX, gP); bracket(MXX, gM);
-  PRED.forEach((p, i) => {
-    on(el('rect', {x:PX, y:Y0 + i*RH, width:VW, height:RH - 1, fill:viridis(p)}, gReg), 2, .6 + i*.1);
-    on(el('rect', {x:MXX, y:Y0 + i*RH, width:VW, height:RH - 1, fill:viridis(MEAS[i])}, gReg), 3, i*.06);
+  // the ignored units: outlines on the real columns (no recolouring)
+  const gIgn = on(el('g', {}, gReg), 6);
+  IGN.forEach(j => {
+    el('rect', {x:colX(Z2, j) - .6, y:M2.t - 2, width:colW(Z2) + 1.2, height:M2.b - M2.t + 4, fill:'none', stroke:'var(--ink)', 'stroke-width':1.2}, gIgn);
+    el('rect', {x:colX(Z2, j) - .6, y:WY - 1.5, width:colW(Z2) + 1.2, height:13, fill:'none', stroke:'var(--ink)', 'stroke-width':1.2}, gIgn);
   });
+  // × w → predicted; measured = panel A's own v, moved in
+  const yw = (M2.t + M2.b)/2;
+  const gXw = on(el('g', {}, gReg), 2, .8);
+  el('circle', {cx:XW, cy:yw, r:13, fill:'#fff', stroke:'var(--ink)', 'stroke-width':1.5}, gXw);
+  el('text', {x:XW, y:yw + 5, 'text-anchor':'middle', style:'font-size:13px; fill:var(--ink)'}, gXw, '× w');
+  el('path', {d:`M${PX - 3},${yw} l-7,-4.5 v9 z`, fill:'var(--ink)'}, gXw);
+  const bracket = (x, g) => { const y0 = M2.t - 3, y1 = M2.b + 3;
+    el('path', {d:`M${x - 3},${y0} h-5 V${y1} h5 M${x + VW + 3},${y0} h5 V${y1} h-5`, fill:'none', stroke:'var(--ink)', 'stroke-width':1.4}, g); };
+  const gP = on(el('g', {}, gReg), 2, 1.0);
+  el('text', {x:PX + VW/2, y:M2.t - 10, 'text-anchor':'middle', class:'hd'}, gP, 'predicted');
+  bracket(PX, gP);
+  PRED.forEach((p, i) => el('rect', {x:PX, y:rowY(Z2, i), width:VW, height:rowH(Z2) + .3, fill:viridis(p)}, gP));
+  const gM = on(el('g', {}, gReg), 3);
+  el('text', {x:MXX + VW/2, y:M2.t - 10, 'text-anchor':'middle', class:'hd'}, gM, 'measured');
+  bracket(MXX, gM);
+  // fig5a-v.png: panel A's v (px 1086–1144 × 429–708), nearest ×3; it slides down into place
+  const vImg = el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-v.png?v=12', x:MXX, y:M2.t, width:VW, height:M2.b - M2.t,
+    preserveAspectRatio:'none', class:'vin'}, gReg);
+  vImg.dataset.on = 3; vImg.classList.add('on');
   // scatter: predicted vs measured
-  const gSc = on(el('g', {}, gReg), 3, .5);
+  const gSc = on(el('g', {}, gReg), 3, .7);
   el('rect', {x:SC.x, y:SC.y, width:SC.w, height:SC.h, fill:'none', stroke:'var(--border)'}, gSc);
   el('line', {x1:SC.x, y1:SC.y + SC.h, x2:SC.x + SC.w, y2:SC.y, stroke:'var(--faint)', 'stroke-dasharray':'4 4'}, gSc);
-  PRED.forEach((p, i) => el('circle', {cx:SC.x + 10 + p*(SC.w - 20), cy:SC.y + SC.h - 10 - MEAS[i]*(SC.h - 20), r:5.5, fill:'var(--ink)'}, gSc));
-  el('text', {x:SC.x + SC.w/2, y:SC.y + SC.h + 20, 'text-anchor':'middle', class:'ax'}, gSc, 'predicted');
-  el('text', {x:SC.x - 8, y:SC.y + SC.h/2, 'text-anchor':'middle', class:'ax', transform:`rotate(-90 ${SC.x - 8} ${SC.y + SC.h/2})`}, gSc, 'measured');
-  el('text', {x:SC.x + SC.w/2, y:SC.y - 14, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gSc,
+  PRED.forEach((p, i) => el('circle', {cx:SC.x + 8 + p*(SC.w - 16), cy:SC.y + SC.h - 8 - MEAS[i]*(SC.h - 16), r:3.5, fill:'var(--ink)'}, gSc));
+  el('text', {x:SC.x + SC.w/2, y:SC.y + SC.h + 18, 'text-anchor':'middle', class:'ax'}, gSc, 'predicted');
+  el('text', {x:SC.x - 7, y:SC.y + SC.h/2, 'text-anchor':'middle', class:'ax', transform:`rotate(-90 ${SC.x - 7} ${SC.y + SC.h/2})`}, gSc, 'measured');
+  el('text', {x:SC.x + SC.w/2, y:SC.y - 10, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gSc,
     'r = ' + corr(PRED, MEAS).toFixed(2));
+  // last beat: every row of the matrix is a natural sound
+  const gNat = on(el('g', {}, gReg), 8);
+  el('rect', {x:M2.l - 3, y:M2.t - 3, width:M2.r - M2.l + 6, height:M2.b - M2.t + 6, fill:'none', stroke:'var(--pine)', 'stroke-width':2.5, rx:2}, gNat);
+  el('text', {x:M2.l, y:M2.t - 8, class:'hd', style:'font-weight:700'}, gNat, 'every row: a natural sound');
 
-  el('line', {x1:782, y1:0, x2:782, y2:420, stroke:'var(--border)', 'stroke-width':1.5}, svg);
+  on(el('line', {x1:782, y1:0, x2:782, y2:420, stroke:'var(--border)', 'stroke-width':1.5}, svg), 4);   // only once the right panel is in use
 
   // ── RSA panel (beat 4) ─────────────────────────────────────────────────────
   const gRsa = el('g', {class:'panel', id:'rsa'});
   on(el('text', {x:806, y:22, class:'ph'}, gRsa, 'RSA'), 4);
   [[RDM_M, 'model stage', 'var(--slate)', 0], [RDM_B, 'cortical region', 'var(--ochre)', .6]].forEach(([D, name, col, d0], m) => {
     const g = on(el('g', {}, gRsa), 4, d0);
-    el('text', {x:RX[m] + NR*RC/2, y:RY - 14, 'text-anchor':'middle', class:'hd'}, g, name);
+    el('text', {x:RX[m] + NRSA*RC/2, y:RY - 14, 'text-anchor':'middle', class:'hd'}, g, name);
     D.forEach((r, i) => r.forEach((v, k) => el('rect', {x:RX[m] + k*RC, y:RY + i*RC, width:RC, height:RC,
       fill:viridis(v/rdmMax)}, g)));
-    el('text', {x:RX[m] + NR*RC/2, y:RY + NR*RC + 20, 'text-anchor':'middle', class:'ax'}, g, 'sound × sound');
+    el('text', {x:RX[m] + NRSA*RC/2, y:RY + NRSA*RC + 20, 'text-anchor':'middle', class:'ax'}, g, 'sound × sound');
   });
   const gCmp = on(el('g', {}, gRsa), 4, 1.2);
-  el('text', {x:(RX[0] + NR*RC + RX[1])/2, y:RY + NR*RC/2 + 7, 'text-anchor':'middle', style:'font-size:22px; fill:var(--muted)'}, gCmp, 'vs');
+  el('text', {x:(RX[0] + NRSA*RC + RX[1])/2, y:RY + NRSA*RC/2 + 7, 'text-anchor':'middle', style:'font-size:22px; fill:var(--muted)'}, gCmp, 'vs');
   const triU = D => D.flatMap((r, i) => r.filter((_, k) => k > i));
-  const by = RY + NR*RC + 42;
-  el('path', {d:`M${RX[0] + NR*RC/2},${by} v14 H${RX[1] + NR*RC/2} v-14`, fill:'none', stroke:'var(--muted)', 'stroke-width':1.5}, gCmp);
-  el('text', {x:(RX[0] + RX[1] + NR*RC)/2, y:by + 42, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gCmp,
+  const by = RY + NRSA*RC + 42;
+  el('path', {d:`M${RX[0] + NRSA*RC/2},${by} v14 H${RX[1] + NRSA*RC/2} v-14`, fill:'none', stroke:'var(--muted)', 'stroke-width':1.5}, gCmp);
+  el('text', {x:(RX[0] + RX[1] + NRSA*RC)/2, y:by + 42, 'text-anchor':'middle', class:'rv', fill:'var(--ink)'}, gCmp,
     'correlation of dissimilarity matrices: ρ = ' + corr(triU(RDM_M), triU(RDM_B)).toFixed(2));
 
   // ── covariation panel (beat 6, replaces RSA on slide 2) ────────────────────
@@ -260,11 +293,11 @@
   const gBs = el('g', {class:'panel', id:'bs'});
   const BS_H = 372, BS_W = BS_H*1293/1188;
   on(el('text', {x:806, y:22, class:'ph'}, gBs, 'Brain-Score benchmarks (vision, IT)'), 7);
-  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=11', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 7, .2);
+  on(el('image', {href:'../assets/final/ch1-current-methods/outline/feather2023-brainscore-it.png?v=12', x:1200 - BS_W, y:36, width:BS_W, height:BS_H}, gBs), 7, .2);
 
   // everything drawn so far is the schematic; it waits under panel A until beat 1
   const gMain = el('g', {id:'main'});
-  [...svg.childNodes].filter(n => n !== gMain).forEach(n => gMain.appendChild(n));
+  [...svg.childNodes].filter(n => n !== gMain && n.id !== 'panelA').forEach(n => gMain.appendChild(n));
 
   // ── panel A (beats 0–5), then the zoom (beat 6) ────────────────────────────
   // assets/outline/fig5a-regression.png: Fig. 5A cropped at 600 dpi from Fer's exported
@@ -275,7 +308,6 @@
   // line + arrowhead redrawn from that voxel to v. Same size as the original.
   // Beats 0–5 build the panel component by component: white covers (image px, checked with PIL so
   // no edge cuts a glyph) fade away one group per click.
-  const PA = {w:3640, h:1300};
   const PA_COVERS = [   // [x0, y0, x1, y1] px, gone from beat k on
     {k:2, r:[[0, 850, 1170, 1300]]},                                    // activations to natural sounds
     {k:3, r:[[1180, 540, 2080, 1130], [1150, 1060, 1180, 1110]]},       // → ridge regression
@@ -284,18 +316,21 @@
     {k:6, r:[[2800, 690, 3640, 1080]]},                                 // measured, NSE / R²
   ];
   const PA_BEATS = 6;   // beat 0 = title alone (round 6); 1..6 build panel A; schematic beat b = overall b + 6
-  const pk = 1200/PA.w, PAH = PA.h*pk, PAY = (430 - PAH)/2;
+  // #panelA sits UNDER the overlays (first child of the svg), so rings and labels draw on the cells.
   const pa = el('g', {id:'panelA'});
-  el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-regression-voxel.png?v=11', x:0, y:PAY, width:1200, height:PAH}, pa);
+  svg.insertBefore(pa, svg.firstChild);
+  const paImg = el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-regression-voxel.png?v=12', x:0, y:PAY, width:1200, height:PAH, class:'paimg'}, pa);
   const paCovers = PA_COVERS.flatMap(c => c.r.map(([x0, y0, x1, y1]) => {
     const e = el('rect', {x:x0*pk, y:PAY + y0*pk, width:(x1 - x0)*pk, height:(y1 - y0)*pk, fill:'#fff', class:'pacov'}, pa);
     e.dataset.k = c.k; return e; }));
-  // Zoom: panel A's matrix cell grid (pixel runs found with PIL: origin (673.9, 946.0) px, pitch
-  // 8.53 px; the first row sits partly under the grey frame) is scaled so its cell (i, j) lands
-  // exactly on schematic cell (i, j) at (MX + j·CW, Y0 + i·RH). Same pixels, same place.
-  const CELL = {x:673.9, y:946.0, p:8.53};
-  const zs = CW/(CELL.p*pk), ztx = MX - zs*CELL.x*pk, zty = Y0 - zs*(PAY + CELL.y*pk);
-  const ZOOM = `translate(${ztx.toFixed(2)}px, ${zty.toFixed(2)}px) scale(${zs.toFixed(4)})`;
+  // The activations crop (fig5a-actcrop.png: px CROP of the same panel, nearest ×3, so the cells
+  // stay crisp; the short connector stub to the ridge box is erased in the copy) lies exactly over
+  // its own region of panel A and switches on, without a transition, when the zoom starts (beat 7):
+  // the pixels beneath are the same, so nothing visibly changes. From then on the zoom and the move
+  // into the regression layout (beat 8) only scale and translate this one image.
+  const crop = el('image', {href:'../assets/final/ch1-current-methods/outline/fig5a-actcrop.png?v=12', x:CROP.x0*pk, y:PAY + CROP.y0*pk,
+    width:(CROP.x1 - CROP.x0)*pk, height:(CROP.y1 - CROP.y0)*pk, preserveAspectRatio:'none', class:'pacrop'}, pa);
+  const zcss = Z => `translate(${Z.tx.toFixed(2)}px, ${Z.ty.toFixed(2)}px) scale(${Z.s.toFixed(4)})`;
 
   // ── beats ──────────────────────────────────────────────────────────────────
   // Each beat is data; render() reads BEATS[beat] only, so any jump lands settled.
@@ -347,8 +382,10 @@
     const sb = Math.max(0, beat - PA_BEATS);   // the schematic's own beat
     const cur = BEATS[sb], onPanel = beat <= PA_BEATS;
     document.body.classList.toggle('panelA', onPanel);
-    pa.style.transform = onPanel ? 'none' : ZOOM;
-    pa.style.opacity = onPanel && beat > 0 ? 1 : 0;
+    pa.style.transform = onPanel ? 'none' : zcss(sb === 1 ? Z1 : Z2);
+    pa.style.opacity = beat === 0 ? 0 : cur.dimReg ? .34 : 1;   // the moved crop dims with its panel
+    paImg.style.opacity = onPanel ? 1 : 0;           // the rest of panel A fades once the zoom lands
+    crop.style.opacity = beat > PA_BEATS ? 1 : 0;     // identical to the panel pixels beneath it
     document.body.classList.toggle('titleonly', beat === 0);
     paCovers.forEach(c => c.style.opacity = beat >= +c.dataset.k ? 0 : 1);
     document.querySelectorAll('[data-beat]').forEach(e => e.classList.toggle('shown', beat >= +e.dataset.beat));
@@ -363,7 +400,6 @@
     const half2 = sb >= 5;
     document.body.classList.toggle('half2', half2);
     titleEl.innerHTML = TITLES[half2 ? 1 : 0];
-    IGN.forEach(j => { cols[j].classList.toggle('ignored', !!cur.ignored); wcols[j].classList.toggle('ignored', !!cur.ignored); });
     // the "fit for one voxel" caption gives way to the ignored-weights caption
     gReg.querySelectorAll('text.ax').forEach(t => { if(t.textContent === 'fit for one voxel') t.style.display = cur.ignored ? 'none' : ''; });
     document.body.classList.toggle('natural', !!cur.natural);

@@ -228,6 +228,25 @@ function startDeck(){
   });
   window.slideLabel = i => LABEL[i];
 
+  /* ---- white lead-in before each slide (Fer, 2026-10-11): "for each slide, a white screen before the
+     title so that I can talk and lean into it before the slide begins." Arriving at a slide going
+     forward shows a blank white screen; the next click brings in the title (then the slide as usual).
+     Not before: the opening slide, a slide that continues the previous one (same scene split, same
+     title, e.g. 4 → 5), or a slide whose part sets {blank:false}. Off with ?blank=0 or
+     window.DECK_NO_BLANK (the public build). ---- */
+  const BLANK_ON = !window.DECK_NO_BLANK && new URLSearchParams(location.search).get('blank') !== '0';
+  const titleOf = s => { const k = groupKey(s); return k && k.startsWith('h1:') ? k : null; };
+  /* Fer, 2026-10-11: "no white screens on the brain slides" (the anchor-brain run, contracts/anchor-brain.md). */
+  const BRAIN_SCENES = ['methods-brain', 'scanning-run', 'nse-explainer', 'region-prior', 'region-definition',
+                        'example-voxels', 'negative-space', 'expected-outcomes'];
+  const brainSlide = s => s.kind === 'scene'
+    ? BRAIN_SCENES.some(n => new RegExp('scenes/' + n + '(\\.final-[\\w-]+)?\\.html').test(s.src))
+    : /outline\/anchor\//.test(s.html || '');
+  const leadIn = i => BLANK_ON && i > 0 && S[i].blank !== false && !brainSlide(S[i]) && S[i].sec !== 'Title' && SUBI[i] === 0
+    && !(titleOf(S[i]) && titleOf(S[i]) === titleOf(S[i-1]));
+  let blank = false;
+  const setBlank = v => { blank = v; document.body.classList.toggle('preblank', v); };
+
   /* ---- (old) feedback numbering "14.3" (2026-10-07) replaced by LABEL above ----
      Shown on every slide, scenes included. Static slides count build groups; scenes use their
      controller's own beat when they expose getBeat()/beat, else the clicks counted here. */
@@ -273,6 +292,7 @@ function startDeck(){
       const pos = idx.indexOf(cur), frac = idx.length ? (pos + 1) / idx.length : 1;
       $('#secbar').children[ci].style.setProperty('--p', frac.toFixed(3));
     }
+    setBlank(dir > 0 && leadIn(cur));
     renderNotes();
     try{ history.replaceState(null, '', location.pathname + location.search + '#' + (cur+1)); }catch(e){}
   }
@@ -283,6 +303,7 @@ function startDeck(){
   }
   function bump(d){ click = Math.max(0, click + d); maxClick[cur] = Math.max(maxClick[cur] || 0, click); updateHud(); }
   function fwd(){
+    if(blank){ setBlank(false); return; }   /* white lead-in → title */
     const s = S[cur];
     if(s.kind === 'scene'){ const c = ctrlOf(s); if(c && !c.atEnd()){ c.advance(); bump(+1); return; } }
     else { const g = buildGroups().find(g => g.some(b => !b.classList.contains('shown')));
@@ -294,6 +315,7 @@ function startDeck(){
     if(s.kind === 'scene'){ const c = ctrlOf(s); if(c && !c.atStart()){ c.back(); bump(-1); return; } }
     else { const g = buildGroups().reverse().find(g => g.some(b => b.classList.contains('shown')));
       if(g){ g.forEach(b => b.classList.remove('shown')); bump(-1); return; } }
+    if(!blank && leadIn(cur)){ setBlank(true); return; }   /* back from the title → white lead-in */
     if(cur > 0){ const from = cur; show(cur-1, -1); maybeTrans(from, cur, false); }
   }
   function onKey(e){
@@ -312,7 +334,7 @@ function startDeck(){
     }
   }
   addEventListener('keydown', onKey, true);
-  root.addEventListener('click', e => { if(S[cur].kind === 'static') fwd(); });
+  root.addEventListener('click', e => { if(S[cur].kind === 'static' || blank) fwd(); });   /* a click also ends a scene's white lead-in */
 
   /* #n in the URL lands on slide n, fully built (reload-safe deep links) */
   const jumpToHash = () => {
@@ -323,7 +345,7 @@ function startDeck(){
   };
   addEventListener('hashchange', jumpToHash);
   jumpToHash();
-  window.deck = { show, fwd, bwd, get cur(){ return cur; }, S };
+  window.deck = { show, fwd, bwd, get cur(){ return cur; }, get blank(){ return blank; }, leadIn, S };
 }
 
 /* ================= video beats (additive; added by section 06) =================

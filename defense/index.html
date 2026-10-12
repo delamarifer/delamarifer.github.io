@@ -20,6 +20,7 @@
 <div id="notes"><div class="nlab">Speaker notes</div><div id="notes-body"></div></div>
 
 <script>document.write(`<script src="outline/engine.js?v=${Date.now()}"><\/script><script src="outline/order.js?v=${Date.now()}"><\/script>`);</script>
+<script>window.DECK_NO_BLANK = true;  /* no white lead-ins publicly (deploy.py) */</script>
 <script>
 /* Public build: intro through Chapter 4, for feedback (deploy.py). */
 (function(){ const i = ORDER.findIndex(r => r[0] === 'ch4'); if(i >= 0) ORDER.splice(i + 1); })();

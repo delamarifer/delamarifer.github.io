@@ -1,22 +1,22 @@
 {
  "intro": {
-  "version": 10,
-  "pushed_at": "2026-10-09T13:58:52",
+  "version": 12,
+  "pushed_at": "2026-10-11T20:45:52",
   "slides": 20
  },
  "ch1-adv-vulnerability": {
-  "version": 7,
-  "pushed_at": "2026-10-08T10:43:48",
+  "version": 9,
+  "pushed_at": "2026-10-11T20:26:23",
   "slides": 1
  },
  "ch1-adv-training": {
-  "version": 8,
-  "pushed_at": "2026-10-09T13:48:30",
+  "version": 9,
+  "pushed_at": "2026-10-11T20:15:27",
   "slides": 1
  },
  "ch1-current-methods": {
-  "version": 11,
-  "pushed_at": "2026-10-09T00:21:51",
+  "version": 12,
+  "pushed_at": "2026-10-11T20:24:38",
   "slides": 1
  },
  "ch1-mms-logic": {
